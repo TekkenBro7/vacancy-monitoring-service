@@ -1,28 +1,13 @@
 import asyncio
 
 from faker import Faker
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from scripts.clean_db import clear_db
 from src.core.logger import logger
 from src.database.session import get_async_session
 from src.models.users import Role, User, UserProfile
 
 fake = Faker()
-
-
-async def clear_db(session: AsyncSession) -> None:
-    logger.info("Clearing database...")
-    try:
-        await session.execute(text('TRUNCATE TABLE "user_profiles" CASCADE'))
-        await session.execute(text('TRUNCATE TABLE "users" CASCADE'))
-        await session.execute(text('TRUNCATE TABLE "roles" CASCADE'))
-        await session.commit()
-        logger.info("Database cleared successfully!")
-    except Exception as e:
-        await session.rollback()
-        logger.error(f"Failed to clear database: {e}")
-        raise
 
 
 async def seed_db() -> None:

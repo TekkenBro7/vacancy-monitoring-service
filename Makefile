@@ -9,13 +9,14 @@ NC = \033[0m
 HOST ?= 0.0.0.0
 PORT ?= 8000
 
-.PHONY: help runserver lint seed_data
+.PHONY: help runserver lint seed_data clean_data
 
 help:
 	@echo "$(YELLOW)Available targets:$(NC)"
 	@echo "  $(GREEN)runserver$(NC)      - Start FastAPI development server"
 	@echo "  $(GREEN)lint$(NC)           - Run black, isort, ruff, mypy linters"
 	@echo "  $(GREEN)seed_data$(NC)      - Seed the database"
+	@echo "  $(GREEN)clean_db$(NC)       - Clean the database"
 
 runserver:
 	@echo "$(GREEN)Starting FastAPI server...$(NC)"
@@ -31,3 +32,7 @@ lint:
 seed_data:
 	@echo "$(GREEN)Seeding database...$(NC)"
 	$(UV) python -m scripts.seed_db
+
+clean_data:
+	@echo "$(GREEN)Cleaning database...$(NC)"
+	$(UV) python -m scripts.clean_db
