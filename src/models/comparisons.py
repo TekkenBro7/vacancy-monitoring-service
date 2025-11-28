@@ -23,18 +23,14 @@ class Comparison(BaseModel):
 class ComparisonVacancy(BaseModel):
     __tablename__ = "comparison_vacancies"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     comparison_id: Mapped[int] = mapped_column(
-        ForeignKey("comparisons.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("comparisons.id", ondelete="CASCADE"), primary_key=True, nullable=False
     )
     vacancy_id: Mapped[int] = mapped_column(
-        ForeignKey("vacancies.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("vacancies.id", ondelete="CASCADE"), primary_key=True, nullable=False
     )
 
     comparison: Mapped["Comparison"] = relationship(back_populates="vacancies")
 
     def __repr__(self) -> str:
-        return (
-            f"<ComparisonVacancy id={self.id} "
-            f"comparison_id={self.comparison_id} vacancy_id={self.vacancy_id}>"
-        )
+        return f"Comparison_id={self.comparison_id} vacancy_id={self.vacancy_id}>"
