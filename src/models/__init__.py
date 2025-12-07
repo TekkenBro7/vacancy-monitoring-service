@@ -1,12 +1,12 @@
 from src.models.bookmarks import Bookmark
 from src.models.comments import Comment
 from src.models.companies import Company, Vacancy
-from src.models.comparisons import Comparison, ComparisonVacancy
+from src.models.comparisons import Comparison
 from src.models.currency import Currency
 from src.models.locations import City, Country
 from src.models.notifications import Notification, NotificationType
 from src.models.search import SearchQuery
-from src.models.skills import Skill, UserSkill, VacancySkill
+from src.models.skills import Skill
 from src.models.sources import Source, SourceType
 from src.models.subscriptions import Subscription, SubscriptionTarget, SubscriptionType
 from src.models.users import User, UserProfile
@@ -17,7 +17,6 @@ __all__ = [
     "Company",
     "Vacancy",
     "Comparison",
-    "ComparisonVacancy",
     "Currency",
     "City",
     "Country",
@@ -25,8 +24,6 @@ __all__ = [
     "NotificationType",
     "SearchQuery",
     "Skill",
-    "UserSkill",
-    "VacancySkill",
     "Source",
     "SourceType",
     "Subscription",

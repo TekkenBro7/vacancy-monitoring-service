@@ -3,6 +3,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
+from src.models.secondary_tables import user_skills_table
 
 
 class Role(BaseModel):
@@ -31,7 +32,7 @@ class User(BaseModel):
     role: Mapped["Role"] = relationship(back_populates="users")
     profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)
     skills: Mapped[list["Skill"]] = relationship(  # type: ignore
-        secondary="user_skills", back_populates="users"
+        secondary=user_skills_table, back_populates="users"
     )
     notifications: Mapped[list["Notification"]] = relationship(  # type: ignore
         back_populates="user", cascade="all, delete-orphan"

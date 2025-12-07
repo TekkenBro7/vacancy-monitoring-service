@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, Text
+from sqlalchemy import Boolean, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -19,6 +19,14 @@ class NotificationType(BaseModel):
 
 class Notification(BaseModel):
     __tablename__ = "notifications"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "notification_type_id",
+            "message",
+            name="uq_user_notification_type_message",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

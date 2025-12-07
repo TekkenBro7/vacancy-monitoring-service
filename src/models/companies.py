@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
+from src.models.secondary_tables import comparison_vacancies_table, vacancy_skills_table
 
 
 class Company(BaseModel):
@@ -49,7 +50,7 @@ class Vacancy(BaseModel):
 
     company: Mapped["Company"] = relationship(back_populates="vacancies")
     skills: Mapped[list["Skill"]] = relationship(  # type: ignore
-        secondary="vacancy_skills", back_populates="vacancies"
+        secondary=vacancy_skills_table, back_populates="vacancies"
     )
     comments: Mapped[list["Comment"]] = relationship(  # type: ignore
         back_populates="vacancy", cascade="all, delete-orphan"
@@ -59,6 +60,9 @@ class Vacancy(BaseModel):
     location: Mapped["City"] = relationship(back_populates="vacancies")  # type: ignore
     bookmarks: Mapped[list["Bookmark"]] = relationship(  # type: ignore
         back_populates="vacancy", cascade="all, delete-orphan"
+    )
+    comparisons: Mapped[list["Comparison"]] = relationship(  # type: ignore
+        secondary=comparison_vacancies_table, back_populates="vacancies"
     )
 
     def __repr__(self) -> str:

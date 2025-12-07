@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
+from src.api.router import api_router
 from src.core.config import base_config
 
 app = FastAPI(
@@ -12,6 +13,7 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     uvicorn.run(

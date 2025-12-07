@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -6,6 +6,9 @@ from src.models.base import BaseModel
 
 class Comment(BaseModel):
     __tablename__ = "comments"
+    __table_args__ = (
+        CheckConstraint("rating >= 0 AND rating <= 10", name="rating_between_0_and_10"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)

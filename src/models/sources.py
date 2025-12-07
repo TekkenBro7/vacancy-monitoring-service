@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -21,6 +21,7 @@ class SourceType(BaseModel):
 
 class Source(BaseModel):
     __tablename__ = "sources"
+    __table_args__ = (UniqueConstraint("name", "source_url", name="uq_source_name_url"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)

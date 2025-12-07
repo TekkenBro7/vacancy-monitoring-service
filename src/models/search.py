@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -6,6 +6,7 @@ from src.models.base import BaseModel
 
 class SearchQuery(BaseModel):
     __tablename__ = "search_queries"
+    __table_args__ = (UniqueConstraint("user_id", "query_text", name="uq_user_query"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

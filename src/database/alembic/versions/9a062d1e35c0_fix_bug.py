@@ -1,8 +1,8 @@
-"""Fix bugs
+"""Fix bug
 
-Revision ID: 515237e7a20d
-Revises: c46133b4cee3
-Create Date: 2025-11-27 23:31:23.437923
+Revision ID: 9a062d1e35c0
+Revises: efd85ca9dc7e
+Create Date: 2025-12-06 17:49:30.209441
 
 """
 
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "515237e7a20d"
-down_revision: Union[str, Sequence[str], None] = "c46133b4cee3"
+revision: str = "9a062d1e35c0"
+down_revision: Union[str, Sequence[str], None] = "efd85ca9dc7e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

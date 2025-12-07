@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -6,6 +6,9 @@ from src.models.base import BaseModel
 
 class Bookmark(BaseModel):
     __tablename__ = "bookmarks"
+    __table_args__ = (
+        UniqueConstraint("user_id", "vacancy_id", name="unique_user_vacancy_bookmark"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

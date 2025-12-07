@@ -10,20 +10,19 @@ class TestBaseRepository:
     async def test_create_role(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        role_data = {"name": "admin"}
+        role = Role(name="admin")
+        created_role = await repo.create(role)
 
-        role = await repo.create(role_data)
-
-        assert role.id is not None
-        assert role.name == "admin"
-        assert isinstance(role, Role)
+        assert created_role.id is not None
+        assert created_role.name == "admin"
+        assert isinstance(created_role, Role)
 
     @pytest.mark.asyncio
     async def test_get_by_id_existing_role(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        role_data = {"name": "manager"}
-        created_role = await repo.create(role_data)
+        role = Role(name="manager")
+        created_role = await repo.create(role)
 
         retrieved_role = await repo.get_by_id(created_role.id)
 
@@ -43,24 +42,23 @@ class TestBaseRepository:
     async def test_list_roles(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        roles_data = [{"name": "admin"}, {"name": "manager"}, {"name": "user"}, {"name": "guest"}]
+        roles = [Role(name=name) for name in ["admin", "manager", "user", "guest"]]
+        for role in roles:
+            await repo.create(role)
 
-        for role_data in roles_data:
-            await repo.create(role_data)
+        all_roles = await repo.list()
 
-        roles = await repo.list()
-
-        assert len(roles) == 4
-        assert all(isinstance(role, Role) for role in roles)
-        assert {role.name for role in roles} == {"admin", "manager", "user", "guest"}
+        assert len(all_roles) == 4
+        assert all(isinstance(role, Role) for role in all_roles)
+        assert {role.name for role in all_roles} == {"admin", "manager", "user", "guest"}
 
     @pytest.mark.asyncio
     async def test_list_roles_with_pagination(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
         for i in range(10):
-            role_data = {"name": f"role_{i}"}
-            await repo.create(role_data)
+            role = Role(name=f"role_{i}")
+            await repo.create(role)
 
         first_page = await repo.list(skip=0, limit=3)
         second_page = await repo.list(skip=3, limit=3)
@@ -91,34 +89,32 @@ class TestBaseRepository:
     async def test_update_role(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        role_data = {"name": "old_name"}
-        role = await repo.create(role_data)
+        role = Role(name="old_name")
+        created_role = await repo.create(role)
 
-        update_data = {"name": "new_name"}
-        updated_role = await repo.update(role.id, update_data)
+        created_role.name = "new_name"
+        updated_role = await repo.update(created_role)
 
-        assert updated_role is not None
-        assert updated_role.id == role.id
+        assert updated_role.id == created_role.id
         assert updated_role.name == "new_name"
 
     @pytest.mark.asyncio
     async def test_update_nonexistent_role(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        update_data = {"name": "new_name"}
-        result = await repo.update(99999, update_data)
+        non_existent_role = await repo.get_by_id(99999)
 
-        assert result is None
+        assert non_existent_role is None
 
     @pytest.mark.asyncio
     async def test_update_partial_data(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        role_data = {"name": "original_name"}
-        role = await repo.create(role_data)
+        role = Role(name="original_name")
+        role = await repo.create(role)
 
-        update_data = {"name": "updated_name"}
-        updated_role = await repo.update(role.id, update_data)
+        role.name = "updated_name"
+        updated_role = await repo.update(role)
 
         assert updated_role is not None
         assert updated_role.name == "updated_name"
@@ -127,14 +123,13 @@ class TestBaseRepository:
     async def test_delete_by_id_existing_role(self, db_session: AsyncSession) -> None:
         repo = BaseRepository(Role, db_session)
 
-        role_data = {"name": "role_to_delete"}
-        role = await repo.create(role_data)
+        role = Role(name="role_to_delete")
+        created_role = await repo.create(role)
 
-        deleted = await repo.delete_by_id(role.id)
-
+        deleted = await repo.delete_by_id(created_role.id)
         assert deleted is True
 
-        deleted_role = await repo.get_by_id(role.id)
+        deleted_role = await repo.get_by_id(created_role.id)
         assert deleted_role is None
 
     @pytest.mark.asyncio

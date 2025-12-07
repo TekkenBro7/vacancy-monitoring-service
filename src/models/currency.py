@@ -8,8 +8,8 @@ class Currency(BaseModel):
     __tablename__ = "currencies"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(64), nullable=False)
-    symbol: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    symbol: Mapped[str | None] = mapped_column(String(16), nullable=True, unique=True)
 
     user_profiles: Mapped[list["UserProfile"]] = relationship(  # type: ignore
         back_populates="desired_salary_currency", cascade="all, delete-orphan"

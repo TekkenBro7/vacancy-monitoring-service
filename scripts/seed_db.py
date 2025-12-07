@@ -8,12 +8,17 @@ from src.database.session import get_async_session
 from src.models.bookmarks import Bookmark
 from src.models.comments import Comment
 from src.models.companies import Company, Vacancy
-from src.models.comparisons import Comparison, ComparisonVacancy
+from src.models.comparisons import Comparison
 from src.models.currency import Currency
 from src.models.locations import City, Country
 from src.models.notifications import Notification, NotificationType
 from src.models.search import SearchQuery
-from src.models.skills import Skill, UserSkill, VacancySkill
+from src.models.secondary_tables import (
+    comparison_vacancies_table,
+    user_skills_table,
+    vacancy_skills_table,
+)
+from src.models.skills import Skill
 from src.models.sources import Source, SourceType
 from src.models.subscriptions import (
     Subscription,
@@ -58,7 +63,7 @@ async def seed_db() -> None:
             profile = UserProfile(
                 user_id=user.id,
                 full_name=fake.name(),
-                phone=fake.phone_number(),
+                phone=fake.msisdn(),
                 avatar_url=fake.image_url(),
                 desired_position=fake.job(),
                 desired_salary=fake.random_int(min=500, max=5000) * 10,
@@ -224,17 +229,19 @@ async def seed_db() -> None:
             await session.refresh(skill_obj)
         logger.info(f"Inserted {len(skill_objs)} skills")
 
-        user_skill_links = []
+        total_user_skill_links = 0
         for user in users:
             user_skills = fake.random_elements(
                 skill_objs, length=fake.random_int(1, 5), unique=True
             )
             for sk in user_skills:
-                user_skill_links.append(UserSkill(user_id=user.id, skill_id=sk.id))
+                await session.execute(
+                    user_skills_table.insert().values(user_id=user.id, skill_id=sk.id)
+                )
+                total_user_skill_links += 1
 
-        session.add_all(user_skill_links)
         await session.commit()
-        logger.info(f"Inserted {len(user_skill_links)} user skills")
+        logger.info(f"Inserted {total_user_skill_links} user skills")
 
         country_names = ["USA", "Germany", "Russia", "France"]
         country_objs = [Country(name=c) for c in country_names]
@@ -298,15 +305,17 @@ async def seed_db() -> None:
             await session.refresh(v)
         logger.info(f"Inserted {len(vacancy_objs)} vacancies")
 
-        vacancy_skill_links = []
+        total_vacancy_skill_links = 0
         for vacancy in vacancy_objs:
             vskills = fake.random_elements(skill_objs, length=fake.random_int(1, 6), unique=True)
             for sk in vskills:
-                vacancy_skill_links.append(VacancySkill(vacancy_id=vacancy.id, skill_id=sk.id))
+                await session.execute(
+                    vacancy_skills_table.insert().values(vacancy_id=vacancy.id, skill_id=sk.id)
+                )
+                total_vacancy_skill_links += 1
 
-        session.add_all(vacancy_skill_links)
         await session.commit()
-        logger.info(f"Inserted {len(vacancy_skill_links)} vacancy skills")
+        logger.info(f"Inserted {total_vacancy_skill_links} vacancy skills")
 
         comparison_objs = []
         for user in users:
@@ -320,19 +329,21 @@ async def seed_db() -> None:
             await session.refresh(comparison_obj)
         logger.info(f"Inserted {len(comparison_objs)} comparisons")
 
-        comparison_vacancy_links = []
+        total_comparison_links = 0
         for comparison in comparison_objs:
             linked_vacancies = fake.random_elements(
                 vacancy_objs, length=fake.random_int(1, 3), unique=True
             )
             for vac in linked_vacancies:
-                comparison_vacancy_links.append(
-                    ComparisonVacancy(comparison_id=comparison.id, vacancy_id=vac.id)
+                await session.execute(
+                    comparison_vacancies_table.insert().values(
+                        comparison_id=comparison.id, vacancy_id=vac.id
+                    )
                 )
+                total_comparison_links += 1
 
-        session.add_all(comparison_vacancy_links)
         await session.commit()
-        logger.info(f"Inserted {len(comparison_vacancy_links)} comparison-vacancy links")
+        logger.info(f"Inserted {total_comparison_links} comparison-vacancy links")
 
         comment_objs = []
         for vacancy in vacancy_objs:

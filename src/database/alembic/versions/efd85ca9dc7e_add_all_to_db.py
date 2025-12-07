@@ -1,8 +1,8 @@
-"""Add all necessary models
+"""Add all to db
 
-Revision ID: c46133b4cee3
-Revises: 72dbdca20620
-Create Date: 2025-11-27 23:21:43.319787
+Revision ID: efd85ca9dc7e
+Revises:
+Create Date: 2025-12-06 17:46:52.291138
 
 """
 
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "c46133b4cee3"
-down_revision: Union[str, Sequence[str], None] = "72dbdca20620"
+revision: str = "efd85ca9dc7e"
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -78,12 +78,33 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+        sa.UniqueConstraint("symbol"),
     )
     op.create_table(
         "notification_types",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+    )
+    op.create_table(
+        "roles",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=20), nullable=False),
         sa.Column(
             "created_at",
             sa.TIMESTAMP(timezone=True),
@@ -218,6 +239,31 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["source_type_id"], ["source_types.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name", "source_url", name="uq_source_name_url"),
+    )
+    op.create_table(
+        "users",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("role_id", sa.Integer(), nullable=False),
+        sa.Column("username", sa.String(), nullable=False),
+        sa.Column("email", sa.String(), nullable=False),
+        sa.Column("password_hash", sa.String(length=255), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["role_id"], ["roles.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
+        sa.UniqueConstraint("username"),
     )
     op.create_table(
         "comparisons",
@@ -258,6 +304,7 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "query_text", name="uq_user_query"),
     )
     op.create_table(
         "subscriptions",
@@ -288,11 +335,23 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "user_id",
+            "subscription_type_id",
+            "target_type_id",
+            name="uq_user_subscription_type_target",
+        ),
     )
     op.create_table(
-        "user_skills",
+        "user_profiles",
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("skill_id", sa.Integer(), nullable=False),
+        sa.Column("full_name", sa.String(length=100), nullable=True),
+        sa.Column("phone", sa.String(length=20), nullable=True),
+        sa.Column("avatar_url", sa.String(length=255), nullable=True),
+        sa.Column("desired_salary", sa.Integer(), nullable=True),
+        sa.Column("desired_position", sa.String(length=100), nullable=True),
+        sa.Column("desired_salary_currency_id", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.TIMESTAMP(timezone=True),
@@ -305,6 +364,18 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
+        sa.ForeignKeyConstraint(
+            ["desired_salary_currency_id"],
+            ["currencies.id"],
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id"),
+    )
+    op.create_table(
+        "user_skills",
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("skill_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["skill_id"], ["skills.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "skill_id"),
@@ -362,6 +433,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["vacancy_id"], ["vacancies.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "vacancy_id", name="unique_user_vacancy_bookmark"),
     )
     op.create_table(
         "comments",
@@ -382,6 +454,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
+        sa.CheckConstraint("rating >= 0 AND rating <= 10", name="rating_between_0_and_10"),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
@@ -391,24 +464,11 @@ def upgrade() -> None:
     )
     op.create_table(
         "comparison_vacancies",
-        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("comparison_id", sa.Integer(), nullable=False),
         sa.Column("vacancy_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column(
-            "updated_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
         sa.ForeignKeyConstraint(["comparison_id"], ["comparisons.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["vacancy_id"], ["vacancies.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("comparison_id", "vacancy_id"),
     )
     op.create_table(
         "notifications",
@@ -436,23 +496,14 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["subscription_id"], ["subscriptions.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "user_id", "notification_type_id", "message", name="uq_user_notification_type_message"
+        ),
     )
     op.create_table(
         "vacancy_skills",
         sa.Column("vacancy_id", sa.Integer(), nullable=False),
         sa.Column("skill_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column(
-            "updated_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
         sa.ForeignKeyConstraint(
             ["skill_id"],
             ["skills.id"],
@@ -463,35 +514,12 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("vacancy_id", "skill_id"),
     )
-    op.add_column(
-        "user_profiles", sa.Column("desired_salary_currency_id", sa.Integer(), nullable=True)
-    )
-    op.drop_constraint(op.f("user_profiles_user_id_fkey"), "user_profiles", type_="foreignkey")
-    op.create_foreign_key(None, "user_profiles", "users", ["user_id"], ["id"], ondelete="CASCADE")
-    op.create_foreign_key(
-        None, "user_profiles", "currencies", ["desired_salary_currency_id"], ["id"]
-    )
-    op.drop_column("user_profiles", "desired_salary")
-    op.drop_constraint(op.f("users_role_id_fkey"), "users", type_="foreignkey")
-    op.create_foreign_key(None, "users", "roles", ["role_id"], ["id"], ondelete="RESTRICT")
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_constraint(None, "users", type_="foreignkey")
-    op.create_foreign_key(op.f("users_role_id_fkey"), "users", "roles", ["role_id"], ["id"])
-    op.add_column(
-        "user_profiles",
-        sa.Column("desired_salary", sa.INTEGER(), autoincrement=False, nullable=True),
-    )
-    op.drop_constraint(None, "user_profiles", type_="foreignkey")
-    op.drop_constraint(None, "user_profiles", type_="foreignkey")
-    op.create_foreign_key(
-        op.f("user_profiles_user_id_fkey"), "user_profiles", "users", ["user_id"], ["id"]
-    )
-    op.drop_column("user_profiles", "desired_salary_currency_id")
     op.drop_table("vacancy_skills")
     op.drop_table("notifications")
     op.drop_table("comparison_vacancies")
@@ -499,15 +527,18 @@ def downgrade() -> None:
     op.drop_table("bookmarks")
     op.drop_table("vacancies")
     op.drop_table("user_skills")
+    op.drop_table("user_profiles")
     op.drop_table("subscriptions")
     op.drop_table("search_queries")
     op.drop_table("comparisons")
+    op.drop_table("users")
     op.drop_table("sources")
     op.drop_table("cities")
     op.drop_table("subscription_types")
     op.drop_table("subscription_targets")
     op.drop_table("source_types")
     op.drop_table("skills")
+    op.drop_table("roles")
     op.drop_table("notification_types")
     op.drop_table("currencies")
     op.drop_table("countries")
