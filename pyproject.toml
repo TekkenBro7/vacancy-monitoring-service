@@ -38,7 +38,7 @@ target-version = ['py312']
 include = '\.pyi?$'
 exclude = '''
 /(
-    migrations/       
+    src/database/alembic/versions
   | __pycache__
   | \.git
   | \.pytest_cache
@@ -57,7 +57,7 @@ exclude = '''
 profile = "black"
 line_length = 100
 skip = [
-    "migrations/",
+    "src/database/alembic/versions",
     "__pycache__",
     ".git",
     ".pytest_cache",
