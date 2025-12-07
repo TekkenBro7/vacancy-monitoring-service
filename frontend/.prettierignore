@@ -1,0 +1,8 @@
+dist/
+node_modules/
+build/
+public/
+README.md
+*.log
+.env
+.env.example
