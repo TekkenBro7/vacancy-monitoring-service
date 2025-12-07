@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from src.api.v1.auth import router as auth_router
 from src.api.v1.cities import router as cities_router
 from src.api.v1.comments import router as comments_router
 from src.api.v1.companies import router as companies_router
@@ -44,3 +45,4 @@ v1_router.include_router(companies_router, prefix="/companies", tags=["Companies
 v1_router.include_router(vacancies_router, prefix="/vacancies", tags=["Vacancies"])
 v1_router.include_router(comments_router, prefix="/comments", tags=["Comments"])
 v1_router.include_router(comparisons_router, prefix="/comparisons", tags=["Comparisons"])
+v1_router.include_router(auth_router, prefix="/auth", tags=["Auth"])

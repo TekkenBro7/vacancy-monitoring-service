@@ -1,4 +1,3 @@
-from passlib.hash import bcrypt
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -52,12 +51,6 @@ class User(BaseModel):
     comments: Mapped[list["Comment"]] = relationship(  # type: ignore
         back_populates="user", cascade="all, delete-orphan"
     )
-
-    def set_password(self, plain_password: str) -> None:
-        self.password_hash = bcrypt.hash(plain_password)
-
-    def verify_password(self, plain_password: str) -> bool:
-        return bcrypt.verify(plain_password, self.password_hash)
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"

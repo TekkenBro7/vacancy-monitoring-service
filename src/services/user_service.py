@@ -6,6 +6,7 @@ from src.database.repositories.user_profile_repository import UserProfileReposit
 from src.database.repositories.user_repository import UserRepository
 from src.models.users import User, UserProfile
 from src.schemas.users import UserCreate, UserRead, UserUpdate
+from src.utils.security import hash_password
 
 
 class UserService:
@@ -24,14 +25,17 @@ class UserService:
 
         return UserRead.model_validate(user)
 
+    async def get_user_by_username(self, username: str) -> User | None:
+        return await self.user_repo.get_by_username(username)
+
     async def create_user(self, data: UserCreate) -> UserRead:
         try:
             user_model = User(
                 username=data.username,
                 email=data.email,
                 role_id=data.role_id,
+                password_hash=hash_password(data.password),
             )
-            user_model.set_password(data.password)
 
             user = await self.user_repo.create(user_model)
 
@@ -54,7 +58,7 @@ class UserService:
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if key == "password":
-                user.set_password(value)
+                user.password_hash = hash_password(value)
             else:
                 setattr(user, key, value)
 

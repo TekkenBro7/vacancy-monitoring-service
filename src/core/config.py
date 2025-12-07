@@ -35,5 +35,14 @@ class PostgresConfig:
         )
 
 
+class JWTConfig:
+    JWT_REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY", "")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_ACCESS_EXPIRE_SECONDS = int(os.getenv("JWT_ACCESS_EXPIRE_SECONDS", "3600"))
+    JWT_REFRESH_EXPIRE_SECONDS = int(os.getenv("JWT_REFRESH_EXPIRE_SECONDS", "2592000"))
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
+jwt_config = JWTConfig()
