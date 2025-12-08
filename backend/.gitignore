@@ -181,3 +181,5 @@ media/
 # Static connent
 staticfiles/
 static/
+
+directory_structure.py

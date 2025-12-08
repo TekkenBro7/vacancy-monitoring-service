@@ -6,15 +6,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PATH="/app/.venv/bin:$PATH"
+    PYTHONPATH=/app
 
 WORKDIR /app
 
 COPY pyproject.toml uv.lock /app/
 
 RUN pip install --no-cache-dir uv && \
-    uv sync --no-dev
+    uv sync --all-groups
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY . .
 

@@ -46,11 +46,11 @@ exclude = '''
   | \.mypy_cache
   | node_modules
   | build
+  | .venv
   | lib
   | \.idea
   | \.vscode
   | \.ruff_cache
-  | \.venv
 )/
 '''
 
@@ -69,7 +69,7 @@ skip = [
     ".idea",
     ".vscode",
     ".ruff_cache",
-    ".venv"
+    "venv"
 ]
 
 [tool.ruff]
