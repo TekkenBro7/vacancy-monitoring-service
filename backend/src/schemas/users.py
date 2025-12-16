@@ -26,3 +26,11 @@ class UserUpdate(BaseModel):
     email: str | None = None
     password: str | None = None
     role_id: int | None = None
+
+
+class UserMe(BaseModel):
+    username: str
+    role_name: str
+
+    class Config:
+        from_attributes = True

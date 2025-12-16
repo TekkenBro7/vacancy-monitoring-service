@@ -1,22 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-export default function App() {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [dark]);
-
+function App() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground transition-colors">
-      <div className="text-3xl font-bold">Tailwind v4 + shadcn/ui ✅</div>
-      <Button>Primary Button</Button>
-      <Button onClick={() => setDark(!dark)}>Переключить {dark ? 'Светлую' : 'Темную'} тему</Button>
-    </div>
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
+
+export default App;

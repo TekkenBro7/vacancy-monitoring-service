@@ -10,3 +10,8 @@ class UserRepository(BaseRepository[User]):
         query = select(User).where(User.username == username).options(joinedload(User.role))
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+    async def get_user_with_role(self, user_id: int) -> User | None:
+        query = select(User).options(joinedload(User.role)).where(User.id == user_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()

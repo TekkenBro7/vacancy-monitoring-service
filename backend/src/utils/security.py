@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import jwt
+from fastapi import Response
 from passlib.context import CryptContext
 
 from src.core.config import jwt_config
@@ -54,3 +55,22 @@ def decode_refresh_token(token: str) -> dict:
         raise ValueError("Refresh token expired") from e
     except jwt.InvalidTokenError as e:
         raise ValueError("Invalid refresh token") from e
+
+
+def set_refresh_token_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        key=jwt_config.JWT_REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        httponly=jwt_config.JWT_REFRESH_COOKIE_HTTPONLY,
+        secure=jwt_config.JWT_REFRESH_COOKIE_SECURE,
+        samesite=jwt_config.JWT_REFRESH_COOKIE_SAMESITE,  # type: ignore
+        max_age=jwt_config.JWT_REFRESH_EXPIRE_SECONDS,
+        path=jwt_config.JWT_REFRESH_COOKIE_PATH,
+    )
+
+
+def clear_refresh_token_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=jwt_config.JWT_REFRESH_COOKIE_NAME,
+        path=jwt_config.JWT_REFRESH_COOKIE_PATH,
+    )
