@@ -29,31 +29,31 @@ export default function Footer() {
         label: 'Поиск вакансий',
         href: '/vacancies',
         icon: Target,
-        color: 'from-blue-500 to-cyan-500',
+        color: 'icon',
       },
       {
         label: 'Сравнение предложений',
         href: '/comparisons',
         icon: Zap,
-        color: 'from-purple-500 to-pink-500',
+        color: 'icon',
       },
       {
         label: 'Аналитика рынка',
         href: '/analytics',
         icon: TrendingUp,
-        color: 'from-emerald-500 to-teal-500',
+        color: 'icon',
       },
       {
         label: 'Персональные рекомендации',
         href: '/recommendations',
         icon: Rocket,
-        color: 'from-amber-500 to-orange-500',
+        color: 'icon',
       },
       {
         label: 'Мобильное приложение',
         href: '/mobile',
         icon: Rocket,
-        color: 'from-rose-500 to-fuchsia-500',
+        color: 'icon',
       },
     ],
     company: [
@@ -98,85 +98,150 @@ export default function Footer() {
       icon: Github,
       label: 'GitHub',
       href: 'https://github.com',
-      color: 'hover:bg-gradient-to-br hover:from-gray-800 hover:to-gray-900',
+      color: 'dark:hover:bg-gradient-to-br hover:from-gray-800 hover:to-gray-900',
     },
     {
       icon: Twitter,
       label: 'Twitter',
       href: 'https://twitter.com',
-      color: 'hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-500',
+      color: 'dark:hover:bg-gradient-to-br hover:from-sky-500 hover:to-blue-500',
     },
     {
       icon: Linkedin,
       label: 'LinkedIn',
       href: 'https://linkedin.com',
-      color: 'hover:bg-gradient-to-br hover:from-blue-600 hover:to-blue-700',
+      color: 'dark:hover:bg-gradient-to-br hover:from-blue-600 hover:to-blue-700',
     },
     {
       icon: Mail,
       label: 'Email',
       href: 'mailto:hello@jobhub.com',
-      color: 'hover:bg-gradient-to-br hover:from-rose-500 hover:to-pink-500',
+      color: 'dark:hover:bg-gradient-to-br hover:from-rose-500 hover:to-pink-500',
     },
   ];
 
   return (
-    <footer className="relative bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
-      <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-10 w-56 h-56 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+    <footer
+      className="relative overflow-hidden transition-colors duration-300"
+      style={{
+        backgroundColor: 'rgb(var(--bg-header))',
+        color: 'rgb(var(--text-primary))',
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{
+          background: 'linear-gradient(to right, transparent, rgb(var(--accent))/50, transparent)',
+        }}
+      />
 
-      <div className="absolute inset-0 opacity-5">
+      <div
+        className="absolute top-20 left-10 w-64 h-64 rounded-full blur-3xl"
+        style={{
+          background: 'radial-gradient(circle, rgb(var(--accent))/10 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute bottom-20 right-10 w-56 h-56 rounded-full blur-3xl"
+        style={{
+          background: 'radial-gradient(circle, rgb(var(--accent))/5 0%, transparent 70%)',
+        }}
+      />
+
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none">
         <div
           className="h-full w-full"
           style={{
-            backgroundImage: `linear-gradient(to right, white 1px, transparent 1px),
-                           linear-gradient(to bottom, white 1px, transparent 1px)`,
+            backgroundImage: `
+              linear-gradient(to right, rgb(var(--text-primary)) 1px, transparent 1px),
+              linear-gradient(to bottom, rgb(var(--text-primary)) 1px, transparent 1px)
+            `,
             backgroundSize: '40px 40px',
           }}
-        ></div>
+        />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="py-10 border-b border-gray-700/50">
+        <div
+          className="py-10"
+          style={{
+            borderBottom: '1px solid rgb(var(--border)/0.5)',
+          }}
+        >
           <div className="flex flex-col lg:flex-row items-start justify-between gap-10">
             <div className="max-w-lg">
               <div className="mb-5">
                 <Logo size="default" showText={true} />
               </div>
 
-              <p className="text-gray-300 mb-6 leading-relaxed">
+              <p
+                className="mb-6 leading-relaxed"
+                style={{
+                  color: 'rgb(var(--text-muted))',
+                }}
+              >
                 Современная платформа для поиска работы и развития карьеры. Мы помогаем
                 профессионалам находить идеальные возможности для роста.
               </p>
 
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1.5 rounded-md bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
-                    <TrendingUp className="h-4 w-4 text-blue-300" />
+                  <div
+                    className="p-1.5 rounded-md border"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgb(var(--accent))/20, rgb(var(--accent))/40)',
+                      borderColor: 'rgb(var(--accent)/0.3)',
+                    }}
+                  >
+                    <TrendingUp
+                      className="h-4 w-4"
+                      style={{
+                        color: 'rgb(var(--accent))',
+                      }}
+                    />
                   </div>
-                  <span className="font-semibold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  <span
+                    className="font-semibold bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                    }}
+                  >
                     Лучшие вакансии первыми
                   </span>
                 </div>
+
                 <div className="flex gap-2">
                   <input
                     type="email"
                     placeholder="Ваш email для уведомлений"
-                    className="flex-1 px-4 py-2.5 rounded-lg border border-gray-700 
-                             bg-gray-800/50 backdrop-blur-sm focus:outline-none 
-                             focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 
-                             placeholder:text-gray-500 text-white text-sm h-11"
+                    className="flex-1 px-4 py-2.5 rounded-lg text-sm h-11 backdrop-blur-sm focus:outline-none"
+                    style={{
+                      backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
+                      border: '1px solid rgb(var(--border))',
+                      color: 'rgb(var(--text-primary))',
+                    }}
                   />
                   <Button
-                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 
-                                   hover:from-blue-600 hover:to-purple-600 text-white font-medium
-                                   shadow-md hover:shadow-lg transition-all duration-300 h-11 text-sm"
+                    className="px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 h-11 text-sm"
+                    style={{
+                      background: `linear-gradient(to right,
+                        rgb(var(--button-from)),
+                        rgb(var(--button-to))
+                      )`,
+                      color: 'white',
+                    }}
                   >
                     Подписаться
                   </Button>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p
+                  className="text-xs mt-2"
+                  style={{
+                    color: 'rgb(var(--text-muted))',
+                  }}
+                >
                   Только полезные уведомления. Без спама.
                 </p>
               </div>
@@ -188,11 +253,19 @@ export default function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`p-2.5 rounded-lg bg-gray-800/50 backdrop-blur-sm border border-gray-700 
-                             hover:scale-105 hover:shadow-lg transition-all duration-300 ${social.color}`}
+                    className="p-2.5 rounded-lg backdrop-blur-sm transition-all duration-300 border hover:scale-105 hover:shadow-lg"
+                    style={{
+                      backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
+                      borderColor: 'rgb(var(--border))',
+                    }}
                     aria-label={social.label}
                   >
-                    <social.icon className="h-5 w-5 text-gray-300" />
+                    <social.icon
+                      className="h-5 w-5 transition-colors"
+                      style={{
+                        color: 'rgb(var(--text-muted))',
+                      }}
+                    />
                   </a>
                 ))}
               </div>
@@ -202,8 +275,12 @@ export default function Footer() {
               {Object.entries(footerLinks).map(([category, links]) => (
                 <div key={category}>
                   <h4
-                    className="font-bold mb-4 pb-2 border-b border-gray-700/50 
-                               bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+                    className="font-bold mb-4 pb-2 border-b bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(to right, rgb(var(--text-primary)), rgb(var(--text-muted)))',
+                      borderColor: 'rgb(var(--border)/0.5)',
+                    }}
                   >
                     {category === 'product' && 'Продукт'}
                     {category === 'company' && 'Компания'}
@@ -213,28 +290,37 @@ export default function Footer() {
                       <li key={link.label}>
                         <Link
                           to={link.href}
-                          className="group flex items-center gap-3 p-2.5 rounded-lg 
-                                   hover:bg-gray-800/50 hover:backdrop-blur-sm 
-                                   border border-transparent hover:border-gray-700
-                                   transition-all duration-300"
+                          className="group flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 border"
+                          style={{
+                            borderColor: 'transparent',
+                          }}
                         >
                           <div
-                            className={`p-2 rounded-md bg-gradient-to-br ${link.color} 
-                                       shadow-md group-hover:scale-105 transition-transform`}
+                            className="p-2 rounded-md shadow-md group-hover:scale-105 transition-transform"
+                            style={{
+                              background: `linear-gradient(135deg,
+                                rgb(var(--icon-gradient-from)),
+                                rgb(var(--icon-gradient-to))
+                              )`,
+                            }}
                           >
                             <link.icon className="h-4 w-4 text-white" />
                           </div>
                           <div className="flex-1">
                             <span
-                              className="text-gray-200 group-hover:text-white 
-                                           text-sm transition-colors"
+                              className="text-sm transition-colors"
+                              style={{
+                                color: 'rgb(var(--text-primary))',
+                              }}
                             >
                               {link.label}
                             </span>
                           </div>
                           <ExternalLink
-                            className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-400 
-                                                 transition-colors"
+                            className="h-3.5 w-3.5 transition-colors"
+                            style={{
+                              color: 'rgb(var(--text-muted))',
+                            }}
                           />
                         </Link>
                       </li>
@@ -251,9 +337,11 @@ export default function Footer() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="group p-4 rounded-xl bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 
-                         hover:bg-gray-800/50 hover:border-gray-600 hover:shadow-lg 
-                         transition-all duration-300 cursor-pointer"
+                className="group p-4 rounded-xl backdrop-blur-sm border transition-all duration-300 cursor-pointer"
+                style={{
+                  backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+                  borderColor: 'rgb(var(--border)/0.5)',
+                }}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div
@@ -262,36 +350,74 @@ export default function Footer() {
                     <stat.icon className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-xl font-bold text-white flex items-baseline">
+                    <div className="text-xl font-bold flex items-baseline">
                       {stat.value}
-                      {stat.suffix && <span className="text-amber-300 ml-0.5">{stat.suffix}</span>}
+                      {stat.suffix && (
+                        <span className="ml-0.5" style={{ color: 'rgb(var(--accent))' }}>
+                          {stat.suffix}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
+                    <div
+                      className="text-xs transition-colors"
+                      style={{
+                        color: 'rgb(var(--text-muted))',
+                      }}
+                    >
                       {stat.label}
                     </div>
                   </div>
                 </div>
-                <div className="h-1 w-full bg-gradient-to-r from-gray-700 to-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-1 w-full rounded-full overflow-hidden"
+                  style={{
+                    backgroundColor: 'rgb(var(--border)/0.3)',
+                  }}
+                >
                   <div
-                    className={`h-full ${stat.color.split(' ')[0]} rounded-full transition-all duration-700 group-hover:w-full w-3/4`}
-                  ></div>
+                    className={`h-full rounded-full transition-all duration-700 group-hover:w-full w-3/4 ${stat.color.split(' ')[0]}`}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="py-5 border-gray-700/50">
+        <div className="py-5">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            <div className="text-gray-400">
+            <div>
               <div className="flex items-center gap-3">
-                <span className="font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                <span
+                  className="font-bold bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                  }}
+                >
                   © {currentYear} JobHub
                 </span>
-                <div className="h-3 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
-                <span className="text-sm">Все права защищены</span>
+                <div
+                  className="h-3 w-px"
+                  style={{
+                    background:
+                      'linear-gradient(to bottom, transparent, rgb(var(--border)), transparent)',
+                  }}
+                />
+                <span
+                  className="text-sm"
+                  style={{
+                    color: 'rgb(var(--text-muted))',
+                  }}
+                >
+                  Все права защищены
+                </span>
               </div>
-              <p className="text-xs text-gray-500 mt-2 max-w-2xl">
+              <p
+                className="text-xs mt-2 max-w-2xl"
+                style={{
+                  color: 'rgb(var(--text-muted))',
+                }}
+              >
                 JobHub предоставляет услуги по поиску вакансий и анализу рынка труда. Данные
                 агрегируются из открытых источников.
               </p>
@@ -299,20 +425,45 @@ export default function Footer() {
 
             <div className="flex items-center gap-3">
               <div
-                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 
-                            border border-gray-700"
+                className="px-3 py-1.5 rounded-full border"
+                style={{
+                  background:
+                    'linear-gradient(to right, rgb(var(--bg-header-muted)), rgb(var(--bg-header)))',
+                  borderColor: 'rgb(var(--border))',
+                }}
               >
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-xs text-emerald-300 font-medium">Проверено</span>
+                  <CheckCircle
+                    className="h-3.5 w-3.5"
+                    style={{
+                      color: 'rgb(var(--accent))',
+                    }}
+                  />
+                  <span
+                    className="text-xs font-medium"
+                    style={{
+                      color: 'rgb(var(--accent))',
+                    }}
+                  >
+                    Проверено
+                  </span>
                 </div>
               </div>
 
               <div
-                className="text-xs px-2.5 py-1 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 
-                            border border-blue-500/20"
+                className="text-xs px-2.5 py-1 rounded-full border"
+                style={{
+                  background:
+                    'linear-gradient(to right, rgb(var(--accent))/10, rgb(var(--accent))/5)',
+                  borderColor: 'rgb(var(--accent)/0.2)',
+                }}
               >
-                <span className="font-medium text-blue-300">
+                <span
+                  className="font-medium"
+                  style={{
+                    color: 'rgb(var(--accent))',
+                  }}
+                >
                   <Award className="h-3 w-3 inline mr-1" />
                   Премиум качество
                 </span>

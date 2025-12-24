@@ -1,84 +1,98 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    applyTheme(savedTheme);
+    const saved = localStorage.getItem('theme') || 'dark';
+    setTheme(saved);
+    applyTheme(saved);
   }, []);
 
-  function applyTheme(newTheme) {
+  function applyTheme(value) {
     const root = document.documentElement;
+
     root.classList.remove('light', 'dark');
+    root.classList.add(value);
 
-    if (newTheme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(newTheme);
-    }
-
-    localStorage.setItem('theme', newTheme);
-    setTheme(newTheme);
-  }
-
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
+    localStorage.setItem('theme', value);
+    setTheme(value);
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 relative hover:bg-accent"
           aria-label="Переключить тему"
+          className="
+            h-9 w-9 rounded-full
+            text-[rgb(var(--text-primary))]
+            hover:bg-[rgb(var(--accent))]/10
+          "
         >
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-foreground" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-foreground" />
-          <span className="sr-only">Переключить тему</span>
+          {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          onClick={() => applyTheme('light')}
-          className="flex items-center gap-2 cursor-pointer hover:bg-accent"
+
+      <DropdownMenuPortal>
+        <DropdownMenuContent
+          side="bottom"
+          align="end"
+          sideOffset={8}
+          className="
+            z-[100]
+            min-w-[140px]
+            rounded-xl
+            border border-[rgb(var(--border))]
+            bg-[rgb(var(--bg-header))]
+            p-1
+            shadow-xl
+          "
         >
-          <Sun className="h-4 w-4" />
-          <span>Светлая</span>
-          {theme === 'light' && <span className="ml-auto h-2 w-2 rounded-full bg-primary"></span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => applyTheme('dark')}
-          className="flex items-center gap-2 cursor-pointer hover:bg-accent"
-        >
-          <Moon className="h-4 w-4" />
-          <span>Темная</span>
-          {theme === 'dark' && <span className="ml-auto h-2 w-2 rounded-full bg-primary"></span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => applyTheme('system')}
-          className="flex items-center gap-2 cursor-pointer hover:bg-accent"
-        >
-          <Monitor className="h-4 w-4" />
-          <span>Системная</span>
-          {theme === 'system' && <span className="ml-auto h-2 w-2 rounded-full bg-primary"></span>}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+          <DropdownMenuItem
+            onClick={() => applyTheme('light')}
+            className="
+              flex items-center gap-2 rounded-lg px-3 py-2
+              text-[rgb(var(--text-primary))]
+              cursor-pointer
+              hover:bg-[rgb(var(--accent))]/10
+            "
+          >
+            <Sun className="h-4 w-4" />
+            <span>Светлая</span>
+            {theme === 'light' && (
+              <span className="ml-auto h-2 w-2 rounded-full bg-[rgb(var(--accent))]" />
+            )}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => applyTheme('dark')}
+            className="
+              flex items-center gap-2 rounded-lg px-3 py-2
+              text-[rgb(var(--text-primary))]
+              cursor-pointer
+              hover:bg-[rgb(var(--accent))]/10
+            "
+          >
+            <Moon className="h-4 w-4" />
+            <span>Тёмная</span>
+            {theme === 'dark' && (
+              <span className="ml-auto h-2 w-2 rounded-full bg-[rgb(var(--accent))]" />
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
     </DropdownMenu>
   );
 }

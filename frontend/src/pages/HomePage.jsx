@@ -30,21 +30,26 @@ export default function HomePage() {
       title: 'Backend разработка',
       count: '1.2K+',
       icon: Target,
-      color: 'from-blue-500 to-cyan-500',
+      color: 'bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500',
     },
     {
       title: 'Frontend разработка',
       count: '850+',
       icon: Zap,
-      color: 'from-purple-500 to-pink-500',
+      color: 'bg-gradient-to-r from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500',
     },
     {
       title: 'Data Science',
       count: '420+',
       icon: TrendingUp,
-      color: 'from-emerald-500 to-teal-500',
+      color: 'bg-gradient-to-r from-emerald-400 to-teal-400 dark:from-emerald-500 dark:to-teal-500',
     },
-    { title: 'DevOps', count: '380+', icon: Sparkles, color: 'from-amber-500 to-orange-500' },
+    {
+      title: 'DevOps',
+      count: '380+',
+      icon: Sparkles,
+      color: 'bg-gradient-to-r from-amber-400 to-orange-400 dark:from-amber-500 dark:to-orange-500',
+    },
   ];
 
   const featuredJobs = [
@@ -85,48 +90,87 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Hero Section */}
+    <div className="min-h-screen transition-colors duration-300">
       <section className="relative overflow-hidden pt-20 pb-16">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+        <div
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{
+            background:
+              'linear-gradient(to right, transparent, rgb(var(--accent))/30, transparent)',
+          }}
+        />
+        <div
+          className="absolute -top-20 -right-20 w-80 h-80 rounded-full blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgb(var(--accent))/10 0%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgb(var(--accent))/5 0%, transparent 70%)',
+          }}
+        />
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-gray-800/50 backdrop-blur-sm border border-gray-700">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span className="text-sm text-amber-300">Платформа нового поколения</span>
+            <div
+              className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full backdrop-blur-sm border"
+              style={{
+                backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
+                borderColor: 'rgb(var(--border))',
+              }}
+            >
+              <Sparkles className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
+              <span className="text-sm" style={{ color: 'rgb(var(--accent))' }}>
+                Платформа нового поколения
+              </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                }}
+              >
                 Находите лучшие
               </span>
               <br />
-              <span className="text-white">вакансии в одном месте</span>
+              <span style={{ color: 'rgb(var(--text-primary))' }}>вакансии в одном месте</span>
             </h1>
 
-            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            <p
+              className="text-xl mb-10 max-w-2xl mx-auto"
+              style={{ color: 'rgb(var(--text-muted))' }}
+            >
               Мониторинг, сравнение и анализ вакансий с разных платформ. Умный поиск,
               персонализированные рекомендации и актуальная аналитика рынка.
             </p>
 
-            {/* Search Bar */}
             <div className="max-w-3xl mx-auto mb-12">
               <div className="relative">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-400" />
+                <Search
+                  className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5"
+                  style={{ color: 'rgb(var(--accent))' }}
+                />
                 <Input
                   type="search"
                   placeholder="Должность, навыки, компания или ключевые слова..."
-                  className="pl-12 pr-32 h-14 rounded-2xl border-2 border-gray-700 
-                           bg-gray-800/50 backdrop-blur-sm text-white placeholder:text-gray-500
-                           text-lg shadow-xl shadow-blue-500/10"
+                  className="pl-12 pr-32 h-14 rounded-2xl border-2 text-lg shadow-xl"
+                  style={{
+                    backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
+                    borderColor: 'rgb(var(--border))',
+                    color: 'rgb(var(--text-primary))',
+                  }}
                 />
                 <Button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-xl 
-                                 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600
-                                 text-white shadow-lg"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-xl text-white shadow-lg"
+                  style={{
+                    background:
+                      'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  }}
                 >
                   Найти вакансии
                 </Button>
@@ -137,10 +181,18 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center gap-8">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  <div
+                    className="text-2xl font-bold bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                    }}
+                  >
                     {stat.value}
                   </div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+                  <div className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -148,12 +200,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="py-16">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Популярные категории</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4" style={{ color: 'rgb(var(--text-primary))' }}>
+              Популярные категории
+            </h2>
+            <p className="max-w-2xl mx-auto" style={{ color: 'rgb(var(--text-muted))' }}>
               Ищите вакансии по интересующим направлениям с актуальной статистикой
             </p>
           </div>
@@ -162,22 +215,27 @@ export default function HomePage() {
             {categories.map((category) => (
               <Card
                 key={category.title}
-                className="bg-gray-800/30 backdrop-blur-sm border-gray-700/50 
-                         hover:bg-gray-800/50 hover:border-gray-600 hover:shadow-xl transition-all"
+                className="backdrop-blur-sm hover:shadow-xl transition-all border"
+                style={{
+                  backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+                  borderColor: 'rgb(var(--border)/0.5)',
+                }}
               >
                 <CardHeader>
                   <div
-                    className={`p-3 rounded-xl bg-gradient-to-br ${category.color} w-12 h-12 flex items-center justify-center mb-4`}
+                    className={`p-3 rounded-xl w-12 h-12 flex items-center justify-center mb-4 ${category.color}`}
                   >
                     <category.icon className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">{category.title}</CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardTitle className="text-xl" style={{ color: 'rgb(var(--text-primary))' }}>
+                    {category.title}
+                  </CardTitle>
+                  <CardDescription style={{ color: 'rgb(var(--text-muted))' }}>
                     {category.count} вакансий
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
+                  <Button variant="ghost" style={{ color: 'rgb(var(--accent))' }}>
                     Смотреть все <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -187,15 +245,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Jobs */}
-      <section className="py-16 bg-gradient-to-b from-transparent to-gray-900/50">
+      <section className="py-16">
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Рекомендуемые вакансии</h2>
-              <p className="text-gray-400">Самые интересные предложения за сегодня</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'rgb(var(--text-primary))' }}>
+                Рекомендуемые вакансии
+              </h2>
+              <p style={{ color: 'rgb(var(--text-muted))' }}>
+                Самые интересные предложения за сегодня
+              </p>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+            <Button
+              className="text-white"
+              style={{
+                background:
+                  'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+              }}
+            >
               Показать все вакансии
             </Button>
           </div>
@@ -204,21 +271,38 @@ export default function HomePage() {
             {featuredJobs.map((job) => (
               <Card
                 key={job.title}
-                className="bg-gray-800/30 backdrop-blur-sm border-gray-700/50 
-                         hover:bg-gray-800/50 hover:border-gray-600 hover:shadow-xl transition-all group"
+                className="backdrop-blur-sm hover:shadow-xl transition-all border group"
+                style={{
+                  backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+                  borderColor: 'rgb(var(--border)/0.5)',
+                }}
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl group-hover:text-blue-300 transition-colors">
+                      <CardTitle
+                        className="text-xl transition-colors"
+                        style={{ color: 'rgb(var(--text-primary))' }}
+                      >
                         {job.title}
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-2">
-                        <Building className="h-4 w-4 text-blue-400" />
+                      <div
+                        className="flex items-center gap-2 mt-2"
+                        style={{ color: 'rgb(var(--text-muted))' }}
+                      >
+                        <Building className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
                         {job.company}
-                      </CardDescription>
+                      </div>
                     </div>
-                    <Badge className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border-blue-500/30">
+                    <Badge
+                      className="border"
+                      style={{
+                        background:
+                          'linear-gradient(to right, rgb(var(--accent))/20, rgb(var(--accent))/10)',
+                        borderColor: 'rgb(var(--accent)/0.3)',
+                        color: 'rgb(var(--accent))',
+                      }}
+                    >
                       {job.source}
                     </Badge>
                   </div>
@@ -226,17 +310,25 @@ export default function HomePage() {
 
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-gray-400" />
+                    <div
+                      className="flex items-center gap-2 text-sm"
+                      style={{ color: 'rgb(var(--text-muted))' }}
+                    >
+                      <MapPin className="h-4 w-4" />
                       <span>{job.location}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="h-4 w-4 text-gray-400" />
-                      <span className="font-semibold text-emerald-400">{job.salary}</span>
+                      <DollarSign className="h-4 w-4" style={{ color: 'rgb(var(--text-muted))' }} />
+                      <span className="font-semibold" style={{ color: 'rgb(var(--accent))' }}>
+                        {job.salary}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-400">{job.posted}</span>
+                    <div
+                      className="flex items-center gap-2 text-sm"
+                      style={{ color: 'rgb(var(--text-muted))' }}
+                    >
+                      <Clock className="h-4 w-4" />
+                      <span>{job.posted}</span>
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-3">
@@ -244,7 +336,11 @@ export default function HomePage() {
                         <Badge
                           key={skill}
                           variant="outline"
-                          className="text-xs border-gray-700 text-gray-300"
+                          className="text-xs"
+                          style={{
+                            borderColor: 'rgb(var(--border))',
+                            color: 'rgb(var(--text-primary))',
+                          }}
                         >
                           {skill}
                         </Badge>
@@ -254,10 +350,16 @@ export default function HomePage() {
                 </CardContent>
 
                 <CardFooter className="flex justify-between">
-                  <Button variant="ghost" className="text-gray-400 hover:text-white">
+                  <Button variant="ghost" style={{ color: 'rgb(var(--text-muted))' }}>
                     Сохранить
                   </Button>
-                  <Button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                  <Button
+                    className="text-white"
+                    style={{
+                      background:
+                        'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                    }}
+                  >
                     Подробнее
                   </Button>
                 </CardFooter>
@@ -267,23 +369,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <div
-              className="p-8 rounded-3xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 
-                         backdrop-blur-sm border border-gray-700/50 shadow-2xl"
+              className="p-8 rounded-3xl backdrop-blur-sm border shadow-2xl"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgb(var(--bg-header-muted)/0.5), rgb(var(--bg-header)/0.5))',
+                borderColor: 'rgb(var(--border)/0.5)',
+              }}
             >
               <h2 className="text-4xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                  }}
+                >
                   Начните карьерный рост
                 </span>
                 <br />
-                <span className="text-white">уже сегодня</span>
+                <span style={{ color: 'rgb(var(--text-primary))' }}>уже сегодня</span>
               </h2>
 
-              <p className="text-gray-300 mb-8 text-lg max-w-2xl mx-auto">
+              <p
+                className="mb-8 text-lg max-w-2xl mx-auto"
+                style={{ color: 'rgb(var(--text-muted))' }}
+              >
                 Присоединяйтесь к тысячам профессионалов, которые уже нашли свою идеальную работу
                 через JobHub
               </p>
@@ -291,9 +405,11 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
-                  className="h-14 px-8 rounded-xl 
-                           bg-gradient-to-r from-blue-600 to-purple-600 
-                           text-white text-lg font-semibold shadow-xl"
+                  className="h-14 px-8 rounded-xl text-white text-lg font-semibold shadow-xl"
+                  style={{
+                    background:
+                      'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  }}
                 >
                   <Briefcase className="mr-2 h-5 w-5" />
                   Найти вакансии
@@ -301,14 +417,17 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-14 px-8 rounded-xl 
-                           border-gray-700 text-white hover:bg-gray-800/50"
+                  className="h-14 px-8 rounded-xl hover:bg-gray-800/50"
+                  style={{
+                    borderColor: 'rgb(var(--border))',
+                    color: 'rgb(var(--text-primary))',
+                  }}
                 >
                   Создать профиль
                 </Button>
               </div>
 
-              <p className="text-sm text-gray-500 mt-6">
+              <p className="text-sm mt-6" style={{ color: 'rgb(var(--text-muted))' }}>
                 Регистрация займет меньше минуты. Без скрытых платежей.
               </p>
             </div>

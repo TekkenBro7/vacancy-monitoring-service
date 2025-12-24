@@ -1,1 +1,42 @@
 @import 'tailwindcss';
+
+@layer base {
+  :root {
+    --bg-header: 255 255 255;
+    --bg-header-muted: 245 247 250;
+
+    --text-primary: 17 24 39;
+    --text-muted: 107 114 128;
+
+    --accent: 59 130 246;
+    --border: 229 231 235;
+
+    --icon-gradient-from: 37 99 235;
+    --icon-gradient-to: 59 130 246;
+
+    --button-from: 37 99 235;
+    --button-to: 59 130 246;
+  }
+
+  .dark {
+    --bg-header: 24 32 40;
+    --bg-header-muted: 36 46 64;
+
+    --text-primary: 243 244 246;
+    --text-muted: 156 163 175;
+
+    --accent: 96 165 250;
+    --border: 55 65 81;
+
+    --icon-gradient-from: 196 155 250;
+    --icon-gradient-to: 59 130 246;
+
+    --button-from: 29 78 216;
+    --button-to: 30 64 175;
+  }
+
+  body {
+    background-color: rgb(var(--bg-header));
+    color: rgb(var(--text-primary));
+  }
+}
