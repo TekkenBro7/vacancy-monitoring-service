@@ -207,16 +207,15 @@ export default function RegisterPage() {
                       <Alert
                         className="border"
                         style={{
-                          backgroundColor: 'rgb(239 68 68 / 0.2)',
-                          borderColor: 'rgb(239 68 68 / 0.3)',
+                          backgroundColor: 'rgb(var(--error-bg))',
+                          borderColor: 'rgb(var(--error-border))',
                         }}
                       >
-                        <AlertDescription style={{ color: 'rgb(254 202 202)' }}>
+                        <AlertDescription style={{ color: 'rgb(var(--error-text))' }}>
                           {formError}
                         </AlertDescription>
                       </Alert>
                     )}
-
                     <div className="space-y-2">
                       <label
                         className="text-sm font-medium"
@@ -411,12 +410,18 @@ export default function RegisterPage() {
                   <CardFooter className="flex-col space-y-4">
                     <Button
                       type="submit"
-                      className="w-full h-12 rounded-xl text-white text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
+                      className="
+                        w-full h-12 rounded-xl text-white text-lg font-semibold
+                        shadow-lg transition-all duration-300
+                        hover:shadow-xl hover:scale-[1.02]
+                        active:scale-[0.98]
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                      "
                       style={{
                         background:
-                          'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                          'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                       }}
-                      disabled={loading}
                     >
                       {loading ? (
                         <span className="flex items-center gap-2">

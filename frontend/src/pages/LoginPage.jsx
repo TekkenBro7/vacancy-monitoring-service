@@ -111,6 +111,10 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google/login`;
+  };
+
   const features = [
     {
       icon: Briefcase,
@@ -215,11 +219,11 @@ export default function LoginPage() {
                       <Alert
                         className="border"
                         style={{
-                          backgroundColor: 'rgb(239 68 68 / 0.2)',
-                          borderColor: 'rgb(239 68 68 / 0.3)',
+                          backgroundColor: 'rgb(var(--error-bg))',
+                          borderColor: 'rgb(var(--error-border))',
                         }}
                       >
-                        <AlertDescription style={{ color: 'rgb(254 202 202)' }}>
+                        <AlertDescription style={{ color: 'rgb(var(--error-text))' }}>
                           {formError}
                         </AlertDescription>
                       </Alert>
@@ -311,12 +315,18 @@ export default function LoginPage() {
                   <CardFooter className="flex-col space-y-6">
                     <Button
                       type="submit"
-                      className="w-full h-12 rounded-xl text-white text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
+                      className="
+                        w-full h-12 rounded-xl text-white text-lg font-semibold
+                        shadow-lg transition-all duration-300
+                        hover:shadow-xl hover:scale-[1.02]
+                        active:scale-[0.98]
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                      "
                       style={{
                         background:
-                          'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                          'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                       }}
-                      disabled={loading}
                     >
                       {loading ? (
                         <span className="flex items-center gap-2">
@@ -346,31 +356,42 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="backdrop-blur-sm"
+                          disabled={loading}
+                          onClick={handleGoogleLogin}
+                          className="
+                            relative overflow-hidden
+                            backdrop-blur-sm
+
+                            transition-all duration-300
+                            hover:scale-105 active:scale-95
+                            hover:shadow-lg
+
+                            before:absolute before:inset-0
+                            before:opacity-0
+                            before:transition-opacity
+
+                            hover:before:opacity-100
+                          "
                           style={{
                             borderColor: 'rgb(var(--border))',
-                            color: 'rgb(var(--text-muted))',
+                            color: 'rgb(var(--text-primary))',
                             backgroundColor: 'rgb(var(--bg-header-muted))',
                           }}
-                          disabled={loading}
                         >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Google
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="backdrop-blur-sm"
-                          style={{
-                            borderColor: 'rgb(var(--border))',
-                            color: 'rgb(var(--text-muted))',
-                            backgroundColor: 'rgb(var(--bg-header-muted))',
-                          }}
-                          disabled={loading}
-                        >
-                          <Building className="h-4 w-4 mr-2" />
-                          LinkedIn
+                          <span
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, rgb(var(--accent))/12, transparent)',
+                              opacity: 0.8,
+                            }}
+                          />
+
+                          <Mail
+                            className="h-4 w-4 mr-2 transition-colors"
+                            style={{ color: 'rgb(var(--accent))' }}
+                          />
+                          <span className="relative z-10">Google</span>
                         </Button>
                       </div>
                     </div>
@@ -563,13 +584,18 @@ export default function LoginPage() {
                   </p>
                   <Button
                     variant="outline"
-                    className="w-full backdrop-blur-sm"
+                    asChild
+                    className="
+                      w-full
+                      transition-all duration-300
+                      hover:scale-[1.01] hover:shadow-md  
+                    "
                     style={{
                       borderColor: 'rgb(var(--border))',
-                      color: 'rgb(var(--text-muted))',
+                      color: 'rgb(var(--text-primary))',
                       backgroundColor: 'rgb(var(--bg-header-muted))',
+                      backdropFilter: 'none',
                     }}
-                    asChild
                   >
                     <Link to="/support">
                       <Mail className="h-4 w-4 mr-2" />

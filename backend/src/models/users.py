@@ -26,7 +26,8 @@ class User(BaseModel):
     )
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=True)
+    google_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
 
     role: Mapped["Role"] = relationship(back_populates="users")
     profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)

@@ -13,6 +13,7 @@ class BaseConfig:
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "").split(",")
     CORS_METHODS = os.getenv("CORS_METHODS", "").split(",")
     CORS_HEADERS = os.getenv("CORS_HEADERS", "").split(",")
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
 class PostgresConfig:
@@ -52,6 +53,13 @@ class JWTConfig:
     JWT_REFRESH_COOKIE_PATH = os.getenv("JWT_REFRESH_COOKIE_PATH", "/api/v1/auth/refresh")
 
 
+class OAuthConfig:
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
+oauth_config = OAuthConfig()

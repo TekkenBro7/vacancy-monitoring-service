@@ -33,6 +33,9 @@ async def clear_db(session: AsyncSession) -> None:
         await session.execute(text('TRUNCATE TABLE "users" CASCADE'))
         await session.execute(text('TRUNCATE TABLE "roles" CASCADE'))
         await session.execute(text('TRUNCATE TABLE "currencies" CASCADE'))
+
+        await session.commit()
+
         logger.info("Database cleared successfully!")
     except Exception as e:
         await session.rollback()

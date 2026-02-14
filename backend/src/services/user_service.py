@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.logger import logger
 from src.database.repositories.user_profile_repository import UserProfileRepository
 from src.database.repositories.user_repository import UserRepository
 from src.models.users import User, UserProfile
@@ -86,3 +87,45 @@ class UserService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
         return {"deleted": True, "user_id": user_id}
+
+    async def get_by_google_id(self, google_id: str) -> User | None:
+        logger.info("Searching user by google_id=%s", google_id)
+        return await self.user_repo.get_by_google_id(google_id)
+
+    async def get_by_email(self, email: str) -> User | None:
+        logger.info("Searching user by email=%s", email)
+        return await self.user_repo.get_by_email(email)
+
+    async def create_google_user(
+        self,
+        email: str,
+        google_id: str,
+        name: str,
+    ) -> User:
+        try:
+            logger.info("Creating new Google user: %s", email)
+
+            user = User(
+                username=name,
+                email=email,
+                google_id=google_id,
+                role_id=7,
+                password_hash=None,
+            )
+
+            user = await self.user_repo.create(user)
+            await self.user_profile_repo.create(UserProfile(user_id=user.id))
+
+            return user
+
+        except IntegrityError as e:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "User create error",
+            ) from e
+
+    async def attach_google_account(self, user: User, google_id: str) -> User:
+        logger.info("Attaching google_id=%s to user_id=%s", google_id, user.id)
+
+        user.google_id = google_id
+        return await self.user_repo.update(user)

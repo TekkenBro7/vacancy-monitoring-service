@@ -64,28 +64,77 @@ export default function Header() {
               <Button
                 className="
                   absolute right-2 top-1/2 -translate-y-1/2
-                  h-8 px-4 rounded-full
+                  h-8 px-4 rounded-full text-sm font-medium
+                  transition-all duration-300
+                  hover:scale-105
+                  active:scale-95
+                  hover:shadow-lg
                 "
+                style={{
+                  background: `
+                    linear-gradient(
+                      135deg,
+                      rgb(var(--button-from)),
+                      rgb(var(--button-to))
+                    )
+                  `,
+                  color: 'white',
+                }}
               >
                 Найти
               </Button>
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
             {!isAuthenticated ? (
               <>
-                <Button variant="ghost" asChild>
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="
+                    transition-all duration-300
+                    hover:bg-[rgb(var(--accent))]/10
+                    hover:shadow-sm
+                    hover:scale-[1.03]
+                  "
+                >
                   <Link to="/login" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Войти
                   </Link>
                 </Button>
 
-                <Button asChild>
+                <Button
+                  asChild
+                  className="
+                    relative overflow-hidden
+                    transition-all duration-300
+                    hover:scale-105 active:scale-95
+                    hover:shadow-xl
+
+                    before:absolute before:inset-0
+                    before:bg-white/10
+                    before:opacity-0
+                    before:transition-opacity
+
+                    dark:before:bg-white/5
+
+                    hover:before:opacity-100
+                  "
+                  style={{
+                    background: `
+                      linear-gradient(
+                        135deg,
+                        rgb(var(--button-from)),
+                        rgb(var(--button-to))
+                      )
+                    `,
+                    color: 'white',
+                  }}
+                >
                   <Link to="/register">Регистрация</Link>
                 </Button>
               </>
@@ -114,7 +163,20 @@ export default function Header() {
                   </div>
                 </div>
 
-                <Button variant="ghost" onClick={logout}>
+                <Button
+                  variant="ghost"
+                  onClick={logout}
+                  className="
+                    transition-all duration-300
+                    hover:scale-105 active:scale-95
+
+                    hover:bg-red-500/10
+                    dark:hover:bg-red-400/10
+
+                    hover:text-red-600
+                    dark:hover:text-red-400
+                  "
+                >
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>

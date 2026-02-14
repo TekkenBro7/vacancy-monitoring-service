@@ -16,6 +16,10 @@
 
     --button-from: 37 99 235;
     --button-to: 59 130 246;
+
+    --error-bg: 254 226 226;
+    --error-border: 248 113 113;
+    --error-text: 153 27 27;
   }
 
   .dark {
@@ -33,6 +37,10 @@
 
     --button-from: 29 78 216;
     --button-to: 30 64 175;
+
+    --error-bg: 127 29 29;
+    --error-border: 239 68 68;
+    --error-text: 254 202 202;
   }
 
   body {

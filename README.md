@@ -5,7 +5,6 @@ Vacancy Monitoring Service — A service for comparing and monitoring available 
 ![FastAPI](https://img.shields.io/badge/FastAPI-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![Docker](https://img.shields.io/badge/Docker-✓-blue)
-![Poetry](https://img.shields.io/badge/Uv-0.9.11-purple)
 
 ---
 

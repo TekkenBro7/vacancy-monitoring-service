@@ -224,13 +224,27 @@ export default function Footer() {
                     }}
                   />
                   <Button
-                    className="px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 h-11 text-sm"
+                    className="
+                      px-6 py-2.5 h-11 text-sm font-medium rounded-lg
+                      transition-all duration-300
+                      shadow-md
+                      hover:shadow-xl
+                      hover:scale-[1.02]
+                      active:scale-[0.98]
+                      focus-visible:ring-2 focus-visible:ring-offset-2
+                    "
                     style={{
-                      background: `linear-gradient(to right,
-                        rgb(var(--button-from)),
-                        rgb(var(--button-to))
-                      )`,
+                      background: `
+                        linear-gradient(
+                          135deg,
+                          rgb(var(--button-from)),
+                          rgb(var(--button-to))
+                        )
+                      `,
                       color: 'white',
+                      boxShadow: `
+                        0 8px 24px rgb(var(--accent) / 0.25)
+                      `,
                     }}
                   >
                     Подписаться
@@ -253,7 +267,13 @@ export default function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2.5 rounded-lg backdrop-blur-sm transition-all duration-300 border hover:scale-105 hover:shadow-lg"
+                    className="
+                      p-2.5 rounded-lg backdrop-blur-sm border
+                      transition-all duration-300
+                      hover:scale-110
+                      hover:shadow-xl
+                      hover:border-[rgb(var(--accent)/0.4)]
+                    "
                     style={{
                       backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
                       borderColor: 'rgb(var(--border))',
@@ -290,18 +310,33 @@ export default function Footer() {
                       <li key={link.label}>
                         <Link
                           to={link.href}
-                          className="group flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 border"
+                          className="
+                            group flex items-center gap-3 p-2.5 rounded-lg
+                            transition-all duration-300
+                            border
+                            hover:translate-x-1
+                            hover:shadow-md
+                          "
                           style={{
-                            borderColor: 'transparent',
+                            borderColor: 'rgb(var(--border)/0.5)',
+                            backgroundColor: 'transparent',
                           }}
                         >
                           <div
-                            className="p-2 rounded-md shadow-md group-hover:scale-105 transition-transform"
+                            className="
+                              p-2 rounded-md shadow-md
+                              transition-all duration-300
+                              group-hover:scale-110
+                              group-hover:shadow-lg
+                            "
                             style={{
-                              background: `linear-gradient(135deg,
-                                rgb(var(--icon-gradient-from)),
-                                rgb(var(--icon-gradient-to))
-                              )`,
+                              background: `
+                                linear-gradient(
+                                  135deg,
+                                  rgb(var(--icon-gradient-from)),
+                                  rgb(var(--icon-gradient-to))
+                                )
+                              `,
                             }}
                           >
                             <link.icon className="h-4 w-4 text-white" />

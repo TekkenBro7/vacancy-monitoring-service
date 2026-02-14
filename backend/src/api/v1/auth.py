@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import base_config, oauth_config
 from src.database.session import get_async_session
 from src.dependencies.users import get_current_user, validate_access_token
 from src.schemas.auth import LoginSchema, Token
@@ -55,3 +57,27 @@ async def validate(_: dict = Depends(validate_access_token)) -> dict:
 @router.get("/users/me", response_model=UserMe)
 async def get_me(current_user: UserMe = Depends(get_current_user)) -> UserMe:
     return current_user
+
+
+@router.get("/google/login")
+async def google_login() -> RedirectResponse:
+    url = (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+        "?response_type=code"
+        f"&client_id={oauth_config.GOOGLE_CLIENT_ID}"
+        f"&redirect_uri={oauth_config.GOOGLE_REDIRECT_URI}"
+        "&scope=openid%20email%20profile"
+    )
+    return RedirectResponse(url)
+
+
+@router.get("/google/callback", response_model=Token)
+async def google_callback(
+    response: Response,
+    code: str = Query(...),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> RedirectResponse:
+    token = await auth_service.google_auth(code, response)
+    redirect_url = f"{base_config.FRONTEND_URL}/auth/success" f"?access_token={token.access_token}"
+
+    return RedirectResponse(url=redirect_url, status_code=302)
