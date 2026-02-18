@@ -3,10 +3,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.logger import logger
+from src.database.repositories.role_repository import RoleRepository
 from src.database.repositories.user_profile_repository import UserProfileRepository
 from src.database.repositories.user_repository import UserRepository
-from src.models.users import User, UserProfile
-from src.schemas.users import UserCreate, UserMe, UserRead, UserUpdate
+from src.models.users import Role, User, UserProfile
+from src.schemas.users import UserAdminCreate, UserCreate, UserMe, UserRead, UserUpdate
 from src.utils.security import hash_password
 
 
@@ -14,6 +15,13 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(User, db)
         self.user_profile_repo = UserProfileRepository(UserProfile, db)
+        self.role_repo = RoleRepository(Role, db)
+
+    async def _get_user_role_id(self) -> int:
+        role = await self.role_repo.get_by_name("user")
+        if not role:
+            raise HTTPException(status.HTTP_500_INTERNAL_ERROR, "Role 'user' not found")
+        return role.id
 
     async def list_users(self) -> list[UserRead]:
         users = await self.user_repo.list()
@@ -35,10 +43,40 @@ class UserService:
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        return UserMe(username=user.username, role_name=user.role.name)
+        return UserMe(id=user.id, username=user.username, role_name=user.role.name)
 
     async def create_user(self, data: UserCreate) -> UserRead:
         try:
+            role_id = await self._get_user_role_id()
+
+            user_model = User(
+                username=data.username,
+                email=data.email,
+                role_id=role_id,
+                password_hash=hash_password(data.password),
+            )
+
+            user = await self.user_repo.create(user_model)
+
+            profile = UserProfile(user_id=user.id)
+            await self.user_profile_repo.create(profile)
+
+            return UserRead.model_validate(user)
+
+        except IntegrityError as e:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail="User with this username or email already exists",
+            ) from e
+
+    async def create_user_with_role(self, data: UserAdminCreate) -> UserRead:
+        try:
+            role = await self.role_repo.get_by_id(data.role_id)
+            if not role:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, f"Role with id {data.role_id} not found"
+                )
+
             user_model = User(
                 username=data.username,
                 email=data.email,
@@ -105,11 +143,13 @@ class UserService:
         try:
             logger.info("Creating new Google user: %s", email)
 
+            role_id = await self._get_user_role_id()
+
             user = User(
                 username=name,
                 email=email,
                 google_id=google_id,
-                role_id=7,
+                role_id=role_id,
                 password_hash=None,
             )
 

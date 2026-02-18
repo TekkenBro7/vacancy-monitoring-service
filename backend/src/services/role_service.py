@@ -22,6 +22,12 @@ class RoleService:
             raise HTTPException(404, "Role not found")
         return RoleRead.model_validate(role)
 
+    async def get_role_by_name(self, name: str) -> RoleRead:
+        role = await self.repo.get_by_name(name)
+        if not role:
+            raise HTTPException(404, f"Role '{name}' not found")
+        return RoleRead.model_validate(role)
+
     async def create_role(self, data: RoleCreate) -> RoleRead:
         try:
             role = Role(name=data.name)

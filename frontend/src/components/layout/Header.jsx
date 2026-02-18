@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import ThemeToggle from '@/components/ui_my/ThemeToggle';
 import { useAuth } from '@/utils/AuthContext';
 
 export default function Header() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { isAuthenticated, user, logout, isLoading } = useAuth();
 
@@ -145,7 +147,12 @@ export default function Header() {
                     flex items-center gap-3 px-4 py-2 rounded-xl
                     bg-[rgb(var(--bg-header-muted))]
                     border border-[rgb(var(--border))]
+                    cursor-pointer
+                    transition-all duration-300
+                    hover:scale-105 active:scale-95
+                    hover:shadow-md
                   "
+                  onClick={() => navigate('/profile')}
                 >
                   <div className="h-9 w-9 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">

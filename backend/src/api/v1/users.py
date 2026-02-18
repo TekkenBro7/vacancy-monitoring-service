@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.session import get_async_session
-from src.schemas.users import UserCreate, UserRead, UserUpdate
+from src.schemas.users import UserAdminCreate, UserCreate, UserRead, UserUpdate
 from src.services.user_service import UserService
 
 router = APIRouter()
@@ -33,6 +33,14 @@ async def create_user(
     service: UserService = Depends(get_user_service),
 ) -> UserRead:
     return await service.create_user(data)
+
+
+@router.post("/with-role", response_model=UserRead)
+async def create_user_with_role(
+    data: UserAdminCreate,
+    service: UserService = Depends(get_user_service),
+) -> UserRead:
+    return await service.create_user_with_role(data)
 
 
 @router.patch("/{user_id}", response_model=UserRead)

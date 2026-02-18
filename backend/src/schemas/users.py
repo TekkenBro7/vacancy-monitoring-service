@@ -7,6 +7,12 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
+
+
+class UserAdminCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
     role_id: int
 
 
@@ -29,6 +35,7 @@ class UserUpdate(BaseModel):
 
 
 class UserMe(BaseModel):
+    id: int
     username: str
     role_name: str
 
