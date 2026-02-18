@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, LogOut } from 'lucide-react';
+import { Search, User, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -90,6 +90,22 @@ export default function Header() {
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
+
+            {isAuthenticated && user?.role_name === 'admin' && (
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/admin')}
+                className="
+                  transition-all duration-300
+                  hover:bg-[rgb(var(--accent))]/10
+                  hover:shadow-sm
+                  hover:scale-[1.03]
+                "
+              >
+                <Shield className="h-4 w-4 mr-2" style={{ color: 'rgb(var(--accent))' }} />
+                Админка
+              </Button>
+            )}
 
             {!isAuthenticated ? (
               <>

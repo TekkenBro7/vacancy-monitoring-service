@@ -32,6 +32,16 @@ export const UserService = {
     }
   },
 
+  async createWithRole(data) {
+    try {
+      const response = await apiClient.post(`${USERS_URL}with-role/`, data);
+      return response.data;
+    } catch (err) {
+      console.error('Create with role error:', err);
+      throw err;
+    }
+  },
+
   async update(userId, data) {
     try {
       const response = await apiClient.patch(`${USERS_URL}${userId}/`, data);
@@ -52,3 +62,5 @@ export const UserService = {
     }
   },
 };
+
+export default UserService;
