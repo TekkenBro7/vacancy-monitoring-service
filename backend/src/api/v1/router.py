@@ -11,6 +11,7 @@ from src.api.v1.notification_typess import router as notification_types_router
 from src.api.v1.notifications import router as notifications_router
 from src.api.v1.roles import router as roles_router
 from src.api.v1.search_queries import router as search_queries_router
+from src.api.v1.skills import router as skills_router
 from src.api.v1.source_types import router as source_types_router
 from src.api.v1.sources import router as sources_router
 from src.api.v1.subscription_targets import router as subscription_targets_router
@@ -46,3 +47,4 @@ v1_router.include_router(vacancies_router, prefix="/vacancies", tags=["Vacancies
 v1_router.include_router(comments_router, prefix="/comments", tags=["Comments"])
 v1_router.include_router(comparisons_router, prefix="/comparisons", tags=["Comparisons"])
 v1_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
+v1_router.include_router(skills_router, prefix="/skills", tags=["Skills"])

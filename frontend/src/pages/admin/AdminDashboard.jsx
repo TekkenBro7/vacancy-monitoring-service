@@ -95,7 +95,6 @@ const topVacancies = [
 export default function AdminDashboard() {
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
           Панель администратора
@@ -105,12 +104,11 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="backdrop-blur-sm border transition-all hover:shadow-lg"
+            className="backdrop-blur-sm border transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-[rgb(var(--accent))/50] cursor-pointer"
             style={{
               backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
               borderColor: 'rgb(var(--border))',
@@ -143,9 +141,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Activity & Top Vacancies */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
         <Card
           className="backdrop-blur-sm border"
           style={{
@@ -168,7 +164,7 @@ export default function AdminDashboard() {
               {recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-lg"
+                  className="flex items-center gap-4 p-3 rounded-lg transition-all duration-300 hover:bg-[rgb(var(--accent))/10] hover:scale-[1.01] cursor-pointer"
                   style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
                 >
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
@@ -194,7 +190,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Top Vacancies */}
         <Card
           className="backdrop-blur-sm border"
           style={{
@@ -217,7 +212,7 @@ export default function AdminDashboard() {
               {topVacancies.map((vacancy) => (
                 <div
                   key={vacancy.id}
-                  className="flex items-center justify-between p-3 rounded-lg"
+                  className="flex items-center justify-between p-3 rounded-lg transition-all duration-300 hover:bg-[rgb(var(--accent))/10] hover:scale-[1.01] cursor-pointer"
                   style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
                 >
                   <div className="flex-1 min-w-0">
@@ -252,7 +247,6 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card
         className="backdrop-blur-sm border"
         style={{
@@ -280,7 +274,9 @@ export default function AdminDashboard() {
                   border border-[rgb(var(--border))]
                   hover:border-[rgb(var(--accent))/50]
                   hover:bg-[rgb(var(--accent))/10]
-                  transition-all duration-200
+                  hover:shadow-lg hover:scale-[1.03]
+                  transition-all duration-300
+                  cursor-pointer
                 "
               >
                 <action.icon className="h-8 w-8" style={{ color: 'rgb(var(--accent))' }} />

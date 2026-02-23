@@ -8,7 +8,7 @@ export default function NotificationContainer() {
   if (!notifications.length) return null;
 
   return (
-    <div className="fixed inset-x-0 top-24 z-[100]">
+    <div className="fixed inset-x-0 top-24 z-[100] pointer-events-none">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-end gap-3">
           {notifications.map((notification) => (

@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminSkillsPage from './pages/admin/AdminSkillsPage';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsersPage />} />
+        <Route path="skills" element={<AdminSkillsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

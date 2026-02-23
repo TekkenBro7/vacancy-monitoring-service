@@ -246,7 +246,7 @@ export default function AdminUsersPage() {
         <Button
           onClick={openCreateModal}
           disabled={loading}
-          className="text-white"
+          className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
           style={{
             background: 'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
           }}
@@ -287,7 +287,7 @@ export default function AdminUsersPage() {
               <Button
                 variant={selectedRole === 'all' ? 'default' : 'outline'}
                 onClick={() => setSelectedRole('all')}
-                className={selectedRole === 'all' ? 'text-white' : ''}
+                className={`transition-all duration-300 hover:scale-105 active:scale-95 ${selectedRole === 'all' ? 'text-white' : ''}`}
                 style={
                   selectedRole === 'all'
                     ? {
@@ -308,7 +308,7 @@ export default function AdminUsersPage() {
                   key={role.id}
                   variant={selectedRole === role.id.toString() ? 'default' : 'outline'}
                   onClick={() => setSelectedRole(role.id.toString())}
-                  className={selectedRole === role.id.toString() ? 'text-white' : ''}
+                  className={`transition-all duration-300 hover:scale-105 active:scale-95 ${selectedRole === role.id.toString() ? 'text-white' : ''}`}
                   style={
                     selectedRole === role.id.toString()
                       ? {
@@ -384,7 +384,7 @@ export default function AdminUsersPage() {
                     {paginatedUsers.map((user) => (
                       <tr
                         key={user.id}
-                        className="border-b transition-colors hover:bg-[rgb(var(--bg-header-muted))/50]"
+                        className="border-b transition-all duration-300 hover:bg-[rgb(var(--bg-header-muted))/50 hover:scale-[1.01] cursor-pointer"
                         style={{ borderColor: 'rgb(var(--border)/0.5)' }}
                       >
                         <td className="py-4 px-4">
@@ -441,7 +441,7 @@ export default function AdminUsersPage() {
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 transition-all duration-300 hover:bg-[rgb(var(--accent))/10] hover:scale-110 active:scale-95"
                                 style={{ color: 'rgb(var(--text-muted))' }}
                               >
                                 <MoreVertical className="h-4 w-4" />
@@ -455,7 +455,7 @@ export default function AdminUsersPage() {
                               }}
                             >
                               <DropdownMenuItem
-                                className="cursor-pointer"
+                                className="cursor-pointer transition-colors hover:bg-[rgb(var(--bg-header-muted))]"
                                 onClick={() => openEditModal(user)}
                                 style={{ color: 'rgb(var(--text-primary))' }}
                               >
@@ -463,7 +463,7 @@ export default function AdminUsersPage() {
                                 Редактировать
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="cursor-pointer text-red-500"
+                                className="cursor-pointer transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                                 onClick={() => openDeleteModal(user)}
                                 style={{ color: 'rgb(var(--error-text))' }}
                               >
@@ -492,6 +492,7 @@ export default function AdminUsersPage() {
                       size="sm"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
+                      className="transition-all duration-300 hover:scale-110 active:scale-95 disabled:hover:scale-100"
                       style={{
                         borderColor: 'rgb(var(--border))',
                         color: 'rgb(var(--text-muted))',
@@ -507,7 +508,7 @@ export default function AdminUsersPage() {
                           variant={currentPage === page ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setCurrentPage(page)}
-                          className={currentPage === page ? 'text-white' : ''}
+                          className={`transition-all duration-300 hover:scale-110 active:scale-95 ${currentPage === page ? 'text-white' : ''}`}
                           style={
                             currentPage === page
                               ? {
@@ -530,6 +531,7 @@ export default function AdminUsersPage() {
                       size="sm"
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
+                      className="transition-all duration-300 hover:scale-110 active:scale-95 disabled:hover:scale-100"
                       style={{
                         borderColor: 'rgb(var(--border))',
                         color: 'rgb(var(--text-muted))',
@@ -679,6 +681,7 @@ export default function AdminUsersPage() {
               variant="outline"
               onClick={() => setIsCreateModalOpen(false)}
               disabled={saving}
+              className="transition-all duration-300 hover:scale-105 active:scale-95"
               style={{
                 borderColor: 'rgb(var(--border))',
                 color: 'rgb(var(--text-primary))',
@@ -690,7 +693,7 @@ export default function AdminUsersPage() {
             <Button
               onClick={handleCreate}
               disabled={saving}
-              className="text-white"
+              className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
               style={{
                 background:
                   'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
@@ -842,6 +845,7 @@ export default function AdminUsersPage() {
               variant="outline"
               onClick={() => setIsEditModalOpen(false)}
               disabled={saving}
+              className="transition-all duration-300 hover:scale-105 active:scale-95"
               style={{
                 borderColor: 'rgb(var(--border))',
                 color: 'rgb(var(--text-primary))',
@@ -853,7 +857,7 @@ export default function AdminUsersPage() {
             <Button
               onClick={handleUpdate}
               disabled={saving}
-              className="text-white"
+              className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
               style={{
                 background:
                   'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
@@ -898,6 +902,7 @@ export default function AdminUsersPage() {
               variant="outline"
               onClick={() => setIsDeleteModalOpen(false)}
               disabled={saving}
+              className="transition-all duration-300 hover:scale-105 active:scale-95"
               style={{
                 borderColor: 'rgb(var(--border))',
                 color: 'rgb(var(--text-primary))',
@@ -909,7 +914,7 @@ export default function AdminUsersPage() {
             <Button
               onClick={handleDelete}
               disabled={saving}
-              className="text-white bg-red-500 hover:bg-red-600"
+              className="text-white bg-red-500 hover:bg-red-600 transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
             >
               {saving ? (
                 <span className="flex items-center gap-2">

@@ -19,6 +19,7 @@ import ThemeToggle from '@/components/ui_my/ThemeToggle';
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Пользователи', href: '/admin/users', icon: Users },
+  { name: 'Навыки', href: '/admin/skills', icon: Tags },
 ];
 
 export default function AdminLayout() {
