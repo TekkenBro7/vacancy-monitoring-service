@@ -51,7 +51,6 @@ async def db_session(test_async_engine: AsyncEngine) -> AsyncGenerator[AsyncSess
 def override_get_db(
     db_session: AsyncSession,
 ) -> Callable[[], AsyncGenerator[AsyncSession, None]]:
-
     async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
@@ -62,7 +61,6 @@ def override_get_db(
 def overridden_app(
     override_get_db: Callable[[], AsyncGenerator[AsyncSession, None]],
 ) -> Generator[FastAPI, None, None]:
-
     app.dependency_overrides[get_async_session] = override_get_db
     yield app
     app.dependency_overrides.clear()

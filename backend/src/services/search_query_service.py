@@ -51,7 +51,6 @@ class SearchQueryService:
         query_id: int,
         data: SearchQueryUpdate,
     ) -> SearchQueryRead:
-
         query = await self.repo.get_by_id(query_id)
         if not query:
             raise HTTPException(

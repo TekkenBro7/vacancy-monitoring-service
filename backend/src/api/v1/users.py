@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.session import get_async_session
-from src.schemas.users import UserAdminCreate, UserCreate, UserRead, UserUpdate
+from src.schemas.users import UserAdminCreate, UserCreate, UserRead, UserSkillsUpdate, UserUpdate
 from src.services.user_service import UserService
 
 router = APIRouter()
@@ -58,3 +58,12 @@ async def delete_user(
     service: UserService = Depends(get_user_service),
 ) -> dict[str, bool | int]:
     return await service.delete_user(user_id)
+
+
+@router.patch("/{user_id}/skills", response_model=UserRead)
+async def update_user_skills(
+    user_id: int,
+    data: UserSkillsUpdate,
+    service: UserService = Depends(get_user_service),
+) -> UserRead:
+    return await service.update_user_skills(user_id, data.skill_ids)

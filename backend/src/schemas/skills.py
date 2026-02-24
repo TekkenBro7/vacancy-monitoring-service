@@ -18,3 +18,10 @@ class SkillRead(BaseModel):
 
 class SkillUpdate(BaseModel):
     name: str | None = None
+
+
+class SkillReadSimple(BaseModel):
+    id: int
+    name: str
+
+    model_config = {"from_attributes": True}

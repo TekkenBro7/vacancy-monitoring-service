@@ -34,6 +34,14 @@ class UserService:
 
         return UserRead.model_validate(user)
 
+    async def update_user_skills(self, user_id: int, skill_ids: list[int]) -> UserRead:
+        user = await self.user_repo.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        updated_user = await self.user_repo.update_skills(user, skill_ids)
+        return UserRead.model_validate(updated_user)
+
     async def get_user_by_username(self, username: str) -> User | None:
         return await self.user_repo.get_by_username(username)
 

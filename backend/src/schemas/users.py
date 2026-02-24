@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
+from src.schemas.skills import SkillReadSimple
+
 
 class UserCreate(BaseModel):
     username: str
@@ -23,6 +25,7 @@ class UserRead(BaseModel):
     role_id: int
     created_at: datetime
     updated_at: datetime
+    skills: list[SkillReadSimple] = []
 
     model_config = {"from_attributes": True}
 
@@ -41,3 +44,7 @@ class UserMe(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserSkillsUpdate(BaseModel):
+    skill_ids: list[int]

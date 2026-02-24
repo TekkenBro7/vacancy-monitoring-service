@@ -28,6 +28,7 @@ lint:
 	$(UV) black .
 	$(UV) isort .
 	$(UV) ruff check
+	$(UV) ruff format
 	$(UV) mypy .
 
 seed_data:

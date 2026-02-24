@@ -32,7 +32,7 @@ class User(BaseModel):
     role: Mapped["Role"] = relationship(back_populates="users")
     profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)
     skills: Mapped[list["Skill"]] = relationship(  # type: ignore
-        secondary=user_skills_table, back_populates="users"
+        secondary=user_skills_table, back_populates="users", lazy="selectin"
     )
     notifications: Mapped[list["Notification"]] = relationship(  # type: ignore
         back_populates="user", cascade="all, delete-orphan"

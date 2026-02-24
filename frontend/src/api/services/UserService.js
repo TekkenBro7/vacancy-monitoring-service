@@ -52,6 +52,18 @@ export const UserService = {
     }
   },
 
+  async updateSkills(userId, skillIds) {
+    try {
+      const response = await apiClient.patch(`${USERS_URL}${userId}/skills/`, {
+        skill_ids: skillIds,
+      });
+      return response.data;
+    } catch (err) {
+      console.error('Update skills error:', err);
+      throw err;
+    }
+  },
+
   async delete(userId) {
     try {
       const response = await apiClient.delete(`${USERS_URL}${userId}/`);

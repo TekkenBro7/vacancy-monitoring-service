@@ -78,6 +78,6 @@ async def google_callback(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> RedirectResponse:
     token = await auth_service.google_auth(code, response)
-    redirect_url = f"{base_config.FRONTEND_URL}/auth/success" f"?access_token={token.access_token}"
+    redirect_url = f"{base_config.FRONTEND_URL}/auth/success?access_token={token.access_token}"
 
     return RedirectResponse(url=redirect_url, status_code=302)
