@@ -6,7 +6,7 @@ import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
 import UserService from '@/api/services/UserService';
 import SkillService from '@/api/services/SkillService';
-import { SkillsManagement, SkillsStats } from '@/components/profile';
+import { SkillsManagement, SkillsStats, PasswordSetup } from '@/components/profile';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -18,6 +18,20 @@ export default function ProfilePage() {
   const [allSkills, setAllSkills] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [initialCount, setInitialCount] = useState(0);
+  const [fullUserData, setFullUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchFullUserData = async () => {
+      if (!user?.id) return;
+      try {
+        const data = await UserService.getById(user.id);
+        setFullUserData(data);
+      } catch {
+        notification.error('Ошибка', 'Не удалось загрузить данные профиля');
+      }
+    };
+    fetchFullUserData();
+  }, [user?.id, notification]);
 
   const fetchUserSkills = useCallback(async () => {
     if (!user?.id) return;
@@ -80,7 +94,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) {
+  if (loading || !fullUserData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -115,39 +129,35 @@ export default function ProfilePage() {
                 </Button>
                 <div>
                   <h1 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
-                    Мои навыки
+                    Профиль
                   </h1>
-                  <p style={{ color: 'rgb(var(--text-muted))' }}>
-                    Управляйте своими профессиональными навыками
-                  </p>
-                </div>
-              </div>
-              <div className="hidden lg:block">
-                <div className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
-                  {selectedSkills.length} из {allSkills.length} выбрано
+                  <p style={{ color: 'rgb(var(--text-muted))' }}>Управление настройками аккаунта</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <SkillsManagement
-                allSkills={allSkills}
-                selectedSkills={selectedSkills}
-                onAddSkill={handleAddSkill}
-                onRemoveSkill={handleRemoveSkill}
-              />
-            </div>
+          <div className="space-y-6">
+            <PasswordSetup user={fullUserData} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <SkillsManagement
+                  allSkills={allSkills}
+                  selectedSkills={selectedSkills}
+                  onAddSkill={handleAddSkill}
+                  onRemoveSkill={handleRemoveSkill}
+                />
+              </div>
 
-            <div className="lg:col-span-1">
-              <SkillsStats
-                selectedCount={selectedSkills.length}
-                totalCount={allSkills.length}
-                initialCount={initialCount}
-                onSave={handleSaveSkills}
-                saving={saving}
-              />
+              <div className="lg:col-span-1">
+                <SkillsStats
+                  selectedCount={selectedSkills.length}
+                  totalCount={allSkills.length}
+                  initialCount={initialCount}
+                  onSave={handleSaveSkills}
+                  saving={saving}
+                />
+              </div>
             </div>
           </div>
         </div>
