@@ -59,7 +59,20 @@ class OAuthConfig:
     GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 
 
+class RabbitMQConfig:
+    HOST: str = os.getenv("RABBITMQ_HOST", "localhost")
+    PORT: int = int(os.getenv("RABBITMQ_PORT", "5672"))
+    USER: str = os.getenv("RABBITMQ_USER", "guest")
+    PASSWORD: str = os.getenv("RABBITMQ_PASSWORD", "guest")
+    VHOST: str = os.getenv("RABBITMQ_VHOST", "/")
+
+    @property
+    def amqp_url(self) -> str:
+        return f"amqp://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.VHOST}"
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
 oauth_config = OAuthConfig()
+rabbitmq_config = RabbitMQConfig()

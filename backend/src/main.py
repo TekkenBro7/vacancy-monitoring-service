@@ -1,9 +1,13 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from src.api.router import api_router
 from src.core.config import base_config
+from src.core.logger import logger
+from src.core.rabbitmq import RabbitMQ
+from src.database.session import async_session_maker
 
 app = FastAPI(
     title="Improved API Service",
@@ -23,6 +27,28 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api")
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    try:
+        await RabbitMQ.connect()
+        logger.info("RabbitMQ is ready")
+    except Exception as e:
+        logger.error(f"RabbitMQ connection failed: {e}")
+    try:
+        async with async_session_maker() as session:
+            await session.execute(text("SELECT 1;"))
+        logger.info("Postgres is ready")
+    except Exception as e:
+        logger.error(f"Postgres connection failed: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event() -> None:
+    await RabbitMQ.close()
+    logger.info("FastAPI shutting down...")
+
 
 if __name__ == "__main__":
     uvicorn.run(
