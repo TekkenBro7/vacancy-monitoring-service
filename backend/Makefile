@@ -24,21 +24,12 @@ help:
 	@echo "  $(GREEN)clean_db$(NC)       - Clean the database"
 	@echo "  $(GREEN)test$(NC)           - Start tests"
 
-check_services:
-	@echo "$(GREEN)Checking PostgreSQL...$(NC)"
-	@PGPASSWORD=$(POSTGRES_PASSWORD) pg_isready -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) || { echo "$(RED)Postgres is not ready$(NC)"; exit 1; }
-	@echo "$(GREEN)PostgreSQL is ready ✅$(NC)"
-
-	@echo "$(GREEN)Checking RabbitMQ...$(NC)"
-	@nc -z $(RABBITMQ_HOST) $(RABBITMQ_PORT) || { echo "$(RED)RabbitMQ is not ready$(NC)"; exit 1; }
-	@echo "$(GREEN)RabbitMQ is ready ✅$(NC)"
-
-runserver: check_services
-	@echo "$(GREEN)Starting FastAPI + Celery worker...$(NC)"
+runserver:
+	@echo "$(GREEN)Starting FastAPI...$(NC)"
 	$(UVICORN) src.main:app --reload --host $(HOST) --port $(PORT) 
 
-celery: check_services
-	@echo "$(GREEN)Starting Celery worker only...$(NC)"
+celery:
+	@echo "$(GREEN)Starting Celery...$(NC)"
 	$(CELERY) worker --loglevel=info
 
 lint:

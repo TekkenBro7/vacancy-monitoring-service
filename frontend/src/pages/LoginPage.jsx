@@ -34,10 +34,10 @@ import { useAuth } from '@/utils/AuthContext';
 export default function LoginPage() {
   const navigate = useNavigate();
   const notification = useNotification();
+  const { checkAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
-  const { checkAuth } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -81,7 +81,7 @@ export default function LoginPage() {
 
       await checkAuth();
 
-      notification.success('Вход выполнен успешно!', 'Добро пожаловать в систему');
+      notification.success('Вход выполнен успешно', 'Добро пожаловать в систему');
 
       navigate('/');
     } catch (err) {
@@ -234,7 +234,7 @@ export default function LoginPage() {
                         className="text-sm font-medium"
                         style={{ color: 'rgb(var(--text-primary))' }}
                       >
-                        Имя пользователя или Email
+                        Имя пользователя
                       </label>
                       <div className="relative">
                         <User
@@ -245,7 +245,7 @@ export default function LoginPage() {
                           name="username"
                           value={formData.username}
                           onChange={handleChange}
-                          placeholder="Введите имя пользователя или email"
+                          placeholder="Введите имя пользователя"
                           className="pl-10 h-11 backdrop-blur-sm focus:outline-none"
                           style={{
                             backgroundColor: 'rgb(var(--bg-header-muted))',

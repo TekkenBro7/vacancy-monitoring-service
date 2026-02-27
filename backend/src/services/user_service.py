@@ -7,7 +7,14 @@ from src.database.repositories.role_repository import RoleRepository
 from src.database.repositories.user_profile_repository import UserProfileRepository
 from src.database.repositories.user_repository import UserRepository
 from src.models.users import Role, User, UserProfile
-from src.schemas.users import UserAdminCreate, UserCreate, UserMe, UserRead, UserUpdate
+from src.schemas.users import (
+    UserAdminCreate,
+    UserCreate,
+    UserMe,
+    UserRead,
+    UserSecurityInfo,
+    UserUpdate,
+)
 from src.utils.security import hash_password
 
 
@@ -53,7 +60,17 @@ class UserService:
 
         return UserMe(id=user.id, username=user.username, role_name=user.role.name)
 
-    async def create_user(self, data: UserCreate) -> UserRead:
+    async def get_security_info(self, user_id: int) -> UserSecurityInfo:
+        user = await self.user_repo.get_by_id(user_id)
+
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        return UserSecurityInfo(id=user.id, email=user.email, has_password=bool(user.password_hash))
+
+    async def create_user(
+        self, data: UserCreate, password_already_hashed: bool = False
+    ) -> UserRead:
         try:
             role_id = await self._get_user_role_id()
 
@@ -61,7 +78,9 @@ class UserService:
                 username=data.username,
                 email=data.email,
                 role_id=role_id,
-                password_hash=hash_password(data.password),
+                password_hash=(
+                    data.password if password_already_hashed else hash_password(data.password)
+                ),
             )
 
             user = await self.user_repo.create(user_model)
@@ -177,3 +196,31 @@ class UserService:
 
         user.google_id = google_id
         return await self.user_repo.update(user)
+
+    async def set_password_hash(
+        self,
+        user: User,
+        password_hash: str,
+    ) -> User:
+        logger.info(
+            "Setting password hash for user_id=%s email=%s",
+            user.id,
+            user.email,
+        )
+        user.password_hash = password_hash
+
+        try:
+            updated = await self.user_repo.update(user)
+
+            logger.info(
+                "Password hash updated successfully user_id=%s",
+                user.id,
+            )
+
+            return updated
+
+        except IntegrityError as e:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "Failed to update password",
+            ) from e

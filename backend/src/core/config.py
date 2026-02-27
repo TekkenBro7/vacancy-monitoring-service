@@ -71,8 +71,35 @@ class RabbitMQConfig:
         return f"amqp://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.VHOST}"
 
 
+class RedisConfig:
+    HOST: str = os.getenv("REDIS_HOST", "localhost")
+    PORT: int = int(os.getenv("REDIS_PORT", 6379))
+    DB: int = int(os.getenv("REDIS_DB", 0))
+    PASSWORD: str | None = os.getenv("REDIS_PASSWORD")
+
+    @property
+    def redis_url(self) -> str:
+        if self.PASSWORD:
+            return f"redis://:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DB}"
+        return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
+
+
+class MailConfig:
+    USERNAME: str = os.getenv("MAIL_USERNAME", "")
+    PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    FROM: str = os.getenv("MAIL_FROM", "")
+    FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "Vacancy Monitoring")
+    SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    PORT: int = int(os.getenv("MAIL_PORT", 587))
+    STARTTLS: bool = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
+    SSL_TLS: bool = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
+    TEMPLATE_FOLDER: str = os.getenv("MAIL_TEMPLATE_FOLDER", "src/templates/email")
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
 oauth_config = OAuthConfig()
 rabbitmq_config = RabbitMQConfig()
+redis_config = RedisConfig()
+mail_config = MailConfig()

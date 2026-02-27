@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Search,
   TrendingUp,
@@ -23,8 +24,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import useNotification from '@/hooks/useNotification';
 
 export default function HomePage() {
+  const notification = useNotification();
+
+  useEffect(() => {
+    const oauthLogin = localStorage.getItem('oauthLogin');
+    if (oauthLogin === 'true') {
+      localStorage.removeItem('oauthLogin');
+      notification.success('Вход выполнен успешно', 'Добро пожаловать в систему');
+    }
+  }, [notification]);
   const categories = [
     {
       title: 'Backend разработка',
@@ -177,7 +188,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Quick Stats */}
             <div className="flex flex-wrap justify-center gap-8">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">

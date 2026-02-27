@@ -64,12 +64,51 @@ export const UserService = {
     }
   },
 
+  async getSecurityInfo() {
+    try {
+      const response = await apiClient.get(`${USERS_URL}me/security/`);
+      return response.data;
+    } catch (err) {
+      console.error('Get security info error:', err);
+      throw err;
+    }
+  },
+
   async delete(userId) {
     try {
       const response = await apiClient.delete(`${USERS_URL}${userId}/`);
       return response.data;
     } catch (err) {
       console.error('Delete error:', err);
+      throw err;
+    }
+  },
+
+  async sendVerificationCode(email, purpose, password, username) {
+    try {
+      const response = await apiClient.post('/auth/send-code', {
+        email,
+        purpose,
+        password,
+        username,
+      });
+      return response.data;
+    } catch (err) {
+      console.error('Send verification code error:', err);
+      throw err;
+    }
+  },
+
+  async verifyCode(email, code, purpose) {
+    try {
+      const response = await apiClient.post('/auth/verify-code', {
+        email,
+        code,
+        purpose,
+      });
+      return response.data;
+    } catch (err) {
+      console.error('Verify code error:', err);
       throw err;
     }
   },

@@ -10,7 +10,10 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle,
+  CheckCircle2,
   Shield,
+  Key,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +26,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import Logo from '@/components/ui_my/Logo';
 import { UserService } from '@/api/services/UserService';
 import useNotification from '@/hooks/useNotification';
@@ -40,6 +51,11 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   });
+
+  const [verificationStep, setVerificationStep] = useState('form'); // 'form' | 'verify'
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationErrors, setVerificationErrors] = useState({});
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,25 +103,56 @@ export default function RegisterPage() {
     setFormError('');
 
     try {
-      await UserService.create({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        role_id: 5,
-      });
+      await UserService.sendVerificationCode(formData.email, 'register', formData.password, formData.username);
 
-      notification.success('Регистрация успешна', 'Сейчас вы будете перенаправлены');
-
-      navigate('/login');
+      setIsVerificationModalOpen(true);
+      setVerificationStep('verify');
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || 'Ошибка регистрации. Проверьте данные.';
-
+      const errorMessage = err.response?.data?.detail || 'Ошибка отправки кода';
       setFormError(errorMessage);
-
-      notification.error('Ошибка регистрации', err.response?.data?.detail || 'Проверьте данные');
+      notification.error('Ошибка регистрации', errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode) {
+      setVerificationErrors({ code: 'Введите код' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await UserService.verifyCode(formData.email, verificationCode, 'register');
+      notification.success('Регистрация успешна', 'Сейчас вы будете перенаправлены');
+      setIsVerificationModalOpen(false);
+      navigate('/login');
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Неверный код';
+      setVerificationErrors({ code: message });
+      notification.error('Ошибка', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      await UserService.sendVerificationCode(formData.email, 'register', formData.password, formData.username);
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Не удалось отправить код';
+      notification.error('Ошибка', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseVerification = () => {
+    setIsVerificationModalOpen(false);
+    setVerificationCode('');
+    setVerificationErrors({});
   };
 
   const passwordStrength = (password) => {
@@ -572,6 +619,163 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isVerificationModalOpen} onOpenChange={(open) => {
+        if (!open) handleCloseVerification();
+      }}>
+        <DialogContent
+          showCloseButton={false}
+          className="border overflow-hidden"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header))',
+            borderColor: 'rgb(var(--border))',
+            maxWidth: '480px',
+          }}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="relative">
+            <div className="relative">
+              <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl shadow-blue-500/30">
+                <Mail className="h-7 w-7 text-white" />
+              </div>
+              <DialogTitle
+                className="text-center text-xl"
+                style={{ color: 'rgb(var(--text-primary))' }}
+              >
+                Подтверждение email
+              </DialogTitle>
+              <DialogDescription className="text-center max-w-sm mx-auto">
+                Введите код из письма для завершения регистрации
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-5 py-4">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 mx-auto rounded-full text-sm border backdrop-blur-sm"
+              style={{
+                backgroundColor: 'rgb(var(--bg-header-muted))',
+                borderColor: 'rgb(var(--border))',
+              }}
+            >
+              <Mail className="h-3.5 w-3.5" style={{ color: 'rgb(var(--accent))' }} />
+              <span className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                Код отправлен на
+              </span>
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: 'rgb(var(--accent)/0.1)' }}
+              >
+                {formData.email}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                className="text-sm font-medium flex items-center gap-2"
+                style={{ color: 'rgb(var(--text-primary))' }}
+              >
+                <Key className="h-3.5 w-3.5" style={{ color: 'rgb(var(--accent))' }} />
+                Код из письма
+              </label>
+              <Input
+                type="text"
+                value={verificationCode}
+                onChange={(e) => {
+                  setVerificationCode(e.target.value);
+                  setVerificationErrors({ code: undefined });
+                }}
+                placeholder="Введите 6-значный код"
+                maxLength={6}
+                className={`h-11 text-center text-lg tracking-widest transition-all ${verificationErrors.code ? 'border-red-500/50 ring-1 ring-red-500/20' : ''}`}
+                style={{
+                  backgroundColor: 'rgb(var(--bg-header-muted))',
+                  borderColor: verificationErrors.code ? undefined : 'rgb(var(--border))',
+                  color: 'rgb(var(--text-primary))',
+                }}
+              />
+              {verificationErrors.code && (
+                <p
+                  className="text-xs flex items-center gap-1 mt-1"
+                  style={{ color: 'rgb(var(--error-text))' }}
+                >
+                  <AlertCircle className="h-3 w-3" />
+                  {verificationErrors.code}
+                </p>
+              )}
+            </div>
+
+            <div
+              className="flex items-start gap-3 p-3 rounded-lg text-xs"
+              style={{ backgroundColor: 'rgb(var(--accent)/0.05)' }}
+            >
+              <AlertCircle
+                className="h-4 w-4 flex-shrink-0 mt-0.5"
+                style={{ color: 'rgb(var(--accent))' }}
+              />
+              <div className="space-y-1" style={{ color: 'rgb(var(--text-muted))' }}>
+                <p className="font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
+                  Важно:
+                </p>
+                <p>• Код действителен 15 минут</p>
+                <p>• Никому не сообщайте код подтверждения</p>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={loading}
+                className="text-xs font-medium hover:underline disabled:opacity-50"
+                style={{ color: 'rgb(var(--accent))' }}
+              >
+                Отправить код повторно
+              </button>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseVerification}
+              disabled={loading}
+              className="flex-1 h-11 border transition-all"
+              style={{
+                borderColor: 'rgb(var(--border))',
+                color: 'rgb(var(--text-primary))',
+                backgroundColor: 'transparent',
+              }}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              onClick={handleVerifyCode}
+              disabled={loading}
+              className="flex-1 h-11 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+              }}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Проверка...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Подтвердить
+                </span>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

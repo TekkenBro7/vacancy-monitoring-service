@@ -20,6 +20,8 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
+celery_app.autodiscover_tasks(["src.core.celery.tasks"])
+
 
 @after_setup_logger.connect
 @after_setup_task_logger.connect

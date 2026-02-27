@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+
+from src.core.enums import VerificationPurpose
 
 
 class LoginSchema(BaseModel):
@@ -23,3 +25,16 @@ class GoogleUserInfo(BaseModel):
     email_verified: bool
     name: str
     picture: str | None = None
+
+
+class SendCodeRequest(BaseModel):
+    email: EmailStr
+    purpose: VerificationPurpose
+    password: str | None = None
+    username: str | None = None
+
+
+class VerifyCodeRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6)
+    purpose: VerificationPurpose

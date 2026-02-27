@@ -1,3 +1,5 @@
+import asyncio
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +9,7 @@ from src.api.router import api_router
 from src.core.config import base_config
 from src.core.logger import logger
 from src.core.rabbitmq import RabbitMQ
+from src.core.redis_client import redis_client
 from src.database.session import async_session_maker
 
 app = FastAPI(
@@ -31,23 +34,67 @@ app.include_router(api_router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event() -> None:
-    try:
-        await RabbitMQ.connect()
-        logger.info("RabbitMQ is ready")
-    except Exception as e:
-        logger.error(f"RabbitMQ connection failed: {e}")
-    try:
-        async with async_session_maker() as session:
-            await session.execute(text("SELECT 1;"))
-        logger.info("Postgres is ready")
-    except Exception as e:
-        logger.error(f"Postgres connection failed: {e}")
+    async def check_rabbitmq() -> None:
+        try:
+            await RabbitMQ.connect()
+            logger.info("RabbitMQ connection established")
+        except Exception as e:
+            logger.exception(
+                "RabbitMQ connection failed error=%s",
+                e,
+            )
+
+    async def check_postgres() -> None:
+        try:
+            async with async_session_maker() as session:
+                await session.execute(text("SELECT 1"))
+            logger.info("Postgres connection established")
+        except Exception as e:
+            logger.exception(
+                "Postgres connection failed error=%s",
+                e,
+            )
+
+    async def check_redis() -> None:
+        try:
+            await redis_client.ping()
+            logger.info("Redis connection established")
+        except Exception as e:
+            logger.exception(
+                "Redis connection failed error=%s",
+                e,
+            )
+
+    await asyncio.gather(
+        check_rabbitmq(),
+        check_postgres(),
+        check_redis(),
+    )
+
+    logger.info("Application startup complete")
 
 
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
-    await RabbitMQ.close()
-    logger.info("FastAPI shutting down...")
+    try:
+        await RabbitMQ.close()
+        logger.info("RabbitMQ connection closed")
+    except Exception as exc:
+        logger.exception(
+            "RabbitMQ shutdown failed error=%s",
+            exc,
+        )
+
+    try:
+        await redis_client.close()
+        logger.info("Redis connection closed")
+    except Exception as exc:
+        logger.exception(
+            "Redis shutdown failed error=%s",
+            exc,
+        )
+
+    logger.info("Application shutdown complete")
 
 
 if __name__ == "__main__":

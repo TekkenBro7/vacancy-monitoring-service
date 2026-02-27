@@ -48,3 +48,12 @@ class UserMe(BaseModel):
 
 class UserSkillsUpdate(BaseModel):
     skill_ids: list[int]
+
+
+class UserSecurityInfo(BaseModel):
+    id: int
+    email: str
+    has_password: bool
+
+    class Config:
+        from_attributes = True

@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [initialCount, setInitialCount] = useState(0);
   const [fullUserData, setFullUserData] = useState(null);
+  const [securityInfo, setSecurityInfo] = useState(null);
 
   useEffect(() => {
     const fetchFullUserData = async () => {
@@ -31,6 +32,19 @@ export default function ProfilePage() {
       }
     };
     fetchFullUserData();
+  }, [user?.id, notification]);
+
+  useEffect(() => {
+    const fetchSecurityInfo = async () => {
+      if (!user?.id) return;
+      try {
+        const data = await UserService.getSecurityInfo();
+        setSecurityInfo(data);
+      } catch {
+        notification.error('Ошибка', 'Не удалось загрузить данные безопасности');
+      }
+    };
+    fetchSecurityInfo();
   }, [user?.id, notification]);
 
   const fetchUserSkills = useCallback(async () => {
@@ -94,7 +108,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading || !fullUserData) {
+  if (loading || !fullUserData || !securityInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -138,7 +152,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-6">
-            <PasswordSetup user={fullUserData} />
+            <PasswordSetup user={securityInfo} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <SkillsManagement

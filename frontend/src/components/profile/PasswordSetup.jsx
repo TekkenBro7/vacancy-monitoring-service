@@ -12,15 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import UserService from '@/api/services/UserService';
+import useNotification from '@/hooks/useNotification';
 
 export default function PasswordSetup({ user, onSave }) {
+  const notification = useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState('form');
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ password: '', confirmPassword: '', code: '' });
   const [errors, setErrors] = useState({});
 
-  const hasPassword = user?.password_hash;
+  const hasPassword = user?.has_password ?? user?.password_hash;
   const userEmail = user?.email || 'ваш email';
 
   const validateForm = () => {
@@ -40,15 +43,53 @@ export default function PasswordSetup({ user, onSave }) {
   const handleSubmit = async () => {
     if (!validateForm()) return;
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setLoading(false);
-    setStep('email-sent');
+    try {
+      await UserService.sendVerificationCode(userEmail, 'add_password', formData.password);
+      setStep('verify');
+    } catch (err) {
+      console.error('Send code error:', err);
+      const message = err?.response?.data?.detail || 'Не удалось отправить код';
+      notification.error('Ошибка', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!formData.code) {
+      setErrors({ code: 'Введите код' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await UserService.verifyCode(userEmail, formData.code, 'add_password');
+      notification.success('Готово', 'Пароль успешно установлен');
+      handleClose();
+      if (onSave) onSave();
+    } catch (err) {
+      const message = err?.response?.data?.detail || 'Неверный код';
+      notification.error('Ошибка', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      await UserService.sendVerificationCode(userEmail, 'add_password', formData.password);
+    } catch (err) {
+      const message = err?.response?.data?.detail || 'Не удалось отправить код';
+      notification.error('Ошибка', message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
     setIsModalOpen(false);
     setStep('form');
-    setFormData({ password: '', confirmPassword: '' });
+    setFormData({ password: '', confirmPassword: '', code: '' });
     setErrors({});
   };
 
@@ -173,6 +214,7 @@ export default function PasswordSetup({ user, onSave }) {
 
             {!hasPassword && (
               <Button
+                type="button"
                 size="sm"
                 onClick={() => setIsModalOpen(true)}
                 className="h-8 px-3 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
@@ -186,7 +228,6 @@ export default function PasswordSetup({ user, onSave }) {
             )}
           </div>
 
-          {/* Info Banner */}
           {!hasPassword && (
             <div
               className="mt-2 p-3 rounded-xl border backdrop-blur-sm"
@@ -215,14 +256,19 @@ export default function PasswordSetup({ user, onSave }) {
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={handleClose}>
+      <Dialog open={isModalOpen} onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}>
         <DialogContent
+          showCloseButton={false}
           className="border overflow-hidden"
           style={{
             backgroundColor: 'rgb(var(--bg-header))',
             borderColor: 'rgb(var(--border))',
             maxWidth: '480px',
           }}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
         >
           {step === 'form' ? (
             <>
@@ -244,7 +290,6 @@ export default function PasswordSetup({ user, onSave }) {
               </DialogHeader>
 
               <div className="space-y-5 py-4">
-                {/* Email Info Chip */}
                 <div
                   className="inline-flex items-center gap-2 px-4 py-2 mx-auto rounded-full text-sm border backdrop-blur-sm"
                   style={{
@@ -264,7 +309,6 @@ export default function PasswordSetup({ user, onSave }) {
                   </span>
                 </div>
 
-                {/* Password Field */}
                 <div className="space-y-2">
                   <label
                     className="text-sm font-medium flex items-center gap-2"
@@ -289,7 +333,6 @@ export default function PasswordSetup({ user, onSave }) {
                     }}
                   />
 
-                  {/* Password Strength */}
                   {formData.password && (
                     <div className="space-y-3 pt-2">
                       <div className="flex justify-between text-xs">
@@ -345,7 +388,6 @@ export default function PasswordSetup({ user, onSave }) {
                   )}
                 </div>
 
-                {/* Confirm Password Field */}
                 <div className="space-y-2">
                   <label
                     className="text-sm font-medium flex items-center gap-2"
@@ -383,6 +425,7 @@ export default function PasswordSetup({ user, onSave }) {
 
               <DialogFooter className="gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={handleClose}
                   disabled={loading}
@@ -396,6 +439,7 @@ export default function PasswordSetup({ user, onSave }) {
                   Отмена
                 </Button>
                 <Button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={loading}
                   className="flex-1 h-11 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50"
@@ -442,19 +486,39 @@ export default function PasswordSetup({ user, onSave }) {
               </DialogHeader>
 
               <div className="space-y-4 py-4">
-                <div
-                  className="p-4 rounded-xl text-center border"
-                  style={{
-                    backgroundColor: 'rgb(var(--bg-header-muted))',
-                    borderColor: 'rgb(var(--border))',
-                  }}
-                >
-                  <p className="text-sm mb-1" style={{ color: 'rgb(var(--text-primary))' }}>
-                    Введите код из письма
-                  </p>
-                  <p className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                    для подтверждения смены пароля
-                  </p>
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-medium flex items-center gap-2"
+                    style={{ color: 'rgb(var(--text-primary))' }}
+                  >
+                    <Key className="h-3.5 w-3.5" style={{ color: 'rgb(var(--accent))' }} />
+                    Код из письма
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => {
+                      setFormData({ ...formData, code: e.target.value });
+                      setErrors({ ...errors, code: undefined });
+                    }}
+                    placeholder="Введите 6-значный код"
+                    maxLength={6}
+                    className={`h-11 text-center text-lg tracking-widest transition-all ${errors.code ? 'border-red-500/50 ring-1 ring-red-500/20' : ''}`}
+                    style={{
+                      backgroundColor: 'rgb(var(--bg-header-muted))',
+                      borderColor: errors.code ? undefined : 'rgb(var(--border))',
+                      color: 'rgb(var(--text-primary))',
+                    }}
+                  />
+                  {errors.code && (
+                    <p
+                      className="text-xs flex items-center gap-1 mt-1"
+                      style={{ color: 'rgb(var(--error-text))' }}
+                    >
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.code}
+                    </p>
+                  )}
                 </div>
 
                 <div
@@ -473,10 +537,23 @@ export default function PasswordSetup({ user, onSave }) {
                     <p>• Никому не сообщайте код подтверждения</p>
                   </div>
                 </div>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    className="text-xs font-medium hover:underline disabled:opacity-50"
+                    style={{ color: 'rgb(var(--accent))' }}
+                  >
+                    Отправить код повторно
+                  </button>
+                </div>
               </div>
 
               <DialogFooter className="gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={handleClose}
                   className="flex-1 h-11 border transition-all"
@@ -486,17 +563,29 @@ export default function PasswordSetup({ user, onSave }) {
                     backgroundColor: 'transparent',
                   }}
                 >
-                  Закрыть
+                  Отмена
                 </Button>
                 <Button
-                  className="flex-1 h-11 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={loading}
+                  className="flex-1 h-11 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50"
                   style={{
                     background:
                       'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                   }}
                 >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Ввести код
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Проверка...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Подтвердить
+                    </span>
+                  )}
                 </Button>
               </DialogFooter>
             </>

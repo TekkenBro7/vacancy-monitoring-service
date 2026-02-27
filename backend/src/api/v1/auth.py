@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.config import base_config, oauth_config
 from src.database.session import get_async_session
 from src.dependencies.users import get_current_user, validate_access_token
-from src.schemas.auth import LoginSchema, Token
+from src.schemas.auth import LoginSchema, SendCodeRequest, Token, VerifyCodeRequest
+from src.schemas.common import MessageResponse
 from src.schemas.users import UserMe
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
@@ -49,9 +50,9 @@ async def logout(
     return await auth_service.logout(response)
 
 
-@router.get("/validate")
-async def validate(_: dict = Depends(validate_access_token)) -> dict:
-    return {"message": "Access token is valid"}
+@router.get("/validate", response_model=MessageResponse)
+async def validate(_: dict = Depends(validate_access_token)) -> MessageResponse:
+    return MessageResponse(message="Access token is valid")
 
 
 @router.get("/users/me", response_model=UserMe)
@@ -81,3 +82,34 @@ async def google_callback(
     redirect_url = f"{base_config.FRONTEND_URL}/auth/success?access_token={token.access_token}"
 
     return RedirectResponse(url=redirect_url, status_code=302)
+
+
+@router.post(
+    "/send-code",
+    response_model=MessageResponse,
+)
+async def send_code(
+    data: SendCodeRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> MessageResponse:
+    return await auth_service.send_code(
+        email=data.email,
+        purpose=data.purpose,
+        password=data.password,
+        username=data.username,
+    )
+
+
+@router.post(
+    "/verify-code",
+    response_model=MessageResponse,
+)
+async def verify_code(
+    data: VerifyCodeRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> MessageResponse:
+    return await auth_service.verify_code(
+        email=data.email,
+        code=data.code,
+        purpose=data.purpose,
+    )
