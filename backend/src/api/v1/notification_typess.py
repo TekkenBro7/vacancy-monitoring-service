@@ -23,7 +23,7 @@ async def list_types(
     return await service.list_types()
 
 
-@router.get("/{type_id}", response_model=NotificationTypeRead)
+@router.get("/{type_id}/", response_model=NotificationTypeRead)
 async def get_type(
     type_id: int, service: NotificationTypeService = Depends(get_service)
 ) -> NotificationTypeRead:
@@ -38,7 +38,7 @@ async def create_type(
     return await service.create_type(data)
 
 
-@router.patch("/{type_id}", response_model=NotificationTypeRead)
+@router.patch("/{type_id}/", response_model=NotificationTypeRead)
 async def update_type(
     type_id: int,
     data: NotificationTypeUpdate,
@@ -47,7 +47,7 @@ async def update_type(
     return await service.update_type(type_id, data)
 
 
-@router.delete("/{type_id}")
+@router.delete("/{type_id}/")
 async def delete_type(
     type_id: int, service: NotificationTypeService = Depends(get_service)
 ) -> dict[str, bool | int]:

@@ -47,10 +47,16 @@ class JWTConfig:
     JWT_REFRESH_EXPIRE_SECONDS = int(os.getenv("JWT_REFRESH_EXPIRE_SECONDS", "2592000"))
 
     JWT_REFRESH_COOKIE_NAME = os.getenv("JWT_REFRESH_COOKIE_NAME", "refresh_token")
-    JWT_REFRESH_COOKIE_HTTPONLY = bool(os.getenv("JWT_REFRESH_COOKIE_HTTPONLY", True))
-    JWT_REFRESH_COOKIE_SECURE = bool(os.getenv("JWT_REFRESH_COOKIE_SECURE", False))
-    JWT_REFRESH_COOKIE_SAMESITE = os.getenv("JWT_REFRESH_COOKIE_SAMESITE", "strict")
-    JWT_REFRESH_COOKIE_PATH = os.getenv("JWT_REFRESH_COOKIE_PATH", "/api/v1/auth/refresh")
+    JWT_REFRESH_COOKIE_HTTPONLY = os.getenv("JWT_REFRESH_COOKIE_HTTPONLY", "True").lower() in (
+        "true",
+        "1",
+    )
+    JWT_REFRESH_COOKIE_SECURE = os.getenv("JWT_REFRESH_COOKIE_SECURE", "False").lower() in (
+        "true",
+        "1",
+    )
+    JWT_REFRESH_COOKIE_SAMESITE = os.getenv("JWT_REFRESH_COOKIE_SAMESITE", "lax")
+    JWT_REFRESH_COOKIE_PATH = os.getenv("JWT_REFRESH_COOKIE_PATH", "/api/v1/auth/")
 
 
 class OAuthConfig:

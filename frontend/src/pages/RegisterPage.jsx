@@ -52,7 +52,6 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
 
-  const [verificationStep, setVerificationStep] = useState('form'); // 'form' | 'verify'
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationErrors, setVerificationErrors] = useState({});
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -103,10 +102,14 @@ export default function RegisterPage() {
     setFormError('');
 
     try {
-      await UserService.sendVerificationCode(formData.email, 'register', formData.password, formData.username);
+      await UserService.sendVerificationCode(
+        formData.email,
+        'register',
+        formData.password,
+        formData.username
+      );
 
       setIsVerificationModalOpen(true);
-      setVerificationStep('verify');
     } catch (err) {
       const errorMessage = err.response?.data?.detail || 'Ошибка отправки кода';
       setFormError(errorMessage);
@@ -140,7 +143,12 @@ export default function RegisterPage() {
   const handleResendCode = async () => {
     setLoading(true);
     try {
-      await UserService.sendVerificationCode(formData.email, 'register', formData.password, formData.username);
+      await UserService.sendVerificationCode(
+        formData.email,
+        'register',
+        formData.password,
+        formData.username
+      );
     } catch (err) {
       const message = err.response?.data?.detail || 'Не удалось отправить код';
       notification.error('Ошибка', message);
@@ -620,9 +628,12 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <Dialog open={isVerificationModalOpen} onOpenChange={(open) => {
-        if (!open) handleCloseVerification();
-      }}>
+      <Dialog
+        open={isVerificationModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseVerification();
+        }}
+      >
         <DialogContent
           showCloseButton={false}
           className="border overflow-hidden"

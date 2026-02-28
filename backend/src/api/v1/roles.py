@@ -21,7 +21,7 @@ async def list_roles(
     return await service.list_roles()
 
 
-@router.get("/{role_id}", response_model=RoleRead)
+@router.get("/{role_id}/", response_model=RoleRead)
 async def get_role(
     role_id: int,
     service: RoleService = Depends(get_role_service),
@@ -37,7 +37,7 @@ async def create_role(
     return await service.create_role(data)
 
 
-@router.patch("/{role_id}", response_model=RoleRead)
+@router.patch("/{role_id}/", response_model=RoleRead)
 async def update_role(
     role_id: int,
     data: RoleUpdate,
@@ -46,7 +46,7 @@ async def update_role(
     return await service.update_role(role_id, data)
 
 
-@router.delete("/{role_id}")
+@router.delete("/{role_id}/")
 async def delete_role(
     role_id: int,
     service: RoleService = Depends(get_role_service),

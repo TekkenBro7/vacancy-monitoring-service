@@ -21,30 +21,24 @@ export default function ProfilePage() {
   const [fullUserData, setFullUserData] = useState(null);
   const [securityInfo, setSecurityInfo] = useState(null);
 
-  useEffect(() => {
-    const fetchFullUserData = async () => {
-      if (!user?.id) return;
-      try {
-        const data = await UserService.getById(user.id);
-        setFullUserData(data);
-      } catch {
-        notification.error('Ошибка', 'Не удалось загрузить данные профиля');
-      }
-    };
-    fetchFullUserData();
+  const fetchFullUserData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await UserService.getById(user.id);
+      setFullUserData(data);
+    } catch {
+      notification.error('Ошибка', 'Не удалось загрузить данные профиля');
+    }
   }, [user?.id, notification]);
 
-  useEffect(() => {
-    const fetchSecurityInfo = async () => {
-      if (!user?.id) return;
-      try {
-        const data = await UserService.getSecurityInfo();
-        setSecurityInfo(data);
-      } catch {
-        notification.error('Ошибка', 'Не удалось загрузить данные безопасности');
-      }
-    };
-    fetchSecurityInfo();
+  const fetchSecurityInfo = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await UserService.getSecurityInfo();
+      setSecurityInfo(data);
+    } catch {
+      notification.error('Ошибка', 'Не удалось загрузить данные безопасности');
+    }
   }, [user?.id, notification]);
 
   const fetchUserSkills = useCallback(async () => {
@@ -77,10 +71,20 @@ export default function ProfilePage() {
       return;
     }
     if (user?.id) {
+      fetchFullUserData();
+      fetchSecurityInfo();
       fetchUserSkills();
       fetchAllSkills();
     }
-  }, [isAuthenticated, user?.id, fetchUserSkills, fetchAllSkills, navigate]);
+  }, [
+    isAuthenticated,
+    user?.id,
+    fetchFullUserData,
+    fetchSecurityInfo,
+    fetchUserSkills,
+    fetchAllSkills,
+    navigate,
+  ]);
 
   const handleAddSkill = (skill) => {
     if (!selectedSkills.find((s) => s.id === skill.id)) {

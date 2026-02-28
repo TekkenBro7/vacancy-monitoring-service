@@ -23,7 +23,7 @@ async def list_subscriptions(
     return await service.list_subscriptions()
 
 
-@router.get("/{subscription_id}", response_model=SubscriptionRead)
+@router.get("/{subscription_id}/", response_model=SubscriptionRead)
 async def get_subscription(
     subscription_id: int,
     service: SubscriptionService = Depends(get_service),
@@ -31,7 +31,7 @@ async def get_subscription(
     return await service.get_subscription(subscription_id)
 
 
-@router.get("/user/{user_id}", response_model=list[SubscriptionRead])
+@router.get("/user/{user_id}/", response_model=list[SubscriptionRead])
 async def list_user_subscriptions(
     user_id: int,
     service: SubscriptionService = Depends(get_service),
@@ -47,7 +47,7 @@ async def create_subscription(
     return await service.create_subscription(data)
 
 
-@router.patch("/{subscription_id}", response_model=SubscriptionRead)
+@router.patch("/{subscription_id}/", response_model=SubscriptionRead)
 async def update_subscription(
     subscription_id: int,
     data: SubscriptionUpdate,
@@ -56,7 +56,7 @@ async def update_subscription(
     return await service.update_subscription(subscription_id, data)
 
 
-@router.delete("/{subscription_id}")
+@router.delete("/{subscription_id}/")
 async def delete_subscription(
     subscription_id: int,
     service: SubscriptionService = Depends(get_service),

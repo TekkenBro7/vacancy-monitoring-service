@@ -2,9 +2,20 @@ import axios from 'axios';
 import { HttpStatusCode } from 'axios';
 import { AUTH_URL } from '@/constants/ApiUrls';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
 async function refreshToken() {
   try {
-    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}${AUTH_URL}refresh/`);
+    const response = await axios.post(
+      `${BASE_URL}${AUTH_URL}refresh/`,
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     const { access_token } = response.data;
     if (access_token) {
       localStorage.setItem('token', access_token);

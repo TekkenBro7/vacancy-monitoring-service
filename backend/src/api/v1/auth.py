@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +10,7 @@ from src.schemas.common import MessageResponse
 from src.schemas.users import UserMe
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
+from src.utils.security import set_refresh_token_cookie
 
 router = APIRouter()
 
@@ -24,7 +25,7 @@ def get_auth_service(user_service: UserService = Depends(get_user_service)) -> A
     return AuthService(user_service)
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login/", response_model=Token)
 async def login(
     data: LoginSchema,
     response: Response,
@@ -33,7 +34,7 @@ async def login(
     return await auth_service.login(data, response)
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh/", response_model=Token)
 async def refresh_token_endpoint(
     request: Request,
     response: Response,
@@ -42,7 +43,7 @@ async def refresh_token_endpoint(
     return await auth_service.refresh(request, response)
 
 
-@router.post("/logout")
+@router.post("/logout/")
 async def logout(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
@@ -50,17 +51,17 @@ async def logout(
     return await auth_service.logout(response)
 
 
-@router.get("/validate", response_model=MessageResponse)
+@router.get("/validate/", response_model=MessageResponse)
 async def validate(_: dict = Depends(validate_access_token)) -> MessageResponse:
     return MessageResponse(message="Access token is valid")
 
 
-@router.get("/users/me", response_model=UserMe)
+@router.get("/users/me/", response_model=UserMe)
 async def get_me(current_user: UserMe = Depends(get_current_user)) -> UserMe:
     return current_user
 
 
-@router.get("/google/login")
+@router.get("/google/login/")
 async def google_login() -> RedirectResponse:
     url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
@@ -72,20 +73,25 @@ async def google_login() -> RedirectResponse:
     return RedirectResponse(url)
 
 
-@router.get("/google/callback", response_model=Token)
+@router.get("/google/callback/", response_model=Token)
 async def google_callback(
     response: Response,
     code: str = Query(...),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> RedirectResponse:
-    token = await auth_service.google_auth(code, response)
+    token, refresh_token = await auth_service.google_auth(code, response)
+
     redirect_url = f"{base_config.FRONTEND_URL}/auth/success?access_token={token.access_token}"
 
-    return RedirectResponse(url=redirect_url, status_code=302)
+    redirect_response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+
+    set_refresh_token_cookie(redirect_response, refresh_token)
+
+    return redirect_response
 
 
 @router.post(
-    "/send-code",
+    "/send-code/",
     response_model=MessageResponse,
 )
 async def send_code(
@@ -101,7 +107,7 @@ async def send_code(
 
 
 @router.post(
-    "/verify-code",
+    "/verify-code/",
     response_model=MessageResponse,
 )
 async def verify_code(

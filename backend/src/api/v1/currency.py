@@ -21,7 +21,7 @@ async def list_currencies(
     return await service.list_currencies()
 
 
-@router.get("/{currency_id}", response_model=CurrencyRead)
+@router.get("/{currency_id}/", response_model=CurrencyRead)
 async def get_currency(
     currency_id: int,
     service: CurrencyService = Depends(get_currency_service),
@@ -37,7 +37,7 @@ async def create_currency(
     return await service.create_currency(data)
 
 
-@router.patch("/{currency_id}", response_model=CurrencyRead)
+@router.patch("/{currency_id}/", response_model=CurrencyRead)
 async def update_currency(
     currency_id: int,
     data: CurrencyUpdate,
@@ -46,7 +46,7 @@ async def update_currency(
     return await service.update_currency(currency_id, data)
 
 
-@router.delete("/{currency_id}")
+@router.delete("/{currency_id}/")
 async def delete_currency(
     currency_id: int,
     service: CurrencyService = Depends(get_currency_service),

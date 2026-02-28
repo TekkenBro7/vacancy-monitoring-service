@@ -19,7 +19,7 @@ async def list_countries(
     return await service.list_countries()
 
 
-@router.get("/{country_id}", response_model=CountryRead)
+@router.get("/{country_id}/", response_model=CountryRead)
 async def get_country(
     country_id: int, service: CountryService = Depends(get_country_service)
 ) -> CountryRead:
@@ -33,14 +33,14 @@ async def create_country(
     return await service.create_country(data)
 
 
-@router.patch("/{country_id}", response_model=CountryRead)
+@router.patch("/{country_id}/", response_model=CountryRead)
 async def update_country(
     country_id: int, data: CountryUpdate, service: CountryService = Depends(get_country_service)
 ) -> CountryRead:
     return await service.update_country(country_id, data)
 
 
-@router.delete("/{country_id}")
+@router.delete("/{country_id}/")
 async def delete_country(
     country_id: int, service: CountryService = Depends(get_country_service)
 ) -> dict[str, bool | int]:

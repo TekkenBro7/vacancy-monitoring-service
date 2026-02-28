@@ -1,29 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
+import { applyTheme } from '@/lib/theme';
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState('dark');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme') || 'dark';
-    applyTheme(saved);
-  }, []);
-
-  function applyTheme(value) {
-    const root = document.documentElement;
-
-    root.classList.remove('light', 'dark');
-    root.classList.add(value);
-
-    localStorage.setItem('theme', value);
-    setTheme(value);
-  }
-
-  function toggleTheme() {
-    applyTheme(theme === 'dark' ? 'light' : 'dark');
-  }
-
+function ThemeToggleInner({ isDark, toggleTheme }) {
   return (
     <Button
       variant="ghost"
@@ -37,7 +17,25 @@ export default function ThemeToggle() {
         transition-all
       "
     >
-      {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
     </Button>
   );
+}
+
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') return false;
+  const saved = localStorage.getItem('theme');
+  return saved === 'dark';
+}
+
+export default function ThemeToggle() {
+  const [isDark, setIsDark] = useState(getInitialDarkMode);
+
+  const toggleTheme = () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    applyTheme(newTheme);
+    setIsDark(!isDark);
+  };
+
+  return <ThemeToggleInner isDark={isDark} toggleTheme={toggleTheme} />;
 }

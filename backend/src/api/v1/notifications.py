@@ -23,14 +23,14 @@ async def list_notifications(
     return await service.list_notifications()
 
 
-@router.get("/{notification_id}", response_model=NotificationRead)
+@router.get("/{notification_id}/", response_model=NotificationRead)
 async def get_notification(
     notification_id: int, service: NotificationService = Depends(get_service)
 ) -> NotificationRead:
     return await service.get_notification(notification_id)
 
 
-@router.get("/user/{user_id}", response_model=list[NotificationRead])
+@router.get("/user/{user_id}/", response_model=list[NotificationRead])
 async def list_user_notifications(
     user_id: int, service: NotificationService = Depends(get_service)
 ) -> list[NotificationRead]:
@@ -45,7 +45,7 @@ async def create_notification(
     return await service.create_notification(data)
 
 
-@router.patch("/{notification_id}", response_model=NotificationRead)
+@router.patch("/{notification_id}/", response_model=NotificationRead)
 async def update_notification(
     notification_id: int,
     data: NotificationUpdate,
@@ -54,7 +54,7 @@ async def update_notification(
     return await service.update_notification(notification_id, data)
 
 
-@router.delete("/{notification_id}")
+@router.delete("/{notification_id}/")
 async def delete_notification(
     notification_id: int, service: NotificationService = Depends(get_service)
 ) -> dict[str, bool | int]:

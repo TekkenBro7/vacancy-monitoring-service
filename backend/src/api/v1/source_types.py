@@ -19,7 +19,7 @@ async def list_source_types(
     return await service.list_source_types()
 
 
-@router.get("/{type_id}", response_model=SourceTypeRead)
+@router.get("/{type_id}/", response_model=SourceTypeRead)
 async def get_source_type(
     type_id: int, service: SourceTypeService = Depends(get_service)
 ) -> SourceTypeRead:
@@ -33,14 +33,14 @@ async def create_source_type(
     return await service.create_source_type(data)
 
 
-@router.patch("/{type_id}", response_model=SourceTypeRead)
+@router.patch("/{type_id}/", response_model=SourceTypeRead)
 async def update_source_type(
     type_id: int, data: SourceTypeUpdate, service: SourceTypeService = Depends(get_service)
 ) -> SourceTypeRead:
     return await service.update_source_type(type_id, data)
 
 
-@router.delete("/{type_id}")
+@router.delete("/{type_id}/")
 async def delete_source_type(
     type_id: int, service: SourceTypeService = Depends(get_service)
 ) -> dict[str, bool | int]:

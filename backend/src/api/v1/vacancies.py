@@ -19,7 +19,7 @@ async def list_vacancies(
     return await service.list_vacancies()
 
 
-@router.get("/{vacancy_id}", response_model=VacancyRead)
+@router.get("/{vacancy_id}/", response_model=VacancyRead)
 async def get_vacancy(
     vacancy_id: int, service: VacancyService = Depends(get_vacancy_service)
 ) -> VacancyRead:
@@ -34,7 +34,7 @@ async def create_vacancy(
     return await service.create_vacancy(data)
 
 
-@router.patch("/{vacancy_id}", response_model=VacancyRead)
+@router.patch("/{vacancy_id}/", response_model=VacancyRead)
 async def update_vacancy(
     vacancy_id: int,
     data: VacancyUpdate,
@@ -43,7 +43,7 @@ async def update_vacancy(
     return await service.update_vacancy(vacancy_id, data)
 
 
-@router.delete("/{vacancy_id}")
+@router.delete("/{vacancy_id}/")
 async def delete_vacancy(
     vacancy_id: int,
     service: VacancyService = Depends(get_vacancy_service),

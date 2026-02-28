@@ -112,7 +112,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google/login`;
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google/login/`;
   };
 
   const features = [

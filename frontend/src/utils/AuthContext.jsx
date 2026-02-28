@@ -46,6 +46,7 @@ export function AuthProvider({ children }) {
       await AuthService.refresh();
       await checkAuth();
     } catch (error) {
+      console.error('Refresh check failed:', error);
       setIsAuthenticated(false);
       setUser(null);
     }

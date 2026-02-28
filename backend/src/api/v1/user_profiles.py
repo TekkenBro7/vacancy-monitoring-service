@@ -20,7 +20,7 @@ async def list_profiles(db: AsyncSession = Depends(get_async_session)) -> list[U
     return await service.list_profiles()
 
 
-@router.get("/{user_id}", response_model=UserProfileRead)
+@router.get("/{user_id}/", response_model=UserProfileRead)
 async def get_profile(
     user_id: int,
     service: UserProfileService = Depends(get_user_profile_service),
@@ -28,7 +28,7 @@ async def get_profile(
     return await service.get_profile(user_id)
 
 
-@router.patch("/{user_id}", response_model=UserProfileRead)
+@router.patch("/{user_id}/", response_model=UserProfileRead)
 async def update_profile(
     user_id: int,
     data: UserProfileUpdate,

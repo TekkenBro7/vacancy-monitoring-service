@@ -256,9 +256,12 @@ export default function PasswordSetup({ user, onSave }) {
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={(open) => {
-        if (!open) handleClose();
-      }}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleClose();
+        }}
+      >
         <DialogContent
           showCloseButton={false}
           className="border overflow-hidden"

@@ -72,7 +72,7 @@ class AuthService:
         clear_refresh_token_cookie(response)
         return {"message": "Successfully logged out"}
 
-    async def google_auth(self, code: str, response: Response) -> Token:
+    async def google_auth(self, code: str, response: Response) -> tuple[Token, str]:
         logger.info("Starting Google OAuth authentication")
 
         token_data = await exchange_code_for_token(code)
@@ -107,11 +107,9 @@ class AuthService:
         access_token = create_access_token({"sub": str(user.id), "role": "user"})
         refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        set_refresh_token_cookie(response, refresh_token)
-
         logger.info("Google OAuth success for user_id=%s", user.id)
 
-        return Token(access_token=access_token)
+        return Token(access_token=access_token), refresh_token
 
     async def send_code(
         self,

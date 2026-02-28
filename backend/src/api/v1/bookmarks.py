@@ -14,7 +14,7 @@ def get_bookmark_service(
     return BookmarkService(db)
 
 
-@router.get("/user/{user_id}", response_model=list[BookmarkRead])
+@router.get("/user/{user_id}/", response_model=list[BookmarkRead])
 async def list_user_bookmarks(
     user_id: int,
     service: BookmarkService = Depends(get_bookmark_service),
@@ -30,7 +30,7 @@ async def create_bookmark(
     return await service.create_bookmark(data)
 
 
-@router.delete("/{bookmark_id}")
+@router.delete("/{bookmark_id}/")
 async def delete_bookmark(
     bookmark_id: int,
     service: BookmarkService = Depends(get_bookmark_service),

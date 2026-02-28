@@ -19,7 +19,7 @@ async def list_companies(
     return await service.list_companies()
 
 
-@router.get("/{company_id}", response_model=CompanyRead)
+@router.get("/{company_id}/", response_model=CompanyRead)
 async def get_company(
     company_id: int, service: CompanyService = Depends(get_company_service)
 ) -> CompanyRead:
@@ -34,7 +34,7 @@ async def create_company(
     return await service.create_company(data)
 
 
-@router.patch("/{company_id}", response_model=CompanyRead)
+@router.patch("/{company_id}/", response_model=CompanyRead)
 async def update_company(
     company_id: int,
     data: CompanyUpdate,
@@ -43,7 +43,7 @@ async def update_company(
     return await service.update_company(company_id, data)
 
 
-@router.delete("/{company_id}")
+@router.delete("/{company_id}/")
 async def delete_company(
     company_id: int,
     service: CompanyService = Depends(get_company_service),

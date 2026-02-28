@@ -17,7 +17,7 @@ async def list_sources(service: SourceService = Depends(get_service)) -> list[So
     return await service.list_sources()
 
 
-@router.get("/{source_id}", response_model=SourceRead)
+@router.get("/{source_id}/", response_model=SourceRead)
 async def get_source(source_id: int, service: SourceService = Depends(get_service)) -> SourceRead:
     return await service.get_source(source_id)
 
@@ -29,14 +29,14 @@ async def create_source(
     return await service.create_source(data)
 
 
-@router.patch("/{source_id}", response_model=SourceRead)
+@router.patch("/{source_id}/", response_model=SourceRead)
 async def update_source(
     source_id: int, data: SourceUpdate, service: SourceService = Depends(get_service)
 ) -> SourceRead:
     return await service.update_source(source_id, data)
 
 
-@router.delete("/{source_id}")
+@router.delete("/{source_id}/")
 async def delete_source(
     source_id: int, service: SourceService = Depends(get_service)
 ) -> dict[str, bool | int]:

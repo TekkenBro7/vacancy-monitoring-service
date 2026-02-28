@@ -23,7 +23,7 @@ async def list_targets(
     return await service.list_targets()
 
 
-@router.get("/{target_id}", response_model=SubscriptionTargetRead)
+@router.get("/{target_id}/", response_model=SubscriptionTargetRead)
 async def get_target(
     target_id: int,
     service: SubscriptionTargetService = Depends(get_service),
@@ -39,7 +39,7 @@ async def create_target(
     return await service.create_target(data)
 
 
-@router.patch("/{target_id}", response_model=SubscriptionTargetRead)
+@router.patch("/{target_id}/", response_model=SubscriptionTargetRead)
 async def update_target(
     target_id: int,
     data: SubscriptionTargetUpdate,
@@ -48,7 +48,7 @@ async def update_target(
     return await service.update_target(target_id, data)
 
 
-@router.delete("/{target_id}")
+@router.delete("/{target_id}/")
 async def delete_target(
     target_id: int,
     service: SubscriptionTargetService = Depends(get_service),

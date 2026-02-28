@@ -28,7 +28,7 @@ async def list_users(service: UserService = Depends(get_user_service)) -> list[U
     return await service.list_users()
 
 
-@router.get("/{user_id}", response_model=UserRead)
+@router.get("/{user_id}/", response_model=UserRead)
 async def get_user(
     user_id: int,
     service: UserService = Depends(get_user_service),
@@ -36,7 +36,7 @@ async def get_user(
     return await service.get_user(user_id)
 
 
-@router.get("/me/security", response_model=UserSecurityInfo)
+@router.get("/me/security/", response_model=UserSecurityInfo)
 async def get_user_security_info(
     current_user: UserMe = Depends(get_current_user),
     service: UserService = Depends(get_user_service),
@@ -52,7 +52,7 @@ async def create_user(
     return await service.create_user(data)
 
 
-@router.post("/with-role", response_model=UserRead)
+@router.post("/with-role/", response_model=UserRead)
 async def create_user_with_role(
     data: UserAdminCreate,
     service: UserService = Depends(get_user_service),
@@ -60,7 +60,7 @@ async def create_user_with_role(
     return await service.create_user_with_role(data)
 
 
-@router.patch("/{user_id}", response_model=UserRead)
+@router.patch("/{user_id}/", response_model=UserRead)
 async def update_user(
     user_id: int,
     data: UserUpdate,
@@ -69,7 +69,7 @@ async def update_user(
     return await service.update_user(user_id, data)
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}/")
 async def delete_user(
     user_id: int,
     service: UserService = Depends(get_user_service),
@@ -77,7 +77,7 @@ async def delete_user(
     return await service.delete_user(user_id)
 
 
-@router.patch("/{user_id}/skills", response_model=UserRead)
+@router.patch("/{user_id}/skills/", response_model=UserRead)
 async def update_user_skills(
     user_id: int,
     data: UserSkillsUpdate,

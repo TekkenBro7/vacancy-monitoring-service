@@ -23,7 +23,7 @@ async def list_types(
     return await service.list_types()
 
 
-@router.get("/{type_id}", response_model=SubscriptionTypeRead)
+@router.get("/{type_id}/", response_model=SubscriptionTypeRead)
 async def get_type(
     type_id: int,
     service: SubscriptionTypeService = Depends(get_service),
@@ -39,7 +39,7 @@ async def create_type(
     return await service.create_type(data)
 
 
-@router.patch("/{type_id}", response_model=SubscriptionTypeRead)
+@router.patch("/{type_id}/", response_model=SubscriptionTypeRead)
 async def update_type(
     type_id: int,
     data: SubscriptionTypeUpdate,
@@ -48,7 +48,7 @@ async def update_type(
     return await service.update_type(type_id, data)
 
 
-@router.delete("/{type_id}")
+@router.delete("/{type_id}/")
 async def delete_type(
     type_id: int,
     service: SubscriptionTypeService = Depends(get_service),

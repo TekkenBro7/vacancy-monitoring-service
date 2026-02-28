@@ -25,7 +25,7 @@ async def list_queries(
     return await service.list_queries()
 
 
-@router.get("/{query_id}", response_model=SearchQueryRead)
+@router.get("/{query_id}/", response_model=SearchQueryRead)
 async def get_query(
     query_id: int,
     service: SearchQueryService = Depends(get_search_query_service),
@@ -33,7 +33,7 @@ async def get_query(
     return await service.get_query(query_id)
 
 
-@router.get("/user/{user_id}", response_model=list[SearchQueryRead])
+@router.get("/user/{user_id}/", response_model=list[SearchQueryRead])
 async def list_queries_by_user(
     user_id: int,
     service: SearchQueryService = Depends(get_search_query_service),
@@ -49,7 +49,7 @@ async def create_query(
     return await service.create_query(data)
 
 
-@router.patch("/{query_id}", response_model=SearchQueryRead)
+@router.patch("/{query_id}/", response_model=SearchQueryRead)
 async def update_query(
     query_id: int,
     data: SearchQueryUpdate,
@@ -58,7 +58,7 @@ async def update_query(
     return await service.update_query(query_id, data)
 
 
-@router.delete("/{query_id}")
+@router.delete("/{query_id}/")
 async def delete_query(
     query_id: int,
     service: SearchQueryService = Depends(get_search_query_service),

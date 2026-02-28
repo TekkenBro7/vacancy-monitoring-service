@@ -19,7 +19,7 @@ async def list_skills(service: SkillService = Depends(get_skill_service)) -> lis
     return await service.list_skills()
 
 
-@router.get("/{skill_id}", response_model=SkillRead)
+@router.get("/{skill_id}/", response_model=SkillRead)
 async def get_skill(
     skill_id: int,
     service: SkillService = Depends(get_skill_service),
@@ -35,7 +35,7 @@ async def create_skill(
     return await service.create_skill(data)
 
 
-@router.patch("/{skill_id}", response_model=SkillRead)
+@router.patch("/{skill_id}/", response_model=SkillRead)
 async def update_skill(
     skill_id: int,
     data: SkillUpdate,
@@ -44,7 +44,7 @@ async def update_skill(
     return await service.update_skill(skill_id, data)
 
 
-@router.delete("/{skill_id}")
+@router.delete("/{skill_id}/")
 async def delete_skill(
     skill_id: int,
     service: SkillService = Depends(get_skill_service),

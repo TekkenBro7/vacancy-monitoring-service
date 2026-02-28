@@ -17,7 +17,7 @@ async def list_cities(service: CityService = Depends(get_city_service)) -> list[
     return await service.list_cities()
 
 
-@router.get("/{city_id}", response_model=CityRead)
+@router.get("/{city_id}/", response_model=CityRead)
 async def get_city(city_id: int, service: CityService = Depends(get_city_service)) -> CityRead:
     return await service.get_city(city_id)
 
@@ -29,14 +29,14 @@ async def create_city(
     return await service.create_city(data)
 
 
-@router.patch("/{city_id}", response_model=CityRead)
+@router.patch("/{city_id}/", response_model=CityRead)
 async def update_city(
     city_id: int, data: CityUpdate, service: CityService = Depends(get_city_service)
 ) -> CityRead:
     return await service.update_city(city_id, data)
 
 
-@router.delete("/{city_id}")
+@router.delete("/{city_id}/")
 async def delete_city(
     city_id: int, service: CityService = Depends(get_city_service)
 ) -> dict[str, bool | int]:
