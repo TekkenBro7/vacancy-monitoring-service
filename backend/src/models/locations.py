@@ -25,7 +25,7 @@ class City(BaseModel):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     country_id: Mapped[int] = mapped_column(
-        ForeignKey("countries.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("countries.id", ondelete="CASCADE"), nullable=True
     )
 
     country: Mapped["Country"] = relationship(back_populates="cities")

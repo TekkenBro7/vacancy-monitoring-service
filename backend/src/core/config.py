@@ -102,6 +102,20 @@ class MailConfig:
     TEMPLATE_FOLDER: str = os.getenv("MAIL_TEMPLATE_FOLDER", "src/templates/email")
 
 
+class HHConfig:
+    HH_SOURCE_NAME = "HeadHunter"
+    HH_BASE_URL = "https://api.hh.ru/vacancies"
+    HH_MAX_TOTAL = 2000
+    HH_PER_PAGE = 100
+    HH_TIMEOUT = int(os.getenv("HH_TIMEOUT", 20))
+    HH_RETRIES = int(os.getenv("HH_RETRIES", 3))
+
+
+class SuperJobConfig:
+    API_KEY = os.getenv("SUPERJOB_API_KEY")
+    BASE_URL = "https://api.superjob.ru/2.0"
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
@@ -109,3 +123,5 @@ oauth_config = OAuthConfig()
 rabbitmq_config = RabbitMQConfig()
 redis_config = RedisConfig()
 mail_config = MailConfig()
+super_job_config = SuperJobConfig()
+hh_config = HHConfig()

@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.repositories.currency_repository import CurrencyRepository
-from src.models.currency import Currency
+from src.models.currencies import Currency
 from src.schemas.currencies import (
     CurrencyCreate,
     CurrencyRead,

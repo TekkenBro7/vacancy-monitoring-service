@@ -11,6 +11,7 @@ from src.core.logger import logger
 from src.core.rabbitmq import RabbitMQ
 from src.core.redis_client import redis_client
 from src.database.session import async_session_maker
+from src.parsers.services.parser_import_service import ParserImportService
 
 app = FastAPI(
     title="Improved API Service",
@@ -72,6 +73,46 @@ async def startup_event() -> None:
     )
 
     logger.info("Application startup complete")
+
+    from datetime import datetime
+
+    from src.database.repositories.city_repository import CityRepository
+    from src.database.repositories.company_repository import CompanyRepository
+    from src.database.repositories.currency_repository import CurrencyRepository
+    from src.database.repositories.source_repository import SourceRepository
+    from src.database.repositories.vacancy_repository import VacancyRepository
+    from src.parsers.hh_ru.hh_service import HHVacancyService
+
+    async with async_session_maker() as session:
+        service = HHVacancyService()
+
+        from src.models.companies import Company, Vacancy
+        from src.models.currencies import Currency
+        from src.models.locations import City
+        from src.models.sources import Source
+
+        vacancy_repo = VacancyRepository(Vacancy, session)
+        company_repo = CompanyRepository(Company, session)
+        city_repo = CityRepository(City, session)
+        currency_repo = CurrencyRepository(Currency, session)
+        source_repo = SourceRepository(Source, session)
+
+        import_service = ParserImportService(
+            vacancy_repo=vacancy_repo,
+            company_repo=company_repo,
+            city_repo=city_repo,
+            currency_repo=currency_repo,
+            source_repo=source_repo,
+        )
+
+        start = datetime(2026, 2, 11, 0, 0)
+        end = datetime(2026, 2, 12, 0, 0)
+
+        results = await service.run(None, start, end)
+        print(f"Collected {len(results)} vacancies")
+
+        for vacancy in results:
+            await import_service.import_vacancy(vacancy)
 
 
 @app.on_event("shutdown")

@@ -5,23 +5,15 @@ from faker import Faker
 from scripts.clean_db import clear_db
 from src.core.logger import logger
 from src.database.session import get_async_session
-from src.models.bookmarks import Bookmark
-from src.models.comments import Comment
-from src.models.companies import Company, Vacancy
-from src.models.comparisons import Comparison
-from src.models.currency import Currency
+from src.models.currencies import Currency
 from src.models.locations import City, Country
-from src.models.notifications import Notification, NotificationType
-from src.models.search import SearchQuery
+from src.models.notifications import NotificationType
 from src.models.secondary_tables import (
-    comparison_vacancies_table,
     user_skills_table,
-    vacancy_skills_table,
 )
 from src.models.skills import Skill
 from src.models.sources import Source, SourceType
 from src.models.subscriptions import (
-    Subscription,
     SubscriptionTarget,
     SubscriptionType,
 )
@@ -77,7 +69,8 @@ async def seed_db() -> None:
         currency_data = [
             {"name": "USD", "symbol": "$"},
             {"name": "EUR", "symbol": "€"},
-            {"name": "RUB", "symbol": "₽"},
+            {"name": "RUR", "symbol": "₽"},
+            {"name": "BYR", "symbol": "Br"},
         ]
         currency_objs = [Currency(**c) for c in currency_data]
         session.add_all(currency_objs)
@@ -113,11 +106,6 @@ async def seed_db() -> None:
                 "source_url": "https://linkedin.com",
                 "source_type_id": source_type_objs[1].id,
             },
-            {
-                "name": "Company Career Page",
-                "source_url": fake.url(),
-                "source_type_id": source_type_objs[2].id,
-            },
         ]
         source_objs = [Source(**s) for s in source_data]
         session.add_all(source_objs)
@@ -150,32 +138,6 @@ async def seed_db() -> None:
             await session.refresh(sub_types)
         logger.info(f"Inserted {len(sub_type_objs)} subscription types")
 
-        subscriptions = []
-        for user in users:
-            for _ in range(fake.random_int(min=1, max=3)):
-                subscription = Subscription(
-                    user_id=user.id,
-                    subscription_type_id=fake.random_element(sub_type_objs).id,
-                    target_type_id=fake.random_element(target_objs).id,
-                )
-                subscriptions.append(subscription)
-        session.add_all(subscriptions)
-        await session.commit()
-        logger.info(f"Inserted {len(subscriptions)} subscriptions")
-
-        queries = []
-        for user in users:
-            for _ in range(fake.random_int(min=1, max=5)):
-                queries.append(
-                    SearchQuery(
-                        user_id=user.id,
-                        query_text=fake.sentence(nb_words=5),
-                    )
-                )
-        session.add_all(queries)
-        await session.commit()
-        logger.info(f"Inserted {len(queries)} search queries")
-
         notification_type_data = [
             {"name": "info", "description": "General info message"},
             {"name": "warning", "description": "Important warnings"},
@@ -187,26 +149,6 @@ async def seed_db() -> None:
         for nt in notif_type_objs:
             await session.refresh(nt)
         logger.info(f"Inserted {len(notif_type_objs)} notification types")
-
-        notifications = []
-        for user in users:
-            for _ in range(fake.random_int(min=1, max=5)):
-                notifications.append(
-                    Notification(
-                        user_id=user.id,
-                        notification_type_id=fake.random_element(notif_type_objs).id,
-                        message=fake.sentence(),
-                        subscription_id=(
-                            fake.random_element(subscriptions).id
-                            if subscriptions and fake.boolean()
-                            else None
-                        ),
-                        is_read=fake.boolean(),
-                    )
-                )
-        session.add_all(notifications)
-        await session.commit()
-        logger.info(f"Inserted {len(notifications)} notifications")
 
         skill_names = [
             "Python",
@@ -251,128 +193,15 @@ async def seed_db() -> None:
             await session.refresh(country_obj)
         logger.info(f"Inserted {len(country_objs)} countries")
 
-        city_objs = []
-        for country in country_objs:
-            for _ in range(fake.random_int(2, 5)):
-                city_objs.append(
-                    City(
-                        name=fake.city(),
-                        description=fake.text(50),
-                        country_id=country.id,
-                    )
-                )
+        city_objs = [
+            City(name="Минск"),
+            City(name="Москва"),
+            City(name="Санкт-Петербург"),
+        ]
 
         session.add_all(city_objs)
         await session.commit()
         logger.info(f"Inserted {len(city_objs)} cities")
-
-        company_objs = []
-        for _ in range(10):
-            company_objs.append(
-                Company(
-                    name=fake.company(),
-                    description=fake.text(120),
-                    website=fake.url(),
-                )
-            )
-        session.add_all(company_objs)
-        await session.commit()
-        for company_obj in company_objs:
-            await session.refresh(company_obj)
-        logger.info(f"Inserted {len(company_objs)} companies")
-
-        vacancy_objs = []
-        for _ in range(20):
-            vacancy = Vacancy(
-                title=fake.job(),
-                description=fake.text(200),
-                salary_from=fake.random_int(300, 2000) * 10,
-                salary_to=fake.random_int(2000, 5000) * 10,
-                currency_id=fake.random_element(currency_objs).id,
-                company_id=fake.random_element(company_objs).id,
-                source_id=fake.random_element(source_objs).id,
-                location_id=fake.random_element(city_objs).id,
-                vacancy_url=fake.url(),
-                is_remote=fake.boolean(),
-                is_active=True,
-                published_at=fake.date_time(),
-            )
-            vacancy_objs.append(vacancy)
-
-        session.add_all(vacancy_objs)
-        await session.commit()
-        for v in vacancy_objs:
-            await session.refresh(v)
-        logger.info(f"Inserted {len(vacancy_objs)} vacancies")
-
-        total_vacancy_skill_links = 0
-        for vacancy in vacancy_objs:
-            vskills = fake.random_elements(skill_objs, length=fake.random_int(1, 6), unique=True)
-            for sk in vskills:
-                await session.execute(
-                    vacancy_skills_table.insert().values(vacancy_id=vacancy.id, skill_id=sk.id)
-                )
-                total_vacancy_skill_links += 1
-
-        await session.commit()
-        logger.info(f"Inserted {total_vacancy_skill_links} vacancy skills")
-
-        comparison_objs = []
-        for user in users:
-            for _ in range(fake.random_int(1, 3)):
-                comparison = Comparison(user_id=user.id, name=fake.sentence(nb_words=3))
-                comparison_objs.append(comparison)
-
-        session.add_all(comparison_objs)
-        await session.commit()
-        for comparison_obj in comparison_objs:
-            await session.refresh(comparison_obj)
-        logger.info(f"Inserted {len(comparison_objs)} comparisons")
-
-        total_comparison_links = 0
-        for comparison in comparison_objs:
-            linked_vacancies = fake.random_elements(
-                vacancy_objs, length=fake.random_int(1, 3), unique=True
-            )
-            for vac in linked_vacancies:
-                await session.execute(
-                    comparison_vacancies_table.insert().values(
-                        comparison_id=comparison.id, vacancy_id=vac.id
-                    )
-                )
-                total_comparison_links += 1
-
-        await session.commit()
-        logger.info(f"Inserted {total_comparison_links} comparison-vacancy links")
-
-        comment_objs = []
-        for vacancy in vacancy_objs:
-            comment_users = fake.random_elements(users, length=fake.random_int(1, 5), unique=True)
-            for u in comment_users:
-                comment_objs.append(
-                    Comment(
-                        user_id=u.id,
-                        vacancy_id=vacancy.id,
-                        content=fake.text(100),
-                        rating=fake.random_int(1, 5),
-                    )
-                )
-
-        session.add_all(comment_objs)
-        await session.commit()
-        logger.info(f"Inserted {len(comment_objs)} comments")
-
-        bookmark_objs = []
-        for user in users:
-            bookmarked_vacancies = fake.random_elements(
-                vacancy_objs, length=fake.random_int(1, 5), unique=True
-            )
-            for vac in bookmarked_vacancies:
-                bookmark_objs.append(Bookmark(user_id=user.id, vacancy_id=vac.id))
-
-        session.add_all(bookmark_objs)
-        await session.commit()
-        logger.info(f"Inserted {len(bookmark_objs)} bookmarks")
 
     logger.info("Seeding database finished!")
 
