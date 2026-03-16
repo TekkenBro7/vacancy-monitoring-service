@@ -2,28 +2,35 @@ from dataclasses import dataclass
 from datetime import datetime
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class ParserVacancyResult:
+    # external
     external_id: str
+    vacancy_url: str | None = None
+
+    # title / description
     title: str
-    description: str | None
+    description: str | None = None
 
-    company_external_id: str | None
-    company_name: str | None
+    # company
+    company_name: str | None = None
+    company_external_id: str | None = None
 
-    salary_from: int | None
-    salary_to: int | None
-    currency: str | None
+    # salary
+    salary_from: int | None = None
+    salary_to: int | None = None
+    currency: str | None = None
 
-    city: str | None
-
-    vacancy_url: str | None
-
-    experience: str | None
-    employment: str | None
-    schedule: str | None
-
-    published_at: datetime | None
-    created_at: datetime | None
-
+    # location
+    city: str | None = None
     is_remote: bool = False
+
+    # job info
+    experience: str | None = None
+    employment: str | None = None
+    schedule: str | None = None
+    internship: str | None = None
+
+    # timestamps
+    published_at: datetime | None = None
+    created_at: datetime | None = None

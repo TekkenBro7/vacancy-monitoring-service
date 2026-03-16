@@ -13,7 +13,7 @@ PORT ?= 8000
 include .env
 export
 
-.PHONY: help runserver lint seed_data clean_data test
+.PHONY: help runserver lint seed_data clean_db test
 
 help:
 	@echo "$(YELLOW)Available targets:$(NC)"
@@ -44,7 +44,7 @@ seed_data:
 	@echo "$(GREEN)Seeding database...$(NC)"
 	$(UV) python -m scripts.seed_db
 
-clean_data:
+clean_db:
 	@echo "$(GREEN)Cleaning database...$(NC)"
 	$(UV) python -m scripts.clean_db
 

@@ -1,95 +1,98 @@
 import asyncio
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 import aiohttp
+from fastapi import status
 
 from src.core.config import hh_config
 from src.core.enums import HHWorkFormat
 from src.core.logger import logger
-from src.parsers.base.base_parser import BaseParser
 from src.parsers.base.parser_result import ParserVacancyResult
 from src.utils.datetime_utils import parse_hh_datetime
 
 
-class HHParser(BaseParser):
-    async def _request(self, session: aiohttp.ClientSession, url: str, params: dict):
+class HHParser:
+    async def _request(
+        self, session: aiohttp.ClientSession, url: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
         for attempt in range(hh_config.HH_RETRIES):
             try:
                 async with session.get(url, params=params, timeout=hh_config.HH_TIMEOUT) as resp:
-                    if resp.status != 200:
+                    if resp.status != status.HTTP_200_OK:
                         text = await resp.text()
-                        logger.warning(f"HH API bad status {resp.status}: {text[:200]}")
+                        logger.warning(
+                            "HH API bad status %s: %s",
+                            resp.status,
+                            text[:200],
+                        )
                         raise Exception(f"Bad status {resp.status}")
-
                     return await resp.json()
-
             except TimeoutError:
-                logger.warning(f"HH API timeout (attempt {attempt + 1})")
-
+                logger.warning("HH API timeout (attempt %s)", attempt + 1)
             except aiohttp.ClientError as e:
-                logger.warning(f"HH API connection error: {e}")
-
+                logger.warning("HH API connection error: %s", e)
             await asyncio.sleep(2**attempt)
-
         raise Exception("HH API request failed after retries")
 
-    async def search_vacancies(
+    def _build_params(
         self,
+        page: int,
         query: str | None,
         date_from: datetime,
         date_to: datetime,
-    ) -> list[ParserVacancyResult] | int:
+        per_page: int = 100,
+    ) -> dict[str, Any]:
         params = {
-            "page": 0,
-            "per_page": 100,
+            "page": page,
+            "per_page": per_page,
             "date_from": date_from.strftime("%Y-%m-%dT%H:%M:%S"),
             "date_to": date_to.strftime("%Y-%m-%dT%H:%M:%S"),
         }
-
         if query:
             params["text"] = query
+        return params
 
+    async def stream_vacancies(
+        self, query: str | None, date_from: datetime, date_to: datetime
+    ) -> AsyncGenerator[list[ParserVacancyResult], None]:
         async with aiohttp.ClientSession() as session:
+            params = self._build_params(0, query, date_from, date_to)
             data = await self._request(session, hh_config.HH_BASE_URL, params)
 
-            found = data.get("found", 0)
-
-            logger.info(f"HHParser range {date_from} - {date_to} → found={found}")
-
-            if found > hh_config.HH_MAX_TOTAL:
-                return found
-
-            results: list[ParserVacancyResult] = []
-
             pages = data.get("pages", 0)
-
             items = data.get("items", [])
-
-            for v in items:
-                results.append(self._parse_vacancy(v))
-
-            logger.info(f"HHParser page 1/{pages} parsed ({len(items)} items)")
+            logger.info(
+                "HH page 1/%s parsed (%s items)",
+                pages,
+                len(items),
+            )
+            yield [self._parse_vacancy(v) for v in items]
 
             for page in range(1, pages):
-                params["page"] = page
-
+                params = self._build_params(page, query, date_from, date_to)
                 data = await self._request(session, hh_config.HH_BASE_URL, params)
                 items = data.get("items", [])
+                logger.info(
+                    "HH page %s/%s parsed (%s items)",
+                    page + 1,
+                    pages,
+                    len(items),
+                )
+                yield [self._parse_vacancy(v) for v in items]
 
-                for v in items:
-                    results.append(self._parse_vacancy(v))
-
-                logger.info(f"HHParser page {page + 1}/{pages} parsed ({len(items)} items)")
-
-            return results
-
-    def _parse_vacancy(self, v: dict) -> ParserVacancyResult:
+    def _parse_vacancy(self, v: dict[str, Any]) -> ParserVacancyResult:
+        area = v.get("area") or {}
+        experience = v.get("experience") or {}
+        employment = v.get("employment") or {}
+        schedule = v.get("schedule") or {}
         salary = v.get("salary") or {}
         employer = v.get("employer") or {}
         snippet = v.get("snippet") or {}
 
         return ParserVacancyResult(
-            external_id=v["id"],
+            external_id=v.get("id"),
             title=v.get("name"),
             description=snippet.get("responsibility"),
             company_name=employer.get("name", "Unknown"),
@@ -97,14 +100,30 @@ class HHParser(BaseParser):
             salary_from=salary.get("from"),
             salary_to=salary.get("to"),
             currency=salary.get("currency"),
-            city=(v.get("area") or {}).get("name"),
-            experience=(v.get("experience") or {}).get("name"),
-            employment=(v.get("employment") or {}).get("name"),
-            schedule=(v.get("schedule") or {}).get("name"),
+            city=area.get("name"),
+            experience=experience.get("name"),
+            employment=employment.get("name"),
+            schedule=schedule.get("name"),
             is_remote=any(
                 wf.get("id") == HHWorkFormat.REMOTE for wf in (v.get("work_format") or [])
             ),
             published_at=parse_hh_datetime(v.get("published_at")),
+            internship=v.get("internship"),
             created_at=parse_hh_datetime(v.get("created_at")),
             vacancy_url=v.get("alternate_url"),
         )
+
+    async def search_vacancies(
+        self, query: str | None, date_from: datetime, date_to: datetime
+    ) -> int:
+        async with aiohttp.ClientSession() as session:
+            params = self._build_params(0, query, date_from, date_to, per_page=1)
+            data = await self._request(session, hh_config.HH_BASE_URL, params)
+            total_found = data.get("found")
+            if total_found is None:
+                logger.warning(
+                    "HH API response missing 'found' field: %s",
+                    data,
+                )
+                return 0
+            return int(total_found)

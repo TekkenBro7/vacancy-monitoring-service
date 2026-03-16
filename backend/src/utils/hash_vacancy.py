@@ -1,0 +1,8 @@
+import hashlib
+
+from src.parsers.base.parser_result import ParserVacancyResult
+
+
+def make_fingerprint(v: ParserVacancyResult):
+    raw = f"{v.title}_{v.company_name}_{v.city}"
+    return hashlib.sha256(raw.lower().encode()).hexdigest()

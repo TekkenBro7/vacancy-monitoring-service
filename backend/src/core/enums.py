@@ -12,3 +12,10 @@ class VerificationPurpose(str, Enum):
 
 class HHWorkFormat(str, Enum):
     REMOTE = "REMOTE"
+
+
+class SourceParseTaskStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    SUCCESS = "success"
+    FAILED = "failed"

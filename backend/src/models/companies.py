@@ -38,6 +38,7 @@ class Vacancy(BaseModel):
 
     employment: Mapped[str] = mapped_column(String(50), nullable=True)
     schedule: Mapped[str] = mapped_column(String(50), nullable=True)
+    internship: Mapped[bool] = mapped_column(nullable=True)
     vacancy_url: Mapped[str] = mapped_column(String(255), nullable=True)
 
     is_remote: Mapped[bool] = mapped_column(default=False, nullable=True)

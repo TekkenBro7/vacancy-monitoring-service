@@ -3,51 +3,62 @@ from datetime import datetime, timedelta
 from src.core.config import hh_config
 from src.core.logger import logger
 from src.parsers.hh_ru.hh_parser import HHParser
+from src.parsers.services.parser_import_service import ParserImportService
 
 
 class HHVacancyService:
-    def __init__(self):
+    def __init__(self, import_service: ParserImportService):
         self.parser = HHParser()
+        self.import_service = import_service
 
-    async def parse_range(self, query: str | None, start: datetime, end: datetime):
-        result = await self.parser.search_vacancies(query, start, end)
+    async def _import_range(self, query: str | None, start: datetime, end: datetime) -> int:
+        total = 0
 
-        if isinstance(result, int):
-            total = result
+        async for batch in self.parser.stream_vacancies(query, start, end):
+            await self.import_service.import_batch(batch)
+            total += len(batch)
 
-            logger.info(f"Range {start} - {end}, found {total}")
+        logger.info("Range %s - %s → imported %s", start, end, total)
+        return total
 
-            if total >= hh_config.HH_MAX_TOTAL:
-                mid = start + (end - start) / 2
+    async def _parse_range(self, query: str | None, start: datetime, end: datetime) -> int:
+        total = await self.parser.search_vacancies(query, start, end)
 
-                if mid <= start:
-                    logger.warning(f"Cannot split further {start}-{end}")
-                    return []
+        if total >= hh_config.HH_MAX_TOTAL:
+            mid = start + (end - start) / 2
 
-                first_half = await self.parse_range(query, start, mid)
-                second_half = await self.parse_range(query, mid, end)
+            if mid <= start:
+                logger.warning("Cannot split further %s-%s", start, end)
+                return 0
 
-                return first_half + second_half
+            logger.info(
+                "Range %s - %s found %s vacancies, splitting",
+                start,
+                end,
+                total,
+            )
 
-        return result
+            left = await self._parse_range(query, start, mid)
+            right = await self._parse_range(query, mid, end)
 
-    async def run(self, query: str | None, from_date: datetime, to_date: datetime):
+            return left + right
+
+        return await self._import_range(query, start, end)
+
+    async def run(self, query: str | None, from_date: datetime, to_date: datetime) -> None:
         current = from_date
-        delta = timedelta(days=1)
+        step = timedelta(days=1)
 
-        all_results = []
+        total = 0
 
         while current < to_date:
-            next_day = current + delta
+            next_day = current + step
 
-            results = await self.parse_range(query, current, next_day)
+            imported = await self._parse_range(query, current, next_day)
+            total += imported
 
-            all_results.extend(results)
-
-            logger.info(f"Completed parsing {current.date()} -> {len(results)} vacancies")
+            logger.info("%s → imported %s", current.date(), imported)
 
             current = next_day
 
-        logger.info(f"Total vacancies collected: {len(all_results)}")
-
-        return all_results
+        logger.info("Finished parsing → total imported %s", total)

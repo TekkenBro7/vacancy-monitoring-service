@@ -84,8 +84,6 @@ async def startup_event() -> None:
     from src.parsers.hh_ru.hh_service import HHVacancyService
 
     async with async_session_maker() as session:
-        service = HHVacancyService()
-
         from src.models.companies import Company, Vacancy
         from src.models.currencies import Currency
         from src.models.locations import City
@@ -105,14 +103,12 @@ async def startup_event() -> None:
             source_repo=source_repo,
         )
 
-        start = datetime(2026, 2, 11, 0, 0)
-        end = datetime(2026, 2, 12, 0, 0)
+        service = HHVacancyService(import_service=import_service)
 
-        results = await service.run(None, start, end)
-        print(f"Collected {len(results)} vacancies")
+        #start = datetime(2026, 2, 12, 0, 0)
+        #end = datetime(2026, 2, 13, 0, 0)
 
-        for vacancy in results:
-            await import_service.import_vacancy(vacancy)
+        await service.run(None)
 
 
 @app.on_event("shutdown")
