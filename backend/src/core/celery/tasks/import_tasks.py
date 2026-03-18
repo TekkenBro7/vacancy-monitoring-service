@@ -1,33 +1,30 @@
 import asyncio
+from typing import Any
 
 from src.core.celery.celery_app import celery_app
 from src.core.logger import logger
-from src.database.repositories.city_repository import CityRepository
-from src.database.repositories.company_repository import CompanyRepository
-from src.database.repositories.currency_repository import CurrencyRepository
-from src.database.repositories.source_repository import SourceRepository
-from src.database.repositories.vacancy_repository import VacancyRepository
 from src.database.session import async_session_maker
 from src.parsers.base.parser_result import ParserVacancyResult
-from src.parsers.services.parser_import_service import ParserImportService
+from src.parsers.factories.parser_service_factory import ParserServiceFactory
 
 
 @celery_app.task(name="import_vacancies_batch", queue="import_queue")
-def import_vacancies_batch(vacancies_data: list[dict]) -> None:
-    asyncio.run(_import_vacancies_batch(vacancies_data))
+def import_vacancies_batch(
+    vacancies_data: list[dict[str, Any]],
+    source_name: str,
+) -> None:
+    asyncio.run(_import_vacancies_batch(vacancies_data, source_name))
 
 
-async def _import_vacancies_batch(vacancies_data: list[dict]) -> None:
+async def _import_vacancies_batch(
+    vacancies_data: list[dict[str, Any]],
+    source_name: str,
+) -> None:
+    vacancies = [ParserVacancyResult.from_dict(v) for v in vacancies_data]
+
     async with async_session_maker() as session:
-        import_service = ParserImportService(
-            vacancy_repo=VacancyRepository(session),
-            company_repo=CompanyRepository(session),
-            city_repo=CityRepository(session),
-            currency_repo=CurrencyRepository(session),
-            source_repo=SourceRepository(session),
-        )
+        import_service = ParserServiceFactory.create_import_service(session)
 
-        vacancies = [ParserVacancyResult(**item) for item in vacancies_data]
-        await import_service.import_batch(vacancies)
+        await import_service.import_batch(vacancies, source_name)
 
         logger.info("Imported batch with %s vacancies", len(vacancies))

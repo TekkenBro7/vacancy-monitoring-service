@@ -14,12 +14,15 @@ from src.utils.datetime_utils import parse_hh_datetime
 
 
 class HHParser:
+    def __init__(self) -> None:
+        self._timeout = aiohttp.ClientTimeout(total=hh_config.HH_TIMEOUT)
+
     async def _request(
         self, session: aiohttp.ClientSession, url: str, params: dict[str, Any]
     ) -> dict[str, Any]:
         for attempt in range(hh_config.HH_RETRIES):
             try:
-                async with session.get(url, params=params, timeout=hh_config.HH_TIMEOUT) as resp:
+                async with session.get(url, params=params, timeout=self._timeout) as resp:
                     if resp.status != status.HTTP_200_OK:
                         text = await resp.text()
                         logger.warning(
@@ -63,7 +66,7 @@ class HHParser:
 
             pages = data.get("pages", 0)
             items = data.get("items", [])
-            logger.info(
+            logger.debug(
                 "HH page 1/%s parsed (%s items)",
                 pages,
                 len(items),
@@ -74,7 +77,7 @@ class HHParser:
                 params = self._build_params(page, query, date_from, date_to)
                 data = await self._request(session, hh_config.HH_BASE_URL, params)
                 items = data.get("items", [])
-                logger.info(
+                logger.debug(
                     "HH page %s/%s parsed (%s items)",
                     page + 1,
                     pages,
@@ -92,8 +95,8 @@ class HHParser:
         snippet = v.get("snippet") or {}
 
         return ParserVacancyResult(
-            external_id=v.get("id"),
-            title=v.get("name"),
+            external_id=v.get("id"),  # type: ignore
+            title=v.get("name"),  # type: ignore
             description=snippet.get("responsibility"),
             company_name=employer.get("name", "Unknown"),
             company_external_id=employer.get("id"),

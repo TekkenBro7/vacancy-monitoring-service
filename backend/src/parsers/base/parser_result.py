@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 
 
@@ -29,8 +29,29 @@ class ParserVacancyResult:
     experience: str | None = None
     employment: str | None = None
     schedule: str | None = None
-    internship: str | None = None
+    internship: bool | None = None
 
     # timestamps
     published_at: datetime | None = None
     created_at: datetime | None = None
+
+    def to_dict(self) -> dict:
+        data = asdict(self)
+
+        if self.published_at:
+            data["published_at"] = self.published_at.isoformat()
+
+        if self.created_at:
+            data["created_at"] = self.created_at.isoformat()
+
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ParserVacancyResult":
+        if data.get("published_at"):
+            data["published_at"] = datetime.fromisoformat(data["published_at"])
+
+        if data.get("created_at"):
+            data["created_at"] = datetime.fromisoformat(data["created_at"])
+
+        return cls(**data)

@@ -29,42 +29,42 @@ class Vacancy(BaseModel):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(150), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=True)
-    salary_from: Mapped[int] = mapped_column(nullable=True)
-    salary_to: Mapped[int] = mapped_column(nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    salary_from: Mapped[int | None] = mapped_column(nullable=True)
+    salary_to: Mapped[int | None] = mapped_column(nullable=True)
 
     external_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    experience: Mapped[str] = mapped_column(String(100), nullable=True)
+    experience: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    employment: Mapped[str] = mapped_column(String(50), nullable=True)
-    schedule: Mapped[str] = mapped_column(String(50), nullable=True)
-    internship: Mapped[bool] = mapped_column(nullable=True)
-    vacancy_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    employment: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    schedule: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    internship: Mapped[bool | None] = mapped_column(nullable=True)
+    vacancy_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    is_remote: Mapped[bool] = mapped_column(default=False, nullable=True)
-    is_active: Mapped[bool] = mapped_column(default=True, nullable=True)
+    is_remote: Mapped[bool | None] = mapped_column(default=False, nullable=True)
+    is_active: Mapped[bool | None] = mapped_column(default=True, nullable=True)
 
-    created_at_source: Mapped[datetime] = mapped_column(
+    created_at_source: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True),
-        nullable=True,  # ← Как в BaseModel!
+        nullable=True,
     )
-    published_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-    last_seen_at: Mapped[datetime] = mapped_column(
+    published_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    last_seen_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     fingerprint: Mapped[str] = mapped_column(String(64), index=True)
 
-    currency_id: Mapped[int] = mapped_column(
+    currency_id: Mapped[int | None] = mapped_column(
         ForeignKey("currencies.id", ondelete="SET NULL"), nullable=True
     )
-    company_id: Mapped[int] = mapped_column(
-        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    company_id: Mapped[int | None] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=True
     )
     source_id: Mapped[int] = mapped_column(
         ForeignKey("sources.id", ondelete="CASCADE"), nullable=False
     )
-    location_id: Mapped[int] = mapped_column(
+    location_id: Mapped[int | None] = mapped_column(
         ForeignKey("cities.id", ondelete="SET NULL"), nullable=True
     )
     company: Mapped["Company"] = relationship(back_populates="vacancies")

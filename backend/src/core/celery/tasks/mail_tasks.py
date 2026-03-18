@@ -7,7 +7,7 @@ from src.core.logger import logger
 from src.mail.connection import mail_connection
 
 
-@celery_app.task(name="send_verification_email")
+@celery_app.task(name="send_verification_email", queue="mail_queue")
 def send_verification_email_task(email: str, code: str) -> None:
     async def _send() -> None:
         fm = FastMail(mail_connection)

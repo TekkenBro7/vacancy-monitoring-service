@@ -7,6 +7,7 @@ from src.core.config import base_config
 def setup_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(base_config.LOG_LEVEL)
+    logger.propagate = False
 
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 

@@ -6,12 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from src.api.router import api_router
+from src.core.celery.tasks.scheduler_tasks import schedule_source_parse_tasks
 from src.core.config import base_config
 from src.core.logger import logger
 from src.core.rabbitmq import RabbitMQ
 from src.core.redis_client import redis_client
 from src.database.session import async_session_maker
-from src.parsers.services.parser_import_service import ParserImportService
 
 app = FastAPI(
     title="Improved API Service",
@@ -74,41 +74,12 @@ async def startup_event() -> None:
 
     logger.info("Application startup complete")
 
-    from datetime import datetime
+    schedule_source_parse_tasks.delay()
 
-    from src.database.repositories.city_repository import CityRepository
-    from src.database.repositories.company_repository import CompanyRepository
-    from src.database.repositories.currency_repository import CurrencyRepository
-    from src.database.repositories.source_repository import SourceRepository
-    from src.database.repositories.vacancy_repository import VacancyRepository
-    from src.parsers.hh_ru.hh_service import HHVacancyService
+    # from src.core.celery.tasks.scheduler_tasks import _schedule_source_parse_tasks
 
-    async with async_session_maker() as session:
-        from src.models.companies import Company, Vacancy
-        from src.models.currencies import Currency
-        from src.models.locations import City
-        from src.models.sources import Source
 
-        vacancy_repo = VacancyRepository(Vacancy, session)
-        company_repo = CompanyRepository(Company, session)
-        city_repo = CityRepository(City, session)
-        currency_repo = CurrencyRepository(Currency, session)
-        source_repo = SourceRepository(Source, session)
-
-        import_service = ParserImportService(
-            vacancy_repo=vacancy_repo,
-            company_repo=company_repo,
-            city_repo=city_repo,
-            currency_repo=currency_repo,
-            source_repo=source_repo,
-        )
-
-        service = HHVacancyService(import_service=import_service)
-
-        #start = datetime(2026, 2, 12, 0, 0)
-        #end = datetime(2026, 2, 13, 0, 0)
-
-        await service.run(None)
+# await _schedule_source_parse_tasks()
 
 
 @app.on_event("shutdown")

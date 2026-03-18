@@ -1,7 +1,7 @@
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date, datetime
-from sqlalchemy import Date
+
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.enums import SourceParseTaskStatus
 from src.models.base import BaseModel
@@ -31,11 +31,6 @@ class Source(BaseModel):
     source_url: Mapped[str] = mapped_column(String(255), nullable=False)
     source_type_id: Mapped[int] = mapped_column(
         ForeignKey("source_types.id", ondelete="SET NULL"), nullable=False
-    )
-    
-    last_successful_parse_date: Mapped[date | None] = mapped_column(
-        Date,
-        nullable=True,
     )
 
     source_type: Mapped["SourceType"] = relationship(back_populates="sources")
@@ -73,11 +68,11 @@ class SourceParseTask(BaseModel):
         default=SourceParseTaskStatus.PENDING.value,
         index=True,
     )
-    last_error: Mapped[str | None] = mapped_column(
+    error_message: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )
-    
+
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

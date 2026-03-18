@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import hh_config
 from src.core.logger import logger
 from src.parsers.hh_ru.hh_parser import HHParser
@@ -15,7 +16,8 @@ class HHVacancyService:
         total = 0
 
         async for batch in self.parser.stream_vacancies(query, start, end):
-            await self.import_service.import_batch(batch)
+            payload = [v.to_dict() for v in batch]
+            import_vacancies_batch.delay(payload, hh_config.HH_SOURCE_NAME)
             total += len(batch)
 
         logger.info("Range %s - %s → imported %s", start, end, total)
