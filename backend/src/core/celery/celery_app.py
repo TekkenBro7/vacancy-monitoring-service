@@ -1,6 +1,7 @@
 from typing import Any
 
 from celery import Celery
+from celery.schedules import crontab
 from celery.signals import after_setup_logger, after_setup_task_logger
 from kombu import Exchange, Queue
 
@@ -27,7 +28,6 @@ celery_app.conf.update(
 )
 
 vacancy_exchange = Exchange("vacancy_exchange", type="direct")
-vacancy_dlx = Exchange("vacancy_dlx", type="direct")
 
 celery_app.conf.task_queues = (
     Queue("celery"),
@@ -35,29 +35,11 @@ celery_app.conf.task_queues = (
         "parsing_queue",
         exchange=vacancy_exchange,
         routing_key="parsing",
-        queue_arguments={
-            "x-dead-letter-exchange": "vacancy_dlx",
-            "x-dead-letter-routing-key": "parsing_dlq",
-        },
     ),
     Queue(
         "import_queue",
         exchange=vacancy_exchange,
         routing_key="import",
-        queue_arguments={
-            "x-dead-letter-exchange": "vacancy_dlx",
-            "x-dead-letter-routing-key": "import_dlq",
-        },
-    ),
-    Queue(
-        "parsing_dlq",
-        exchange=vacancy_dlx,
-        routing_key="parsing_dlq",
-    ),
-    Queue(
-        "import_dlq",
-        exchange=vacancy_dlx,
-        routing_key="import_dlq",
     ),
     Queue("mail_queue"),
 )
@@ -65,8 +47,21 @@ celery_app.conf.task_queues = (
 celery_app.conf.task_routes = {
     "run_source_parse_task": {"queue": "parsing_queue", "routing_key": "parsing"},
     "schedule_source_parse_tasks": {"queue": "parsing_queue", "routing_key": "parsing"},
+    "dispatch_source_parse_tasks": {"queue": "parsing_queue"},
     "import_vacancies_batch": {"queue": "import_queue", "routing_key": "import"},
     "send_verification_email": {"queue": "mail_queue", "routing_key": "mail"},
+}
+
+
+celery_app.conf.beat_schedule = {
+    "schedule-source-parse-daily": {
+        "task": "schedule_source_parse_tasks",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    "dispatch-source-parse-tasks": {
+        "task": "dispatch_source_parse_tasks",
+        "schedule": crontab(minute="*/1"),
+    },
 }
 
 

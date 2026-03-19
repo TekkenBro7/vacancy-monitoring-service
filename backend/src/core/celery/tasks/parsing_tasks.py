@@ -14,7 +14,6 @@ from src.parsers.hh_ru.hh_service import HHVacancyService
 
 @celery_app.task(name="run_source_parse_task", queue="parsing_queue")
 def run_source_parse_task(task_id: int) -> None:
-    logger.info("22222222222222222222")
     asyncio.run(_run_source_parse_task(task_id))
 
 
@@ -57,6 +56,7 @@ async def _run_source_parse_task(task_id: int) -> None:
                     to_date=date_to,
                 )
             else:
+                await parse_task_repo.mark_failed(task.id, f"Unsupported ыource {task.source_id}")
                 raise ValueError(f"Unsupported source: {source.name}")
 
             await parse_task_repo.mark_success(task.id)

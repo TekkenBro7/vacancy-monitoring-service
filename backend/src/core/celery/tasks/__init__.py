@@ -1,3 +1,4 @@
+from .dispatcher_tasks import dispatch_source_parse_tasks
 from .import_tasks import import_vacancies_batch
 from .mail_tasks import send_verification_email_task
 from .parsing_tasks import run_source_parse_task
@@ -8,4 +9,5 @@ __all__ = [
     "send_verification_email_task",
     "run_source_parse_task",
     "schedule_source_parse_tasks",
+    "dispatch_source_parse_tasks",
 ]

@@ -47,7 +47,12 @@ class HHVacancyService:
 
         return await self._import_range(query, start, end)
 
-    async def run(self, query: str | None, from_date: datetime, to_date: datetime) -> None:
+    async def run(
+        self,
+        query: str | None,
+        from_date: datetime,
+        to_date: datetime,
+    ) -> None:
         current = from_date
         step = timedelta(days=1)
 

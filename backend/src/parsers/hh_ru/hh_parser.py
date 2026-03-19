@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from random import uniform
 from typing import Any
 
 import aiohttp
@@ -16,13 +17,29 @@ from src.utils.datetime_utils import parse_hh_datetime
 class HHParser:
     def __init__(self) -> None:
         self._timeout = aiohttp.ClientTimeout(total=hh_config.HH_TIMEOUT)
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Cache-Control": "no-cache",
+            "Referer": "https://hh.ru/",
+        }
 
     async def _request(
         self, session: aiohttp.ClientSession, url: str, params: dict[str, Any]
     ) -> dict[str, Any]:
         for attempt in range(hh_config.HH_RETRIES):
             try:
+                await asyncio.sleep(0.35 + uniform(0.3, 0.8))
+
                 async with session.get(url, params=params, timeout=self._timeout) as resp:
+                    if resp.status == status.HTTP_403_FORBIDDEN:
+                        logger.warning("HH 403! Backoff %ss", 60 * (attempt + 1))
+                        await asyncio.sleep(60 * (attempt + 1))
+                        continue
+
                     if resp.status != status.HTTP_200_OK:
                         text = await resp.text()
                         logger.warning(
@@ -36,7 +53,6 @@ class HHParser:
                 logger.warning("HH API timeout (attempt %s)", attempt + 1)
             except aiohttp.ClientError as e:
                 logger.warning("HH API connection error: %s", e)
-            await asyncio.sleep(2**attempt)
         raise Exception("HH API request failed after retries")
 
     def _build_params(
@@ -60,7 +76,7 @@ class HHParser:
     async def stream_vacancies(
         self, query: str | None, date_from: datetime, date_to: datetime
     ) -> AsyncGenerator[list[ParserVacancyResult], None]:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=self.headers) as session:
             params = self._build_params(0, query, date_from, date_to)
             data = await self._request(session, hh_config.HH_BASE_URL, params)
 
@@ -119,7 +135,7 @@ class HHParser:
     async def search_vacancies(
         self, query: str | None, date_from: datetime, date_to: datetime
     ) -> int:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=self.headers) as session:
             params = self._build_params(0, query, date_from, date_to, per_page=1)
             data = await self._request(session, hh_config.HH_BASE_URL, params)
             total_found = data.get("found")

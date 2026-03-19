@@ -8,7 +8,13 @@ from src.parsers.base.parser_result import ParserVacancyResult
 from src.parsers.factories.parser_service_factory import ParserServiceFactory
 
 
-@celery_app.task(name="import_vacancies_batch", queue="import_queue")
+@celery_app.task(
+    name="import_vacancies_batch",
+    queue="import_queue",
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
 def import_vacancies_batch(
     vacancies_data: list[dict[str, Any]],
     source_name: str,
@@ -20,11 +26,14 @@ async def _import_vacancies_batch(
     vacancies_data: list[dict[str, Any]],
     source_name: str,
 ) -> None:
-    vacancies = [ParserVacancyResult.from_dict(v) for v in vacancies_data]
+    try:
+        vacancies = [ParserVacancyResult.from_dict(v) for v in vacancies_data]
 
-    async with async_session_maker() as session:
-        import_service = ParserServiceFactory.create_import_service(session)
+        async with async_session_maker() as session:
+            import_service = ParserServiceFactory.create_import_service(session)
 
-        await import_service.import_batch(vacancies, source_name)
+            await import_service.import_batch(vacancies, source_name)
 
-        logger.info("Imported batch with %s vacancies", len(vacancies))
+            logger.info("Imported batch with %s vacancies", len(vacancies))
+    except Exception:
+        logger.exception("Failed to import batch (%s vacancies)", len(vacancies_data))

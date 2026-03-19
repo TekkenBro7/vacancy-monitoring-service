@@ -75,11 +75,9 @@ async def startup_event() -> None:
     logger.info("Application startup complete")
 
     schedule_source_parse_tasks.delay()
+    from src.core.celery.tasks import dispatch_source_parse_tasks
 
-    # from src.core.celery.tasks.scheduler_tasks import _schedule_source_parse_tasks
-
-
-# await _schedule_source_parse_tasks()
+    dispatch_source_parse_tasks.delay()
 
 
 @app.on_event("shutdown")

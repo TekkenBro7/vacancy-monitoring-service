@@ -1,5 +1,7 @@
+import redis.asyncio as redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import redis_config
 from src.database.repositories.city_repository import CityRepository
 from src.database.repositories.company_repository import CompanyRepository
 from src.database.repositories.currency_repository import CurrencyRepository
@@ -11,20 +13,16 @@ from src.models.locations import City
 from src.models.sources import Source
 from src.parsers.services.parser_import_service import ParserImportService
 from src.parsers.services.redis_cache_service import RedisCacheService
-from src.core.redis_client import create_redis_client
 
 
 class ParserServiceFactory:
     @staticmethod
-    def create_import_service(session: AsyncSession) -> ParserImportService:        
+    def create_import_service(session: AsyncSession) -> ParserImportService:
         company_repo = CompanyRepository(Company, session)
         city_repo = CityRepository(City, session)
         currency_repo = CurrencyRepository(Currency, session)
         source_repo = SourceRepository(Source, session)
-        
-        import redis.asyncio as redis
-        from src.core.config import redis_config
-        
+
         redis_client = redis.from_url(
             redis_config.redis_url,
             decode_responses=True,

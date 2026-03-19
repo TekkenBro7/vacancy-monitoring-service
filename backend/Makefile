@@ -13,12 +13,13 @@ PORT ?= 8000
 include .env
 export
 
-.PHONY: help runserver lint seed_data clean_db test
+.PHONY: help runserver lint seed_data clean_db test celery celery_beat
 
 help:
 	@echo "$(YELLOW)Available targets:$(NC)"
 	@echo "  $(GREEN)runserver$(NC)      - Start FastAPI development server"
 	echo "  $(GREEN)celery$(NC)         - Start Celery worker only"
+	@echo "  $(GREEN)celery_beat$(NC)    - Start Celery Beat scheduler"
 	@echo "  $(GREEN)lint$(NC)           - Run black, isort, ruff, mypy linters"
 	@echo "  $(GREEN)seed_data$(NC)      - Seed the database"
 	@echo "  $(GREEN)clean_db$(NC)       - Clean the database"
@@ -31,6 +32,10 @@ runserver:
 celery:
 	@echo "$(GREEN)Starting Celery...$(NC)"
 	$(CELERY) worker --loglevel=info
+
+celery_beat:
+	@echo "$(GREEN)Starting Celery Beat scheduler...$(NC)"
+	$(CELERY) beat --loglevel=info
 
 lint:
 	@echo "$(GREEN)Running linters...$(NC)"

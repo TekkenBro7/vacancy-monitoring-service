@@ -124,6 +124,16 @@ class SourceParseTaskRepository(BaseRepository[SourceParseTask]):
         await self.session.refresh(task)
         return task
 
+    async def get_tasks_for_dispatch(self, limit: int = 100) -> list[SourceParseTask]:
+        stmt = (
+            select(SourceParseTask)
+            .where(SourceParseTask.status.in_(["pending", "failed"]))
+            .order_by(SourceParseTask.parse_date.asc(), SourceParseTask.id.asc())
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def mark_success(self, task_id: int) -> SourceParseTask:
         task = await self.get_by_id(task_id)
         if task is None:
