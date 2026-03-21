@@ -58,7 +58,7 @@ class AuthService:
 
         user = await self.user_service.user_repo.get_user_with_role(int(user_id))  # type: ignore
         if not user:
-            raise HTTPException(404)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
         new_access = create_access_token({"sub": str(user.id), "role": user.role.name})
 

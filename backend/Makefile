@@ -55,4 +55,4 @@ clean_db:
 
 test:
 	@echo "$(GREEN)Starting tests...$(NC)"
-	$(UV) pytest -s
+	$(UV) pytest -s --disable-warnings

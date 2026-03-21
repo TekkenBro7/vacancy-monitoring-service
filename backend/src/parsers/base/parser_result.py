@@ -48,6 +48,8 @@ class ParserVacancyResult:
 
     @classmethod
     def from_dict(cls, data: dict) -> "ParserVacancyResult":
+        data = data.copy()
+
         if data.get("published_at"):
             data["published_at"] = datetime.fromisoformat(data["published_at"])
 
