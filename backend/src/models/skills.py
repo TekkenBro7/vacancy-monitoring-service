@@ -8,7 +8,7 @@ class Skill(BaseModel):
     __tablename__ = "skills"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     users: Mapped[list["User"]] = relationship(secondary="user_skills", back_populates="skills")  # type: ignore
     vacancies: Mapped[list["Vacancy"]] = relationship(  # type: ignore

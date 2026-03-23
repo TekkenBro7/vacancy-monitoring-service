@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
@@ -48,7 +46,6 @@ class VacancyRepository(BaseRepository[Vacancy]):
         return list(result.scalars().all())
 
     async def get_by_id_with_related(self, vacancy_id: int) -> Vacancy | None:
-        """Получить вакансию по ID с загруженными связанными данными"""
         query = (
             select(Vacancy)
             .options(
@@ -65,7 +62,6 @@ class VacancyRepository(BaseRepository[Vacancy]):
         return result.scalar_one_or_none()
 
     async def count(self) -> int:
-        """Получить общее количество вакансий"""
         query = select(func.count()).select_from(Vacancy)
         result = await self.session.execute(query)
         return result.scalar_one()

@@ -122,4 +122,38 @@
   .animate-slide-in-right {
     animation: slide-in-right 0.4s ease-out forwards;
   }
+
+  /* HH.ru HTML description styles */
+  .hh-description {
+    line-height: 1.7;
+  }
+
+  .hh-description p {
+    margin-bottom: 1em;
+  }
+
+  .hh-description ul,
+  .hh-description ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  .hh-description li {
+    margin-bottom: 0.5em;
+  }
+
+  .hh-description strong,
+  .hh-description b {
+    font-weight: 600;
+    color: rgb(var(--text-primary));
+  }
+
+  .hh-description a {
+    color: rgb(var(--accent));
+    text-decoration: underline;
+  }
+
+  .hh-description a:hover {
+    text-decoration: none;
+  }
 }

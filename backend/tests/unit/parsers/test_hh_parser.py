@@ -277,3 +277,153 @@ class TestSearchVacancies:
             result = await parser.search_vacancies(None, datetime(2024, 6, 1), datetime(2024, 6, 2))
 
             assert result == 0
+
+
+class TestGetVacancy:
+    @pytest.mark.asyncio
+    async def test_returns_vacancy_data_on_success(
+        self, parser: HHParser, sample_vacancy_response: dict[str, Any]
+    ) -> None:
+        mock_response = AsyncMock()
+        mock_response.status = status.HTTP_200_OK
+        mock_response.text = AsyncMock(return_value="{}")
+        mock_response.json = AsyncMock(return_value=sample_vacancy_response)
+
+        mock_response_cm = AsyncMock()
+        mock_response_cm.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response_cm.__aexit__ = AsyncMock()
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response_cm)
+
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result == sample_vacancy_response
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_404(self, parser: HHParser) -> None:
+        mock_response = AsyncMock()
+        mock_response.status = status.HTTP_404_NOT_FOUND
+        mock_response.text = AsyncMock(return_value="Not found")
+
+        mock_response_cm = AsyncMock()
+        mock_response_cm.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response_cm.__aexit__ = AsyncMock()
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response_cm)
+
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("99999")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_429_rate_limit(self, parser: HHParser) -> None:
+        mock_response = AsyncMock()
+        mock_response.status = status.HTTP_429_TOO_MANY_REQUESTS
+        mock_response.text = AsyncMock(return_value="Rate limit exceeded")
+
+        mock_response_cm = AsyncMock()
+        mock_response_cm.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response_cm.__aexit__ = AsyncMock()
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response_cm)
+
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_other_error_status(self, parser: HHParser) -> None:
+        mock_response = AsyncMock()
+        mock_response.status = status.HTTP_500_INTERNAL_SERVER_ERROR
+        mock_response.text = AsyncMock(return_value="Internal server error")
+
+        mock_response_cm = AsyncMock()
+        mock_response_cm.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response_cm.__aexit__ = AsyncMock()
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response_cm)
+
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_timeout(self, parser: HHParser) -> None:
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(side_effect=TimeoutError())
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_client_error(self, parser: HHParser) -> None:
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError())
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_unexpected_exception(self, parser: HHParser) -> None:
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(side_effect=Exception("Unexpected error"))
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            result = await parser.get_vacancy("12345")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self, parser: HHParser) -> None:
+        mock_response = AsyncMock()
+        mock_response.status = status.HTTP_200_OK
+        mock_response.text = AsyncMock(return_value="{}")
+        mock_response.json = AsyncMock(return_value={"id": "12345"})
+
+        mock_response_cm = AsyncMock()
+        mock_response_cm.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response_cm.__aexit__ = AsyncMock()
+
+        mock_session = AsyncMock()
+        mock_session.get = MagicMock(return_value=mock_response_cm)
+
+        mock_session_cm = AsyncMock()
+        mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cm.__aexit__ = AsyncMock()
+
+        with patch("aiohttp.ClientSession", return_value=mock_session_cm):
+            with patch("src.core.config.hh_config.HH_BASE_URL", "https://api.hh.ru/vacancies"):
+                await parser.get_vacancy("12345")
+
+        mock_session.get.assert_called_once_with("https://api.hh.ru/vacancies/12345")

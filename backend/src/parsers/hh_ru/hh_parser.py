@@ -55,6 +55,43 @@ class HHParser:
                 logger.warning("HH API connection error: %s", e)
         raise Exception("HH API request failed after retries")
 
+    async def get_vacancy(self, vacancy_id: str) -> dict[str, Any] | None:
+        try:
+            async with aiohttp.ClientSession(
+                headers=self.headers, timeout=self._timeout
+            ) as session:
+                url = f"{hh_config.HH_BASE_URL}/{vacancy_id}"
+                logger.info(f"Fetching HH vacancy {vacancy_id} from {url}")
+
+                async with session.get(url) as response:
+                    response_text = await response.text()
+
+                    if response.status == status.HTTP_200_OK:
+                        data = await response.json()
+                        logger.info(f"Successfully fetched HH vacancy {vacancy_id}")
+                        return data
+                    elif response.status == status.HTTP_404_NOT_FOUND:
+                        logger.warning(f"HH vacancy {vacancy_id} not found (404)")
+                        return None
+                    elif response.status == status.HTTP_429_TOO_MANY_REQUESTS:
+                        logger.error(f"HH API rate limit exceeded for vacancy {vacancy_id}")
+                        return None
+                    else:
+                        logger.error(
+                            f"HH API error: {response.status} for vacancy {vacancy_id}. Response: {response_text[:200]}"
+                        )
+                        return None
+
+        except TimeoutError:
+            logger.error(f"Timeout fetching HH vacancy {vacancy_id}")
+            return None
+        except aiohttp.ClientError as e:
+            logger.error(f"Client error fetching HH vacancy {vacancy_id}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error fetching HH vacancy {vacancy_id}: {e}")
+            return None
+
     def _build_params(
         self,
         page: int,

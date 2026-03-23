@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from src.database.repositories.base_repository import BaseRepository
+from src.models.skills import Skill
 from src.models.users import User
 
 
@@ -17,8 +18,6 @@ class UserRepository(BaseRepository[User]):
         return result.scalar_one_or_none()
 
     async def update_skills(self, user: User, skill_ids: list[int]) -> User:
-        from src.models.skills import Skill
-
         if skill_ids:
             skills_query = select(Skill).where(Skill.id.in_(skill_ids))
             skills_result = await self.session.execute(skills_query)

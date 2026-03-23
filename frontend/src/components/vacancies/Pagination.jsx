@@ -44,9 +44,11 @@ export default function Pagination({ pagination, onPageChange }) {
       style={{ color: 'rgb(var(--text-muted))' }}
     >
       <div className="text-sm">
-        Показано с <span style={{ color: 'rgb(var(--text-primary))', fontWeight: 600 }}>{startItem}</span> по{' '}
+        Показано с{' '}
+        <span style={{ color: 'rgb(var(--text-primary))', fontWeight: 600 }}>{startItem}</span> по{' '}
         <span style={{ color: 'rgb(var(--text-primary))', fontWeight: 600 }}>{endItem}</span> из{' '}
-        <span style={{ color: 'rgb(var(--text-primary))', fontWeight: 600 }}>{total_items}</span> вакансий
+        <span style={{ color: 'rgb(var(--text-primary))', fontWeight: 600 }}>{total_items}</span>{' '}
+        вакансий
       </div>
 
       <div className="flex items-center gap-1">

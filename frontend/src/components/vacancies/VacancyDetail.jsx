@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   ArrowLeft,
   Building,
@@ -15,6 +16,7 @@ import {
   TrendingUp,
   Users,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,13 @@ export default function VacancyDetail() {
       setLoading(true);
       const data = await VacancyService.getVacancyById(id);
       setVacancy(data);
+
+      if (data.last_enriched_at) {
+        const enrichedRecently = new Date(data.last_enriched_at) > new Date(Date.now() - 60000);
+        if (enrichedRecently && data.source?.name?.toLowerCase().includes('headhunter')) {
+          notification.success('Данные обновлены', 'Описание и навыки дополнены из HeadHunter');
+        }
+      }
     } catch (error) {
       notification.error('Ошибка', 'Не удалось загрузить вакансию');
       console.error('Error loading vacancy:', error);
@@ -111,8 +120,14 @@ export default function VacancyDetail() {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          <div className="h-10 w-64 mb-6 animate-pulse rounded" style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.5)' }} />
-          <div className="h-96 rounded-2xl animate-pulse" style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.3)' }} />
+          <div
+            className="h-10 w-64 mb-6 animate-pulse rounded"
+            style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.5)' }}
+          />
+          <div
+            className="h-96 rounded-2xl animate-pulse"
+            style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.3)' }}
+          />
         </div>
       </div>
     );
@@ -126,8 +141,7 @@ export default function VacancyDetail() {
             Вакансия не найдена
           </h2>
           <Button onClick={() => navigate('/vacancies')} className="text-white">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            К списку вакансий
+            <ArrowLeft className="h-4 w-4 mr-2" />К списку вакансий
           </Button>
         </div>
       </div>
@@ -138,7 +152,6 @@ export default function VacancyDetail() {
     <div className="min-h-screen py-8 animate-fade-in">
       <div className="container mx-auto px-6">
         <div className="max-w-5xl mx-auto">
-          {/* Back Button */}
           <div className="flex items-center justify-between mb-6 animate-fade-in-down">
             <Button
               variant="ghost"
@@ -179,7 +192,6 @@ export default function VacancyDetail() {
             </div>
           </div>
 
-          {/* Main Card */}
           <div
             className="rounded-2xl backdrop-blur-sm border shadow-xl overflow-hidden animate-fade-in-up"
             style={{
@@ -187,7 +199,6 @@ export default function VacancyDetail() {
               borderColor: 'rgb(var(--border)/0.5)',
             }}
           >
-            {/* Header with Gradient */}
             <div
               className="relative p-8 border-b overflow-hidden"
               style={{
@@ -195,10 +206,11 @@ export default function VacancyDetail() {
                 background: 'linear-gradient(135deg, rgb(var(--accent))/5, transparent)',
               }}
             >
-              {/* Decorative Elements */}
               <div
                 className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                style={{
+                  background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)',
+                }}
               />
 
               <div className="relative">
@@ -215,7 +227,8 @@ export default function VacancyDetail() {
                         <Badge
                           className="border"
                           style={{
-                            background: 'linear-gradient(135deg, rgb(var(--accent))/25, rgb(var(--accent))/10)',
+                            background:
+                              'linear-gradient(135deg, rgb(var(--accent))/25, rgb(var(--accent))/10)',
                             borderColor: 'rgb(var(--accent)/0.4)',
                             color: 'rgb(var(--accent))',
                           }}
@@ -227,7 +240,8 @@ export default function VacancyDetail() {
                         <Badge
                           className="border"
                           style={{
-                            background: 'linear-gradient(135deg, rgb(34, 197, 94)/25, rgb(34, 197, 94)/10)',
+                            background:
+                              'linear-gradient(135deg, rgb(34, 197, 94)/25, rgb(34, 197, 94)/10)',
                             borderColor: 'rgb(34, 197, 94)/0.4)',
                             color: 'rgb(34, 197, 94)',
                           }}
@@ -239,7 +253,8 @@ export default function VacancyDetail() {
                         <Badge
                           className="border"
                           style={{
-                            background: 'linear-gradient(135deg, rgb(34, 197, 94)/25, rgb(34, 197, 94)/10)',
+                            background:
+                              'linear-gradient(135deg, rgb(34, 197, 94)/25, rgb(34, 197, 94)/10)',
                             borderColor: 'rgb(34, 197, 94)/0.4)',
                             color: 'rgb(34, 197, 94)',
                           }}
@@ -250,7 +265,10 @@ export default function VacancyDetail() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 flex-wrap" style={{ color: 'rgb(var(--text-muted))' }}>
+                    <div
+                      className="flex items-center gap-3 flex-wrap"
+                      style={{ color: 'rgb(var(--text-muted))' }}
+                    >
                       <div className="flex items-center gap-2">
                         <Building className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
                         <span className="font-medium">
@@ -278,12 +296,12 @@ export default function VacancyDetail() {
                   </div>
                 </div>
 
-                {/* Key Info Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div
                     className="group p-5 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
                     style={{
-                      background: 'linear-gradient(135deg, rgb(var(--accent))/10, rgb(var(--accent))/5)',
+                      background:
+                        'linear-gradient(135deg, rgb(var(--accent))/10, rgb(var(--accent))/5)',
                       border: '1px solid rgb(var(--accent)/0.2)',
                     }}
                   >
@@ -294,7 +312,10 @@ export default function VacancyDetail() {
                       >
                         <DollarSign className="h-6 w-6" style={{ color: 'rgb(var(--accent))' }} />
                       </div>
-                      <span className="text-sm font-medium" style={{ color: 'rgb(var(--text-muted))' }}>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: 'rgb(var(--text-muted))' }}
+                      >
                         Зарплата
                       </span>
                     </div>
@@ -303,7 +324,8 @@ export default function VacancyDetail() {
                     </div>
                     {vacancy.currency && (
                       <div className="text-xs mt-1" style={{ color: 'rgb(var(--text-muted))' }}>
-                        {vacancy.currency.name} {vacancy.currency.symbol && `(${vacancy.currency.symbol})`}
+                        {vacancy.currency.name}{' '}
+                        {vacancy.currency.symbol && `(${vacancy.currency.symbol})`}
                       </div>
                     )}
                   </div>
@@ -319,11 +341,17 @@ export default function VacancyDetail() {
                       >
                         <MapPin className="h-6 w-6" style={{ color: 'rgb(var(--accent))' }} />
                       </div>
-                      <span className="text-sm font-medium" style={{ color: 'rgb(var(--text-muted))' }}>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: 'rgb(var(--text-muted))' }}
+                      >
                         Локация
                       </span>
                     </div>
-                    <div className="text-lg font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
+                    <div
+                      className="text-lg font-semibold"
+                      style={{ color: 'rgb(var(--text-primary))' }}
+                    >
                       {vacancy.location?.name || 'Не указана'}
                     </div>
                     {vacancy.location?.country_id && (
@@ -344,24 +372,65 @@ export default function VacancyDetail() {
                       >
                         <Calendar className="h-6 w-6" style={{ color: 'rgb(var(--accent))' }} />
                       </div>
-                      <span className="text-sm font-medium" style={{ color: 'rgb(var(--text-muted))' }}>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: 'rgb(var(--text-muted))' }}
+                      >
                         Опубликовано
                       </span>
                     </div>
-                    <div className="text-lg font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
-                      {timeAgo(vacancy.created_at_source || vacancy.published_at)}
+                    <div
+                      className="text-lg font-semibold"
+                      style={{ color: 'rgb(var(--text-primary))' }}
+                    >
+                      {timeAgo(vacancy.published_at || vacancy.created_at_source)}
                     </div>
                     <div className="text-xs mt-1" style={{ color: 'rgb(var(--text-muted))' }}>
-                      {formatDate(vacancy.created_at_source || vacancy.published_at)}
+                      {formatDate(vacancy.published_at || vacancy.created_at_source)}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Main Content */}
             <div className="p-8">
-              {/* Details Grid */}
+              {vacancy.last_enriched_at &&
+                vacancy.source?.name?.toLowerCase().includes('headhunter') && (
+                  <div
+                    className="mb-6 p-4 rounded-xl border flex items-center justify-between"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgb(var(--accent)/10), rgb(var(--accent)/5))',
+                      borderColor: 'rgb(var(--accent)/0.3)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="p-2 rounded-lg"
+                        style={{ backgroundColor: 'rgb(var(--accent)/0.1)' }}
+                      >
+                        <Sparkles className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+                      </div>
+                      <div>
+                        <div
+                          className="font-semibold"
+                          style={{ color: 'rgb(var(--text-primary))' }}
+                        >
+                          Данные дополнены из HeadHunter
+                        </div>
+                        <div className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                          Описание и навыки обновлены{' '}
+                          {new Date(vacancy.last_enriched_at).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               {(vacancy.experience || vacancy.employment || vacancy.schedule) && (
                 <div className="mb-8">
                   <h2
@@ -387,7 +456,10 @@ export default function VacancyDetail() {
                           <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
                             Опыт работы
                           </div>
-                          <div className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
+                          <div
+                            className="font-semibold"
+                            style={{ color: 'rgb(var(--text-primary))' }}
+                          >
                             {vacancy.experience}
                           </div>
                         </div>
@@ -408,7 +480,10 @@ export default function VacancyDetail() {
                           <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
                             Занятость
                           </div>
-                          <div className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
+                          <div
+                            className="font-semibold"
+                            style={{ color: 'rgb(var(--text-primary))' }}
+                          >
                             {vacancy.employment}
                           </div>
                         </div>
@@ -429,7 +504,10 @@ export default function VacancyDetail() {
                           <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
                             График
                           </div>
-                          <div className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
+                          <div
+                            className="font-semibold"
+                            style={{ color: 'rgb(var(--text-primary))' }}
+                          >
                             {vacancy.schedule}
                           </div>
                         </div>
@@ -439,7 +517,6 @@ export default function VacancyDetail() {
                 </div>
               )}
 
-              {/* Description */}
               {vacancy.description && (
                 <div className="mb-8">
                   <h2
@@ -449,18 +526,18 @@ export default function VacancyDetail() {
                     Описание вакансии
                   </h2>
                   <div
-                    className="p-6 rounded-xl leading-relaxed"
+                    className="prose max-w-none p-6 rounded-xl hh-description"
                     style={{
                       backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
                       color: 'rgb(var(--text-muted))',
                     }}
-                  >
-                    <p className="whitespace-pre-wrap">{vacancy.description}</p>
-                  </div>
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(vacancy.description),
+                    }}
+                  />
                 </div>
               )}
 
-              {/* Skills */}
               {vacancy.skills && vacancy.skills.length > 0 && (
                 <div className="mb-8">
                   <h2
@@ -472,11 +549,12 @@ export default function VacancyDetail() {
                   <div className="flex flex-wrap gap-2">
                     {vacancy.skills.map((skill, index) => (
                       <Badge
-                        key={skill.id}
+                        key={skill.id || index}
                         className="text-sm px-4 py-2 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
                         style={{
                           animationDelay: `${index * 50}ms`,
-                          background: 'linear-gradient(135deg, rgb(var(--accent)/0.15), rgb(var(--accent)/0.05))',
+                          background:
+                            'linear-gradient(135deg, rgb(var(--accent)/0.15), rgb(var(--accent)/0.05))',
                           border: '1px solid rgb(var(--accent)/0.3)',
                           color: 'rgb(var(--text-primary))',
                         }}
@@ -490,7 +568,6 @@ export default function VacancyDetail() {
 
               <Separator className="my-8" style={{ backgroundColor: 'rgb(var(--border))' }} />
 
-              {/* Additional Info */}
               <div className="mb-8">
                 <h2
                   className="text-xl font-semibold mb-4"
@@ -507,32 +584,30 @@ export default function VacancyDetail() {
                     <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
                       Создано:{' '}
                       <span className="font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
-                        {formatDate(vacancy.created_at_source)}
+                        {formatDate(vacancy.created_at)}
                       </span>
                     </span>
                   </div>
-                  {vacancy.last_seen_at && (
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
-                      <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
-                        Последняя активность:{' '}
-                        <span className="font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
-                          {timeAgo(vacancy.last_seen_at)}
-                        </span>
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+                    <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                      Обновлено:{' '}
+                      <span className="font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
+                        {formatDate(vacancy.updated_at)}
                       </span>
-                    </div>
-                  )}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {vacancy.vacancy_url ? (
                   <Button
                     size="lg"
                     className="flex-1 text-white h-14 text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[rgb(var(--accent))/20]"
                     style={{
-                      background: 'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                      background:
+                        'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                     }}
                     asChild
                   >
@@ -546,9 +621,12 @@ export default function VacancyDetail() {
                     size="lg"
                     className="flex-1 text-white h-14 text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[rgb(var(--accent))/20]"
                     style={{
-                      background: 'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                      background:
+                        'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                     }}
-                    onClick={() => notification.info('В разработке', 'Функция отклика будет доступна soon')}
+                    onClick={() =>
+                      notification.info('В разработке', 'Функция отклика будет доступна soon')
+                    }
                   >
                     Откликнуться
                   </Button>

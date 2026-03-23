@@ -15,12 +15,13 @@ class TestGetCurrentUser:
         mock_user.email = "test@example.com"
         mock_db = AsyncMock()
 
-        with patch(
-            "src.dependencies.users.decode_access_token",
-            return_value={"sub": "1", "role": "user"},
-        ), patch(
-            "src.dependencies.users.UserService"
-        ) as mock_service_class:
+        with (
+            patch(
+                "src.dependencies.users.decode_access_token",
+                return_value={"sub": "1", "role": "user"},
+            ),
+            patch("src.dependencies.users.UserService") as mock_service_class,
+        ):
             mock_service = AsyncMock()
             mock_service.get_user_me.return_value = mock_user
             mock_service_class.return_value = mock_service
@@ -29,7 +30,7 @@ class TestGetCurrentUser:
                 "src.schemas.users.UserMe.model_validate",
                 return_value=MagicMock(id=1, username="testuser"),
             ) as mock_validate:
-                result = await get_current_user(token="valid_token", db=mock_db)
+                _ = await get_current_user(token="valid_token", db=mock_db)
 
         mock_service.get_user_me.assert_called_once_with(1)
         mock_validate.assert_called_once_with(mock_user)
@@ -66,12 +67,13 @@ class TestGetCurrentUser:
     async def test_raises_404_when_user_not_found(self) -> None:
         mock_db = AsyncMock()
 
-        with patch(
-            "src.dependencies.users.decode_access_token",
-            return_value={"sub": "999", "role": "user"},
-        ), patch(
-            "src.dependencies.users.UserService"
-        ) as mock_service_class:
+        with (
+            patch(
+                "src.dependencies.users.decode_access_token",
+                return_value={"sub": "999", "role": "user"},
+            ),
+            patch("src.dependencies.users.UserService") as mock_service_class,
+        ):
             mock_service = AsyncMock()
             mock_service.get_user_me.return_value = None
             mock_service_class.return_value = mock_service

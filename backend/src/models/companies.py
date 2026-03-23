@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
-from sqlalchemy import TIMESTAMP, ForeignKey, String, Text, UniqueConstraint, func
+from sqlalchemy import TIMESTAMP, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import BaseModel
@@ -50,7 +50,10 @@ class Vacancy(BaseModel):
     )
     published_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     last_seen_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
+        TIMESTAMP(timezone=True), nullable=True, default=lambda: datetime.now(UTC)
+    )
+    last_enriched_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
     )
 
     fingerprint: Mapped[str] = mapped_column(String(64), index=True)

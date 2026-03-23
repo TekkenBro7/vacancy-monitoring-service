@@ -57,23 +57,16 @@ export default function VacanciesPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-6">
-        {/* Header */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="text-center mb-8">
-            <h1
-              className="text-4xl font-bold mb-3"
-              style={{ color: 'rgb(var(--text-primary))' }}
-            >
+            <h1 className="text-4xl font-bold mb-3" style={{ color: 'rgb(var(--text-primary))' }}>
               Все вакансии
             </h1>
             <p className="text-lg" style={{ color: 'rgb(var(--text-muted))' }}>
-              {pagination
-                ? `Найдено ${pagination.total_items} вакансий`
-                : 'Загрузка вакансий...'}
+              {pagination ? `Найдено ${pagination.total_items} вакансий` : 'Загрузка вакансий...'}
             </p>
           </div>
 
-          {/* Search Bar */}
           <div className="relative max-w-2xl mx-auto">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5"
@@ -104,13 +97,9 @@ export default function VacanciesPage() {
             )}
           </div>
 
-          {/* Stats & Filters Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
             <div className="flex items-center gap-2">
-              <Briefcase
-                className="h-5 w-5"
-                style={{ color: 'rgb(var(--accent))' }}
-              />
+              <Briefcase className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
               <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
                 Показано:{' '}
                 <span className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
@@ -132,11 +121,9 @@ export default function VacanciesPage() {
           </div>
         </div>
 
-        {/* Vacancies Grid */}
         <div className="max-w-6xl mx-auto">
           <VacancyList vacancies={filteredVacancies} loading={loading} />
 
-          {/* Pagination */}
           {pagination && !loading && (
             <Pagination pagination={pagination} onPageChange={handlePageChange} />
           )}

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Generic, Optional, TypeVar
 
 from pydantic import BaseModel, HttpUrl
 
@@ -79,10 +78,10 @@ class VacancyRead(BaseModel):
     last_seen_at: datetime | None
     fingerprint: str
 
-    currency: Optional[CurrencyRead] = None
-    company: Optional[CompanyRead] = None
-    source: Optional[SourceRead] = None
-    location: Optional[CityRead] = None
+    currency: CurrencyRead | None = None
+    company: CompanyRead | None = None
+    source: SourceRead | None = None
+    location: CityRead | None = None
     skills: list[SkillRead] = []
 
     model_config = {"from_attributes": True}
@@ -118,10 +117,6 @@ class VacancyUpdate(BaseModel):
     published_at: datetime | None = None
 
 
-# Pagination schemas
-T = TypeVar("T")
-
-
 class PaginationInfo(BaseModel):
     page: int
     page_size: int
@@ -131,6 +126,6 @@ class PaginationInfo(BaseModel):
     has_prev: bool
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     items: list[T]
     pagination: PaginationInfo

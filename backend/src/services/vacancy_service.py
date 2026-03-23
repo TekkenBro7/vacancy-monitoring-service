@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.repositories.vacancy_repository import VacancyRepository
 from src.models.companies import Vacancy
+from src.parsers.hh_ru.vacancy_enrichment_service import VacancyEnrichmentService
 from src.schemas.companies import (
     PaginatedResponse,
     PaginationInfo,
@@ -17,6 +18,7 @@ from src.schemas.companies import (
 class VacancyService:
     def __init__(self, db: AsyncSession):
         self.repo = VacancyRepository(Vacancy, db)
+        self.enrichment_service = VacancyEnrichmentService(db)
 
     async def list_vacancies(
         self,
@@ -44,6 +46,12 @@ class VacancyService:
         vacancy = await self.repo.get_by_id_with_related(vacancy_id)
         if not vacancy:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Vacancy not found")
+
+        vacancy = await self.enrichment_service.enrich_vacancy_if_needed(vacancy)
+
+        if vacancy.last_enriched_at:
+            vacancy = await self.repo.update(vacancy)
+
         return VacancyRead.model_validate(vacancy)
 
     async def create_vacancy(self, data: VacancyCreate) -> VacancyRead:

@@ -25,14 +25,8 @@ export default function VacancyList({ vacancies, loading }) {
           borderColor: 'rgb(var(--border))',
         }}
       >
-        <Briefcase
-          className="h-16 w-16 mx-auto mb-4"
-          style={{ color: 'rgb(var(--text-muted))' }}
-        />
-        <h3
-          className="text-xl font-semibold mb-2"
-          style={{ color: 'rgb(var(--text-primary))' }}
-        >
+        <Briefcase className="h-16 w-16 mx-auto mb-4" style={{ color: 'rgb(var(--text-muted))' }} />
+        <h3 className="text-xl font-semibold mb-2" style={{ color: 'rgb(var(--text-primary))' }}>
           Вакансии не найдены
         </h3>
         <p style={{ color: 'rgb(var(--text-muted))' }}>

@@ -1,4 +1,14 @@
-import { Building, MapPin, DollarSign, Clock, ExternalLink, Bookmark, Globe, Briefcase, Calendar } from 'lucide-react';
+import {
+  Building,
+  MapPin,
+  DollarSign,
+  Clock,
+  ExternalLink,
+  Bookmark,
+  Globe,
+  Briefcase,
+  Calendar,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,16 +59,15 @@ export default function VacancyCard({ vacancy }) {
         borderColor: 'rgb(var(--border)/0.5)',
       }}
     >
-      {/* Gradient border on hover */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
         style={{
-          background: 'linear-gradient(135deg, rgb(var(--accent))/15, transparent 40%, transparent 60%, rgb(var(--accent))/10)',
+          background:
+            'linear-gradient(135deg, rgb(var(--accent))/15, transparent 40%, transparent 60%, rgb(var(--accent))/10)',
         }}
       />
 
       <div className="relative p-6 md:p-8">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -73,7 +82,8 @@ export default function VacancyCard({ vacancy }) {
                 <Badge
                   className="border shrink-0 animate-fade-in"
                   style={{
-                    background: 'linear-gradient(135deg, rgb(var(--accent))/25, rgb(var(--accent))/10)',
+                    background:
+                      'linear-gradient(135deg, rgb(var(--accent))/25, rgb(var(--accent))/10)',
                     borderColor: 'rgb(var(--accent)/0.4)',
                     color: 'rgb(var(--accent))',
                   }}
@@ -95,7 +105,10 @@ export default function VacancyCard({ vacancy }) {
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap" style={{ color: 'rgb(var(--text-muted))' }}>
+            <div
+              className="flex items-center gap-2 flex-wrap"
+              style={{ color: 'rgb(var(--text-muted))' }}
+            >
               <Building className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
               <span className="font-medium">{getCompanyText()}</span>
               {vacancy.source && (
@@ -108,7 +121,6 @@ export default function VacancyCard({ vacancy }) {
             </div>
           </div>
 
-          {/* Salary Block */}
           <div
             className="md:text-right px-4 py-3 rounded-xl shrink-0"
             style={{
@@ -118,7 +130,10 @@ export default function VacancyCard({ vacancy }) {
           >
             <div className="flex items-center md:justify-end gap-2 mb-1">
               <DollarSign className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
-              <span className="text-lg md:text-xl font-bold" style={{ color: 'rgb(var(--accent))' }}>
+              <span
+                className="text-lg md:text-xl font-bold"
+                style={{ color: 'rgb(var(--accent))' }}
+              >
                 {formatSalary(vacancy.salary_from, vacancy.salary_to, vacancy.currency)}
               </span>
             </div>
@@ -130,7 +145,6 @@ export default function VacancyCard({ vacancy }) {
           </div>
         </div>
 
-        {/* Info Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div
             className="flex items-center gap-3 p-3 rounded-xl transition-all duration-300 hover:scale-105"
@@ -140,8 +154,13 @@ export default function VacancyCard({ vacancy }) {
               <MapPin className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
             </div>
             <div className="min-w-0">
-              <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>Город</div>
-              <div className="text-sm font-medium truncate" style={{ color: 'rgb(var(--text-primary))' }}>
+              <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                Город
+              </div>
+              <div
+                className="text-sm font-medium truncate"
+                style={{ color: 'rgb(var(--text-primary))' }}
+              >
                 {getLocationText()}
               </div>
             </div>
@@ -156,8 +175,13 @@ export default function VacancyCard({ vacancy }) {
                 <Briefcase className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
               </div>
               <div className="min-w-0">
-                <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>Опыт</div>
-                <div className="text-sm font-medium truncate" style={{ color: 'rgb(var(--text-primary))' }}>
+                <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                  Опыт
+                </div>
+                <div
+                  className="text-sm font-medium truncate"
+                  style={{ color: 'rgb(var(--text-primary))' }}
+                >
                   {vacancy.experience}
                 </div>
               </div>
@@ -173,8 +197,13 @@ export default function VacancyCard({ vacancy }) {
                 <Briefcase className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
               </div>
               <div className="min-w-0">
-                <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>Занятость</div>
-                <div className="text-sm font-medium truncate" style={{ color: 'rgb(var(--text-primary))' }}>
+                <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                  Занятость
+                </div>
+                <div
+                  className="text-sm font-medium truncate"
+                  style={{ color: 'rgb(var(--text-primary))' }}
+                >
                   {vacancy.employment}
                 </div>
               </div>
@@ -189,7 +218,9 @@ export default function VacancyCard({ vacancy }) {
               <Clock className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
             </div>
             <div className="min-w-0">
-              <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>Опубликовано</div>
+              <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                Опубликовано
+              </div>
               <div className="text-sm font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
                 {timeAgo(vacancy.created_at_source || vacancy.published_at)}
               </div>
@@ -197,22 +228,6 @@ export default function VacancyCard({ vacancy }) {
           </div>
         </div>
 
-        {/* Description Preview */}
-        {vacancy.description && (
-          <>
-            <div className="mb-6">
-              <p
-                className="text-sm leading-relaxed line-clamp-3"
-                style={{ color: 'rgb(var(--text-muted))' }}
-              >
-                {vacancy.description}
-              </p>
-            </div>
-            <Separator className="mb-6" style={{ backgroundColor: 'rgb(var(--border))' }} />
-          </>
-        )}
-
-        {/* Skills */}
         {vacancy.skills && vacancy.skills.length > 0 && (
           <div className="mb-6">
             <div className="text-xs mb-3" style={{ color: 'rgb(var(--text-muted))' }}>
@@ -249,9 +264,11 @@ export default function VacancyCard({ vacancy }) {
           </div>
         )}
 
-        {/* Footer Actions */}
         <div className="flex items-center justify-between gap-4 pt-4">
-          <div className="flex items-center gap-2 text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+          <div
+            className="flex items-center gap-2 text-xs"
+            style={{ color: 'rgb(var(--text-muted))' }}
+          >
             <Calendar className="h-3 w-3" />
             <span>Обновлено {timeAgo(vacancy.last_seen_at || vacancy.updated_at)}</span>
           </div>
@@ -274,7 +291,8 @@ export default function VacancyCard({ vacancy }) {
                 size="sm"
                 className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[rgb(var(--accent))/20]"
                 style={{
-                  background: 'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  background:
+                    'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                 }}
                 asChild
               >
@@ -288,13 +306,12 @@ export default function VacancyCard({ vacancy }) {
                 size="sm"
                 className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[rgb(var(--accent))/20]"
                 style={{
-                  background: 'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  background:
+                    'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                 }}
                 asChild
               >
-                <Link to={`/vacancies/${vacancy.id}`}>
-                  Подробнее
-                </Link>
+                <Link to={`/vacancies/${vacancy.id}`}>Подробнее</Link>
               </Button>
             )}
           </div>
