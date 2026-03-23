@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Search,
   TrendingUp,
@@ -25,9 +26,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import useNotification from '@/hooks/useNotification';
+import VacancyService from '@/api/services/VacancyService';
+import VacancyList from '@/components/vacancies/VacancyList';
 
 export default function HomePage() {
   const notification = useNotification();
+  const [vacancies, setVacancies] = useState([]);
+  const [loadingVacancies, setLoadingVacancies] = useState(false);
 
   useEffect(() => {
     const oauthLogin = localStorage.getItem('oauthLogin');
@@ -36,6 +41,22 @@ export default function HomePage() {
       notification.success('Вход выполнен успешно', 'Добро пожаловать в систему');
     }
   }, [notification]);
+
+  useEffect(() => {
+    loadVacancies();
+  }, []);
+
+  const loadVacancies = async () => {
+    try {
+      setLoadingVacancies(true);
+      const data = await VacancyService.getVacancies({ page: 1, page_size: 3 });
+      setVacancies(data.items || []); // Берем только items из пагинированного ответа
+    } catch (error) {
+      console.error('Error loading vacancies:', error);
+    } finally {
+      setLoadingVacancies(false);
+    }
+  };
   const categories = [
     {
       title: 'Backend разработка',
@@ -60,36 +81,6 @@ export default function HomePage() {
       count: '380+',
       icon: Sparkles,
       color: 'bg-gradient-to-r from-amber-400 to-orange-400 dark:from-amber-500 dark:to-orange-500',
-    },
-  ];
-
-  const featuredJobs = [
-    {
-      title: 'Senior React Developer',
-      company: 'TechCorp Inc.',
-      location: 'Москва',
-      salary: '$4000 - $6000',
-      skills: ['React', 'TypeScript', 'Redux', 'Node.js'],
-      source: 'hh.ru',
-      posted: '2 дня назад',
-    },
-    {
-      title: 'Backend Engineer',
-      company: 'FinTech Solutions',
-      location: 'Санкт-Петербург',
-      salary: '₽250 000 - ₽400 000',
-      skills: ['Python', 'Django', 'PostgreSQL', 'Docker'],
-      source: 'Habr Career',
-      posted: '5 дней назад',
-    },
-    {
-      title: 'Data Scientist',
-      company: 'AI Research Lab',
-      location: 'Удаленно',
-      salary: '$5000 - $8000',
-      skills: ['Python', 'ML', 'PyTorch', 'SQL'],
-      source: 'LinkedIn',
-      posted: 'Сегодня',
     },
   ];
 
@@ -260,10 +251,10 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold mb-2" style={{ color: 'rgb(var(--text-primary))' }}>
-                Рекомендуемые вакансии
+                Последние вакансии
               </h2>
               <p style={{ color: 'rgb(var(--text-muted))' }}>
-                Самые интересные предложения за сегодня
+                Актуальные предложения от работодателей
               </p>
             </div>
             <Button
@@ -272,110 +263,15 @@ export default function HomePage() {
                 background:
                   'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
               }}
+              asChild
             >
-              Показать все вакансии
+              <Link to="/vacancies">
+                Показать все вакансии <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {featuredJobs.map((job) => (
-              <Card
-                key={job.title}
-                className="backdrop-blur-sm hover:shadow-xl transition-all border group"
-                style={{
-                  backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
-                  borderColor: 'rgb(var(--border)/0.5)',
-                }}
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle
-                        className="text-xl transition-colors"
-                        style={{ color: 'rgb(var(--text-primary))' }}
-                      >
-                        {job.title}
-                      </CardTitle>
-                      <div
-                        className="flex items-center gap-2 mt-2"
-                        style={{ color: 'rgb(var(--text-muted))' }}
-                      >
-                        <Building className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
-                        {job.company}
-                      </div>
-                    </div>
-                    <Badge
-                      className="border"
-                      style={{
-                        background:
-                          'linear-gradient(to right, rgb(var(--accent))/20, rgb(var(--accent))/10)',
-                        borderColor: 'rgb(var(--accent)/0.3)',
-                        color: 'rgb(var(--accent))',
-                      }}
-                    >
-                      {job.source}
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-3">
-                    <div
-                      className="flex items-center gap-2 text-sm"
-                      style={{ color: 'rgb(var(--text-muted))' }}
-                    >
-                      <MapPin className="h-4 w-4" />
-                      <span>{job.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="h-4 w-4" style={{ color: 'rgb(var(--text-muted))' }} />
-                      <span className="font-semibold" style={{ color: 'rgb(var(--accent))' }}>
-                        {job.salary}
-                      </span>
-                    </div>
-                    <div
-                      className="flex items-center gap-2 text-sm"
-                      style={{ color: 'rgb(var(--text-muted))' }}
-                    >
-                      <Clock className="h-4 w-4" />
-                      <span>{job.posted}</span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-3">
-                      {job.skills.map((skill) => (
-                        <Badge
-                          key={skill}
-                          variant="outline"
-                          className="text-xs"
-                          style={{
-                            borderColor: 'rgb(var(--border))',
-                            color: 'rgb(var(--text-primary))',
-                          }}
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex justify-between">
-                  <Button variant="ghost" style={{ color: 'rgb(var(--text-muted))' }}>
-                    Сохранить
-                  </Button>
-                  <Button
-                    className="text-white"
-                    style={{
-                      background:
-                        'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
-                    }}
-                  >
-                    Подробнее
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <VacancyList vacancies={vacancies} loading={loadingVacancies} />
         </div>
       </section>
 

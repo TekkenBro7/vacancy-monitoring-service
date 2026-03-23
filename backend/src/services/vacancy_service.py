@@ -5,19 +5,43 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.repositories.vacancy_repository import VacancyRepository
 from src.models.companies import Vacancy
-from src.schemas.companies import VacancyCreate, VacancyRead, VacancyUpdate
+from src.schemas.companies import (
+    PaginatedResponse,
+    PaginationInfo,
+    VacancyCreate,
+    VacancyRead,
+    VacancyUpdate,
+)
 
 
 class VacancyService:
     def __init__(self, db: AsyncSession):
         self.repo = VacancyRepository(Vacancy, db)
 
-    async def list_vacancies(self) -> list[VacancyRead]:
-        items = await self.repo.list()
-        return [VacancyRead.model_validate(obj) for obj in items]
+    async def list_vacancies(
+        self,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> PaginatedResponse[VacancyRead]:
+        offset = (page - 1) * page_size
+        items = await self.repo.list_with_related(limit=page_size, offset=offset)
+        total_items = await self.repo.count()
+        total_pages = (total_items + page_size - 1) // page_size
+
+        return PaginatedResponse(
+            items=[VacancyRead.model_validate(obj) for obj in items],
+            pagination=PaginationInfo(
+                page=page,
+                page_size=page_size,
+                total_items=total_items,
+                total_pages=total_pages,
+                has_next=page < total_pages,
+                has_prev=page > 1,
+            ),
+        )
 
     async def get_vacancy(self, vacancy_id: int) -> VacancyRead:
-        vacancy = await self.repo.get_by_id(vacancy_id)
+        vacancy = await self.repo.get_by_id_with_related(vacancy_id)
         if not vacancy:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Vacancy not found")
         return VacancyRead.model_validate(vacancy)

@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.session import get_async_session
-from src.schemas.companies import VacancyCreate, VacancyRead, VacancyUpdate
+from src.schemas.companies import PaginatedResponse, VacancyCreate, VacancyRead, VacancyUpdate
 from src.services.vacancy_service import VacancyService
 
 router = APIRouter()
@@ -12,11 +14,13 @@ def get_vacancy_service(db: AsyncSession = Depends(get_async_session)) -> Vacanc
     return VacancyService(db)
 
 
-@router.get("/", response_model=list[VacancyRead])
+@router.get("/", response_model=PaginatedResponse[VacancyRead])
 async def list_vacancies(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
     service: VacancyService = Depends(get_vacancy_service),
-) -> list[VacancyRead]:
-    return await service.list_vacancies()
+) -> PaginatedResponse[VacancyRead]:
+    return await service.list_vacancies(page=page, page_size=page_size)
 
 
 @router.get("/{vacancy_id}/", response_model=VacancyRead)

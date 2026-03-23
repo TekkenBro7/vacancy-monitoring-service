@@ -11,12 +11,16 @@ import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminSkillsPage from './pages/admin/AdminSkillsPage';
+import VacanciesPage from './pages/VacanciesPage';
+import VacancyDetailPage from './pages/VacancyDetailPage';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="vacancies" element={<VacanciesPage />} />
+        <Route path="vacancies/:id" element={<VacancyDetailPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="auth/success" element={<AuthSuccess />} />
