@@ -25,7 +25,7 @@ def upgrade() -> None:
                existing_type=sa.VARCHAR(length=30),
                type_=sa.String(length=255),
                existing_nullable=False)
-    op.drop_column('vacancies', 'last_enriched_at')
+    # op.drop_column('vacancies', 'last_enriched_at')
     # ### end Alembic commands ###
 
 

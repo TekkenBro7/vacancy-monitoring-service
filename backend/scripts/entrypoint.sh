@@ -1,9 +1,18 @@
 #!/bin/sh
+set -e
 
-echo "Applying migrations..."
-uv run alembic upgrade head
+export PATH="/app/.venv/bin:$PATH"
 
-uv run python scripts/seed_db.py
+if echo "$1" | grep -q "uvicorn"; then
+    echo "Applying migrations..."
+    alembic upgrade head
+    
+    echo "Cleaning database..."
+    python scripts/clean_db.py
+    
+    echo "Seeding database..."
+    python scripts/seed_db.py
+fi
 
-echo "Starting the application..."
-exec uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+echo "Starting: $@"
+exec "$@"
