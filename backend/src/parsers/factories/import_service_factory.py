@@ -15,9 +15,9 @@ from src.parsers.services.parser_import_service import ParserImportService
 from src.parsers.services.redis_cache_service import RedisCacheService
 
 
-class ParserServiceFactory:
+class ImportServiceFactory:
     @staticmethod
-    def create_import_service(session: AsyncSession) -> ParserImportService:
+    def create(session: AsyncSession) -> ParserImportService:
         company_repo = CompanyRepository(Company, session)
         city_repo = CityRepository(City, session)
         currency_repo = CurrencyRepository(Currency, session)

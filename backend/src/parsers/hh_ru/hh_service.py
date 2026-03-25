@@ -1,18 +1,20 @@
 from datetime import datetime, timedelta
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import hh_config
 from src.core.logger import logger
+from src.parsers.base.base_vacancy_service import BaseVacancyService
 from src.parsers.hh_ru.hh_parser import HHParser
 from src.parsers.services.parser_import_service import ParserImportService
 
 
-class HHVacancyService:
+class HHVacancyService(BaseVacancyService):
     def __init__(self, import_service: ParserImportService):
+        super().__init__(import_service)
         self.parser = HHParser()
-        self.import_service = import_service
 
     async def _import_range(self, query: str | None, start: datetime, end: datetime) -> int:
+        from src.core.celery.tasks.import_tasks import import_vacancies_batch
+
         total = 0
 
         async for batch in self.parser.stream_vacancies(query, start, end):

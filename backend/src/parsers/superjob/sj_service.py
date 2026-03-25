@@ -1,18 +1,18 @@
 from datetime import datetime, timedelta
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import super_job_config
 from src.core.logger import logger
+from src.parsers.base.base_vacancy_service import BaseVacancyService
 from src.parsers.services.parser_import_service import ParserImportService
 from src.parsers.superjob.sj_parser import SJParser
 
 
-class SJVacancyService:
+class SJVacancyService(BaseVacancyService):
     MIN_SPLIT_INTERVAL = 60
 
     def __init__(self, import_service: ParserImportService):
+        super().__init__(import_service)
         self.parser = SJParser()
-        self.import_service = import_service
 
     async def _import_range(
         self,
@@ -20,6 +20,8 @@ class SJVacancyService:
         start: datetime,
         end: datetime,
     ) -> int:
+        from src.core.celery.tasks.import_tasks import import_vacancies_batch
+
         vacancies = await self.parser.fetch_all_vacancies(query, start, end)
 
         if not vacancies:
@@ -88,7 +90,7 @@ class SJVacancyService:
         query: str | None,
         from_date: datetime,
         to_date: datetime,
-    ) -> int:
+    ) -> None:
         current = from_date
         step = timedelta(days=1)
         total = 0
@@ -108,4 +110,3 @@ class SJVacancyService:
             current = next_point
 
         logger.info("SJ parsing finished: total %s vacancies", total)
-        return total

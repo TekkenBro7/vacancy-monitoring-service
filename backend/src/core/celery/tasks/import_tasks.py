@@ -5,7 +5,7 @@ from src.core.celery.celery_app import celery_app
 from src.core.logger import logger
 from src.database.session import async_session_maker
 from src.parsers.base.parser_result import ParserVacancyResult
-from src.parsers.factories.parser_service_factory import ParserServiceFactory
+from src.parsers.factories.import_service_factory import ImportServiceFactory
 
 
 @celery_app.task(
@@ -30,7 +30,7 @@ async def _import_vacancies_batch(
         vacancies = [ParserVacancyResult.from_dict(v) for v in vacancies_data]
 
         async with async_session_maker() as session:
-            import_service = ParserServiceFactory.create_import_service(session)
+            import_service = ImportServiceFactory.create(session)
 
             await import_service.import_batch(vacancies, source_name)
 
