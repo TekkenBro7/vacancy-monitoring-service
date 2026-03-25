@@ -101,6 +101,11 @@ async def seed_db() -> None:
                 "source_url": "https://hh.ru",
                 "source_type_id": source_type_objs[0].id,
             },
+            {
+                "name": "SuperJob",
+                "source_url": "https://www.superjob.ru",
+                "source_type_id": source_type_objs[0].id,
+            },
         ]
         source_objs = [Source(**s) for s in source_data]
         session.add_all(source_objs)

@@ -112,8 +112,15 @@ class HHConfig:
 
 
 class SuperJobConfig:
-    API_KEY = os.getenv("SUPERJOB_API_KEY")
-    BASE_URL = "https://api.superjob.ru/2.0"
+    SJ_SOURCE_NAME = "SuperJob"
+    SJ_API_KEY: str = os.getenv("SUPERJOB_API_KEY", "")
+    SJ_BASE_URL = "https://api.superjob.ru/2.0/vacancies"
+    SJ_MAX_TOTAL = 480
+    SJ_MAX_PAGES = 12
+    SJ_PER_PAGE = 40
+    SJ_TIMEOUT = int(os.getenv("SJ_TIMEOUT", "20"))
+    SJ_RETRIES = int(os.getenv("SJ_RETRIES", "3"))
+    SJ_RATE_LIMIT_DELAY = 0.4
 
 
 base_config = BaseConfig()
