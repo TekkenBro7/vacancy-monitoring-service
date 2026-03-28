@@ -34,12 +34,15 @@ class Vacancy(BaseModel):
     salary_to: Mapped[int | None] = mapped_column(nullable=True)
 
     external_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    experience: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    experience: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    education: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
-    employment: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    schedule: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    employment: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    schedule: Mapped[str | None] = mapped_column(String(150), nullable=True)
     internship: Mapped[bool | None] = mapped_column(nullable=True)
     vacancy_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    address: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     is_remote: Mapped[bool | None] = mapped_column(default=False, nullable=True)
     is_active: Mapped[bool | None] = mapped_column(default=True, nullable=True)

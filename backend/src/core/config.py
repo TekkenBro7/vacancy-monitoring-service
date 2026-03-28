@@ -123,6 +123,17 @@ class SuperJobConfig:
     SJ_RATE_LIMIT_DELAY = 0.4
 
 
+class PracaByConfig:
+    PRACA_SOURCE_NAME = "PracaBy"
+    PRACA_BASE_URL = "https://praca.by"
+    PRACA_SEARCH_URL = "https://praca.by/search/vacancies/"
+    PRACA_TIMEOUT = int(os.getenv("PRACA_TIMEOUT", "30"))
+    PRACA_RETRIES = int(os.getenv("PRACA_RETRIES", "3"))
+    PRACA_RATE_LIMIT_DELAY = 0
+    PRACA_PER_PAGE = 20
+    PRACA_MAX_PAGES: int = 550
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
@@ -132,3 +143,4 @@ redis_config = RedisConfig()
 mail_config = MailConfig()
 super_job_config = SuperJobConfig()
 hh_config = HHConfig()
+praca_config = PracaByConfig()

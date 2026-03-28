@@ -1,4 +1,5 @@
 import asyncio
+import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from random import uniform
@@ -15,6 +16,48 @@ from src.utils.datetime_utils import parse_hh_datetime
 
 
 class HHParser:
+    EDUCATION_PATTERNS = [
+        # Неполное высшее (проверяем первым, чтобы не перехватило "высшее")
+        (re.compile(r"\bнеполное\s+высшее\b", re.IGNORECASE), "Неполное высшее"),
+        # Высшее образование
+        (
+            re.compile(
+                r"\bвысшее\s+(?:образование|техническое|профессиональное|медицинское|юридическое|экономическое|педагогическое)\b",
+                re.IGNORECASE,
+            ),
+            "Высшее",
+        ),
+        (
+            re.compile(
+                r"\bвысшее\b(?!\s+(?:качество|уровень|требовани|руководств))", re.IGNORECASE
+            ),
+            "Высшее",
+        ),
+        # Средне-специальное / среднее профессиональное
+        (re.compile(r"\bсредне[\s-]?специальное\b", re.IGNORECASE), "Средне-специальное"),
+        (
+            re.compile(
+                r"\bсреднее\s+(?:специальное|профессиональное|техническое)\b", re.IGNORECASE
+            ),
+            "Средне-специальное",
+        ),
+        (
+            re.compile(r"\bспо\b", re.IGNORECASE),
+            "Средне-специальное",
+        ),  # СПО - среднее профессиональное
+        # Среднее образование
+        (re.compile(r"\bсреднее\s+(?:общее\s+)?образование\b", re.IGNORECASE), "Среднее"),
+        (re.compile(r"\bполное\s+среднее\b", re.IGNORECASE), "Среднее"),
+        # Без образования / не требуется
+        (
+            re.compile(
+                r"\bобразование\s+не\s+(?:требуется|важно|имеет\s+значения)\b", re.IGNORECASE
+            ),
+            None,
+        ),
+        (re.compile(r"\bбез\s+(?:специального\s+)?образования\b", re.IGNORECASE), None),
+    ]
+
     def __init__(self) -> None:
         self._timeout = aiohttp.ClientTimeout(total=hh_config.HH_TIMEOUT)
         self.headers = {
@@ -138,6 +181,16 @@ class HHParser:
                 )
                 yield [self._parse_vacancy(v) for v in items]
 
+    def _extract_education_from_requirement(self, requirement: str | None) -> str | None:
+        if not requirement:
+            return None
+
+        for pattern, education_value in self.EDUCATION_PATTERNS:
+            if pattern.search(requirement):
+                return education_value
+
+        return None
+
     def _parse_vacancy(self, v: dict[str, Any]) -> ParserVacancyResult:
         area = v.get("area") or {}
         experience = v.get("experience") or {}
@@ -146,6 +199,9 @@ class HHParser:
         salary = v.get("salary") or {}
         employer = v.get("employer") or {}
         snippet = v.get("snippet") or {}
+        address = v.get("address") or {}
+
+        education = self._extract_education_from_requirement(snippet.get("requirement"))
 
         return ParserVacancyResult(
             external_id=v.get("id"),  # type: ignore
@@ -157,7 +213,9 @@ class HHParser:
             salary_to=salary.get("to"),
             currency=salary.get("currency"),
             city=area.get("name"),
+            address=address.get("raw"),
             experience=experience.get("name"),
+            education=education,
             employment=employment.get("name"),
             schedule=schedule.get("name"),
             is_remote=any(

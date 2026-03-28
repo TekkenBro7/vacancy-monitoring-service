@@ -28,9 +28,10 @@ def patch_session_maker(db_session: AsyncSession) -> Generator[None, None, None]
 
 @pytest.fixture
 def mock_import_service() -> Generator[MagicMock, None, None]:
-    with patch("src.core.celery.tasks.import_tasks.ParserServiceFactory") as mock_factory:
+    # Изменено: патчим ImportServiceFactory вместо ParserServiceFactory
+    with patch("src.core.celery.tasks.import_tasks.ImportServiceFactory") as mock_factory:
         mock_service = AsyncMock()
-        mock_factory.create_import_service.return_value = mock_service
+        mock_factory.create.return_value = mock_service
         yield mock_service
 
 

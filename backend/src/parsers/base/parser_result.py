@@ -23,10 +23,12 @@ class ParserVacancyResult:
 
     # location
     city: str | None = None
+    address: str | None = None
     is_remote: bool = False
 
     # job info
     experience: str | None = None
+    education: str | None = None
     employment: str | None = None
     schedule: str | None = None
     internship: bool | None = None

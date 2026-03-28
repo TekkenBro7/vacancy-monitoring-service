@@ -126,6 +126,7 @@ class ParserImportService:
         model.salary_from = vacancy.salary_from
         model.salary_to = vacancy.salary_to
         model.experience = vacancy.experience
+        model.education = vacancy.education
         model.employment = vacancy.employment
         model.schedule = vacancy.schedule
         model.published_at = vacancy.published_at
@@ -134,6 +135,7 @@ class ParserImportService:
         model.currency_id = currency_id
         model.location_id = city_id
         model.vacancy_url = vacancy.vacancy_url
+        model.address = vacancy.address
         model.is_remote = vacancy.is_remote
         model.fingerprint = fingerprint
         model.internship = vacancy.internship
@@ -156,8 +158,10 @@ class ParserImportService:
                 salary_to=vacancy.salary_to,
                 external_id=vacancy.external_id,
                 experience=vacancy.experience,
+                education=vacancy.education,
                 employment=vacancy.employment,
                 schedule=vacancy.schedule,
+                address=vacancy.address,
                 created_at_source=vacancy.created_at,
                 published_at=vacancy.published_at,
                 company_id=company_id,

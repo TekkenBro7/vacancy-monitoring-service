@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import super_job_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -20,8 +21,6 @@ class SJVacancyService(BaseVacancyService):
         start: datetime,
         end: datetime,
     ) -> int:
-        from src.core.celery.tasks.import_tasks import import_vacancies_batch
-
         vacancies = await self.parser.fetch_all_vacancies(query, start, end)
 
         if not vacancies:

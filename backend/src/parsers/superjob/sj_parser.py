@@ -13,6 +13,15 @@ from src.parsers.base.parser_result import ParserVacancyResult
 
 
 class SJParser:
+    SJ_EDUCATION_MAP = {
+        0: None,
+        2: "Высшее",
+        3: "Неполное высшее",
+        4: "Средне-специальное",
+        5: "Среднее",
+        6: "Учащийся",
+    }
+
     def __init__(self) -> None:
         self._timeout = aiohttp.ClientTimeout(total=super_job_config.SJ_TIMEOUT)
         self.headers = {
@@ -143,6 +152,21 @@ class SJParser:
         )
         return all_vacancies
 
+    def _parse_education(self, education_data: dict | None) -> str | None:
+        if not education_data:
+            return None
+
+        education_id = education_data.get("id")
+
+        if education_id in self.SJ_EDUCATION_MAP:
+            return self.SJ_EDUCATION_MAP[education_id]
+
+        title = education_data.get("title", "")
+        if title and title.lower() != "не имеет значения":
+            return title.capitalize()
+
+        return None
+
     def _parse_vacancy(self, v: dict[str, Any]) -> ParserVacancyResult:
         town = v.get("town") or {}
         experience = v.get("experience") or {}
@@ -172,6 +196,8 @@ class SJParser:
         if salary_to == 0:
             salary_to = None
 
+        education = self._parse_education(v.get("education"))
+
         return ParserVacancyResult(
             external_id=str(v.get("id")),
             title=v.get("profession", ""),
@@ -182,7 +208,9 @@ class SJParser:
             salary_to=salary_to,
             currency=v.get("currency"),
             city=town.get("title"),
+            address=v.get("address"),
             experience=experience.get("title"),
+            education=education,
             employment=type_of_work.get("title"),
             schedule=None,
             is_remote=is_remote,

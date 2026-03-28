@@ -1,4 +1,5 @@
 import redis.asyncio as redis
+from sqlalchemy.exc import IntegrityError
 
 from src.core.logger import logger
 from src.database.repositories.city_repository import CityRepository
@@ -85,12 +86,28 @@ class RedisCacheService:
 
         cached = await self._get(key)
         if cached:
-            return int(cached)
+            value = int(cached)
+            if value > 0:
+                return value
+            return None
 
         city = await self.city_repo.get_by_name(name)
+
         if not city:
-            logger.debug("Creating city: %s", name)
-            city = await self.city_repo.create(City(name=name))
+            try:
+                logger.debug("Creating city: %s", name)
+                city = await self.city_repo.create(City(name=name))
+            except IntegrityError:
+                await self.city_repo.session.rollback()
+                city = await self.city_repo.get_by_name(name)
+                if not city:
+                    logger.warning("City %s not found after IntegrityError", name)
+                    await self._set(key, "-1", self.TTL_NEGATIVE)
+                    return None
+            except Exception as e:
+                logger.warning("Failed to create city %s: %s", name, e)
+                await self._set(key, "-1", self.TTL_NEGATIVE)
+                return None
 
         await self._set(key, str(city.id), self.TTL_CACHE)
         return city.id

@@ -93,17 +93,25 @@ def patch_session_maker(db_session: AsyncSession) -> Generator[None, None, None]
 
 
 @pytest.fixture
-def mock_hh_service() -> Generator[MagicMock, None, None]:
-    with patch("src.core.celery.tasks.parsing_tasks.HHVacancyService") as mock_cls:
-        mock_instance = AsyncMock()
-        mock_cls.return_value = mock_instance
-        yield mock_instance
+def mock_vacancy_service() -> Generator[MagicMock, None, None]:
+    """Мокаем VacancyServiceFactory.create чтобы возвращал мок сервиса"""
+    mock_service_instance = AsyncMock()
+    with patch(
+        "src.core.celery.tasks.parsing_tasks.VacancyServiceFactory.create",
+        return_value=mock_service_instance,
+    ) as mock_factory:
+        # Добавляем ссылку на мок-инстанс для проверок
+        mock_factory.mock_service = mock_service_instance
+        yield mock_factory
 
 
 @pytest.fixture
-def mock_parser_factory() -> Generator[MagicMock, None, None]:
-    with patch("src.core.celery.tasks.parsing_tasks.ParserServiceFactory") as mock_factory:
-        mock_factory.create_import_service.return_value = MagicMock()
+def mock_import_factory() -> Generator[MagicMock, None, None]:
+    """Мокаем ImportServiceFactory.create"""
+    with patch(
+        "src.core.celery.tasks.parsing_tasks.ImportServiceFactory.create",
+        return_value=MagicMock(),
+    ) as mock_factory:
         yield mock_factory
 
 
@@ -116,11 +124,11 @@ async def get_task_by_id(db_session: AsyncSession, task_id: int) -> SourceParseT
 async def test_task_not_found(
     db_session: AsyncSession,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
+    mock_vacancy_service: MagicMock,
 ) -> None:
     await _run_source_parse_task(task_id=99999)
 
-    mock_hh_service.run.assert_not_called()
+    mock_vacancy_service.mock_service.run.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -128,7 +136,7 @@ async def test_skips_success_status(
     db_session: AsyncSession,
     hh_source: Source,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
+    mock_vacancy_service: MagicMock,
 ) -> None:
     task = SourceParseTask(
         source_id=hh_source.id,
@@ -142,7 +150,7 @@ async def test_skips_success_status(
 
     await _run_source_parse_task(task.id)
 
-    mock_hh_service.run.assert_not_called()
+    mock_vacancy_service.mock_service.run.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -150,7 +158,7 @@ async def test_skips_in_progress_status(
     db_session: AsyncSession,
     hh_source: Source,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
+    mock_vacancy_service: MagicMock,
 ) -> None:
     task = SourceParseTask(
         source_id=hh_source.id,
@@ -164,7 +172,7 @@ async def test_skips_in_progress_status(
 
     await _run_source_parse_task(task.id)
 
-    mock_hh_service.run.assert_not_called()
+    mock_vacancy_service.mock_service.run.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -172,12 +180,12 @@ async def test_processes_pending_task_successfully(
     db_session: AsyncSession,
     pending_task: SourceParseTask,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
-    mock_parser_factory: MagicMock,
+    mock_vacancy_service: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     await _run_source_parse_task(pending_task.id)
 
-    mock_hh_service.run.assert_called_once()
+    mock_vacancy_service.mock_service.run.assert_called_once()
 
     updated_task = await get_task_by_id(db_session, pending_task.id)
     assert updated_task is not None
@@ -190,14 +198,14 @@ async def test_processes_failed_task_successfully(
     db_session: AsyncSession,
     failed_task: SourceParseTask,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
-    mock_parser_factory: MagicMock,
+    mock_vacancy_service: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     initial_attempts = failed_task.attempts
 
     await _run_source_parse_task(failed_task.id)
 
-    mock_hh_service.run.assert_called_once()
+    mock_vacancy_service.mock_service.run.assert_called_once()
 
     updated_task = await get_task_by_id(db_session, failed_task.id)
     assert updated_task is not None
@@ -210,7 +218,7 @@ async def test_marks_in_progress_before_parsing(
     db_session: AsyncSession,
     pending_task: SourceParseTask,
     patch_session_maker: None,
-    mock_parser_factory: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     captured_status: list[str] = []
 
@@ -219,11 +227,13 @@ async def test_marks_in_progress_before_parsing(
         if task:
             captured_status.append(task.status)
 
-    with patch("src.core.celery.tasks.parsing_tasks.HHVacancyService") as mock_cls:
-        mock_instance = AsyncMock()
-        mock_instance.run = capture_status
-        mock_cls.return_value = mock_instance
+    mock_service_instance = AsyncMock()
+    mock_service_instance.run = capture_status
 
+    with patch(
+        "src.core.celery.tasks.parsing_tasks.VacancyServiceFactory.create",
+        return_value=mock_service_instance,
+    ):
         await _run_source_parse_task(pending_task.id)
 
     assert captured_status == ["in_progress"]
@@ -234,13 +244,15 @@ async def test_marks_failed_on_parser_exception(
     db_session: AsyncSession,
     pending_task: SourceParseTask,
     patch_session_maker: None,
-    mock_parser_factory: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
-    with patch("src.core.celery.tasks.parsing_tasks.HHVacancyService") as mock_cls:
-        mock_instance = AsyncMock()
-        mock_instance.run.side_effect = RuntimeError("Connection timeout")
-        mock_cls.return_value = mock_instance
+    mock_service_instance = AsyncMock()
+    mock_service_instance.run.side_effect = RuntimeError("Connection timeout")
 
+    with patch(
+        "src.core.celery.tasks.parsing_tasks.VacancyServiceFactory.create",
+        return_value=mock_service_instance,
+    ):
         await _run_source_parse_task(pending_task.id)
 
     updated_task = await get_task_by_id(db_session, pending_task.id)
@@ -254,7 +266,7 @@ async def test_unsupported_source_marks_failed(
     db_session: AsyncSession,
     unsupported_source: Source,
     patch_session_maker: None,
-    mock_parser_factory: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     task = SourceParseTask(
         source_id=unsupported_source.id,
@@ -266,6 +278,7 @@ async def test_unsupported_source_marks_failed(
     await db_session.commit()
     await db_session.refresh(task)
 
+    # Не мокаем VacancyServiceFactory — пусть выбросит реальную ошибку
     await _run_source_parse_task(task.id)
 
     updated_task = await get_task_by_id(db_session, task.id)
@@ -279,8 +292,8 @@ async def test_increments_attempts_on_each_run(
     db_session: AsyncSession,
     pending_task: SourceParseTask,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
-    mock_parser_factory: MagicMock,
+    mock_vacancy_service: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     initial_attempts = pending_task.attempts
 
@@ -296,13 +309,13 @@ async def test_parser_called_with_correct_date_range(
     db_session: AsyncSession,
     pending_task: SourceParseTask,
     patch_session_maker: None,
-    mock_hh_service: MagicMock,
-    mock_parser_factory: MagicMock,
+    mock_vacancy_service: MagicMock,
+    mock_import_factory: MagicMock,
 ) -> None:
     await _run_source_parse_task(pending_task.id)
 
-    mock_hh_service.run.assert_called_once()
-    call_kwargs = mock_hh_service.run.call_args.kwargs
+    mock_vacancy_service.mock_service.run.assert_called_once()
+    call_kwargs = mock_vacancy_service.mock_service.run.call_args.kwargs
 
     assert call_kwargs["query"] is None
     assert call_kwargs["from_date"].date() == pending_task.parse_date
