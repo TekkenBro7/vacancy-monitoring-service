@@ -1,6 +1,9 @@
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
 from src.parsers.base.parser_result import ParserVacancyResult
@@ -50,7 +53,9 @@ class TestImportDate:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
         with (
@@ -71,7 +76,9 @@ class TestImportDate:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy, sample_vacancy]
             yield [sample_vacancy]
 
@@ -92,7 +99,9 @@ class TestImportDate:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             return
             yield  # type: ignore[misc]
 
@@ -114,7 +123,9 @@ class TestImportDate:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
         with (
@@ -143,7 +154,9 @@ class TestRun:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 16)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
         with (
@@ -163,7 +176,9 @@ class TestRun:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 18)
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
         with (
@@ -197,7 +212,7 @@ class TestRun:
 
         processed_dates: list[datetime] = []
 
-        async def mock_import_date(client, target_date):
+        async def mock_import_date(client: httpx.AsyncClient, target_date: datetime) -> int:
             processed_dates.append(target_date)
             return 0
 
@@ -219,7 +234,9 @@ class TestRun:
 
         call_count = 0
 
-        async def mock_stream(*args, **kwargs):
+        async def mock_stream(
+            *args: Any, **kwargs: Any
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
@@ -241,7 +258,9 @@ class TestRun:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 16)
 
-        async def mock_stream(client, target_date):
+        async def mock_stream(
+            client: httpx.AsyncClient, target_date: datetime
+        ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             return
             yield  # type: ignore[misc]
 
