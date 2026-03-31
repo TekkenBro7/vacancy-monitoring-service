@@ -27,7 +27,6 @@ class VacancyRepository(BaseRepository[Vacancy]):
         limit: int = 10,
         offset: int = 0,
     ) -> list[Vacancy]:
-        """Получить список вакансий с загруженными связанными данными и пагинацией"""
         query = (
             select(Vacancy)
             .options(

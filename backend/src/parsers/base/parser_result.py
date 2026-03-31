@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 
 
@@ -32,6 +32,7 @@ class ParserVacancyResult:
     employment: str | None = None
     schedule: str | None = None
     internship: bool | None = None
+    skills: list[str] = field(default_factory=list)
 
     # timestamps
     published_at: datetime | None = None

@@ -22,18 +22,18 @@ class PracaByVacancyService(BaseVacancyService):
         total = 0
         page_num = 0
 
+        # from src.core.celery.tasks.import_tasks import _import_vacancies_batch
+
+        from src.core.celery.tasks.import_tasks import import_vacancies_batch
+
         async for page_vacancies in self.parser.stream_vacancies(client, target_date.date()):
             page_num += 1
 
             payload = [v.to_dict() for v in page_vacancies]
 
-            from src.core.celery.tasks.import_tasks import _import_vacancies_batch
+            # await _import_vacancies_batch(payload, praca_config.PRACA_SOURCE_NAME)
 
-            await _import_vacancies_batch(payload, praca_config.PRACA_SOURCE_NAME)
-
-            # from src.core.celery.tasks.import_tasks import import_vacancies_batch
-
-            # import_vacancies_batch.delay(payload, praca_config.PRACA_SOURCE_NAME)
+            import_vacancies_batch.delay(payload, praca_config.PRACA_SOURCE_NAME)
 
             total += len(page_vacancies)
 

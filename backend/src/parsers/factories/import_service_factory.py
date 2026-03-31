@@ -5,11 +5,13 @@ from src.core.config import redis_config
 from src.database.repositories.city_repository import CityRepository
 from src.database.repositories.company_repository import CompanyRepository
 from src.database.repositories.currency_repository import CurrencyRepository
+from src.database.repositories.skill_repository import SkillRepository
 from src.database.repositories.source_repository import SourceRepository
 from src.database.repositories.vacancy_repository import VacancyRepository
 from src.models.companies import Company, Vacancy
 from src.models.currencies import Currency
 from src.models.locations import City
+from src.models.skills import Skill
 from src.models.sources import Source
 from src.parsers.services.parser_import_service import ParserImportService
 from src.parsers.services.redis_cache_service import RedisCacheService
@@ -22,6 +24,7 @@ class ImportServiceFactory:
         city_repo = CityRepository(City, session)
         currency_repo = CurrencyRepository(Currency, session)
         source_repo = SourceRepository(Source, session)
+        skill_repo = SkillRepository(Skill, session)
 
         redis_client = redis.from_url(
             redis_config.redis_url,
@@ -38,5 +41,6 @@ class ImportServiceFactory:
 
         return ParserImportService(
             vacancy_repo=VacancyRepository(Vacancy, session),
+            skill_repo=skill_repo,
             cache_service=cache_service,
         )

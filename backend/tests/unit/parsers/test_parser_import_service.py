@@ -14,6 +14,13 @@ def mock_vacancy_repo() -> AsyncMock:
 
 
 @pytest.fixture
+def mock_skill_repo() -> AsyncMock:
+    skill_repo = AsyncMock()
+    skill_repo.get_or_create_many.return_value = []
+    return skill_repo
+
+
+@pytest.fixture
 def mock_cache_service() -> AsyncMock:
     cache = AsyncMock()
     cache.get_source_id.return_value = 1
@@ -24,8 +31,12 @@ def mock_cache_service() -> AsyncMock:
 
 
 @pytest.fixture
-def service(mock_vacancy_repo: AsyncMock, mock_cache_service: AsyncMock) -> ParserImportService:
-    return ParserImportService(mock_vacancy_repo, mock_cache_service)
+def service(
+    mock_vacancy_repo: AsyncMock,
+    mock_skill_repo: AsyncMock,
+    mock_cache_service: AsyncMock,
+) -> ParserImportService:
+    return ParserImportService(mock_vacancy_repo, mock_skill_repo, mock_cache_service)
 
 
 @pytest.fixture

@@ -5,7 +5,6 @@ from src.api.v1.cities import router as cities_router
 from src.api.v1.comments import router as comments_router
 from src.api.v1.companies import router as companies_router
 from src.api.v1.comparisons import router as comparisons_router
-from src.api.v1.countries import router as countries_router
 from src.api.v1.currency import router as currencies_router
 from src.api.v1.notification_typess import router as notification_types_router
 from src.api.v1.notifications import router as notifications_router
@@ -28,7 +27,6 @@ v1_router.include_router(user_profiles_router, prefix="/user_profiles", tags=["U
 v1_router.include_router(currencies_router, prefix="/currencies", tags=["Currencies"])
 v1_router.include_router(source_types_router, prefix="/source_types", tags=["Source_types"])
 v1_router.include_router(sources_router, prefix="/sources", tags=["Sources"])
-v1_router.include_router(countries_router, prefix="/countries", tags=["Countries"])
 v1_router.include_router(cities_router, prefix="/cities", tags=["Cities"])
 v1_router.include_router(search_queries_router, prefix="/search_queries", tags=["Search_queries"])
 v1_router.include_router(

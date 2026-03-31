@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from src.core.logger import logger
+from src.database.repositories.skill_repository import SkillRepository
 from src.database.repositories.vacancy_repository import VacancyRepository
 from src.models.companies import Vacancy
 from src.parsers.base.parser_result import ParserVacancyResult
@@ -12,9 +13,11 @@ class ParserImportService:
     def __init__(
         self,
         vacancy_repo: VacancyRepository,
+        skill_repo: SkillRepository,
         cache_service: RedisCacheService,
     ):
         self.vacancy_repo = vacancy_repo
+        self.skill_repo = skill_repo
         self.cache = cache_service
 
     async def import_batch(
@@ -64,6 +67,17 @@ class ParserImportService:
         duplicate = await self.vacancy_repo.get_by_fingerprint(fingerprint)
 
         if duplicate:
+            logger.warning(
+                "FINGERPRINT DUPLICATE: new_external_id=%s, existing_external_id=%s, "
+                "new_source=%s, existing_source_id=%s, title='%s', fingerprint=%s",
+                vacancy.external_id,
+                duplicate.external_id,
+                source_name,
+                duplicate.source_id,
+                vacancy.title[:50] if vacancy.title else "N/A",
+                fingerprint[:16] + "...",
+            )
+
             duplicate.last_seen_at = now
             await self.vacancy_repo.update(duplicate)
             return
@@ -101,6 +115,8 @@ class ParserImportService:
                 city_id,
                 fingerprint,
             )
+
+            await self._attach_skills(exists, vacancy.skills)
 
             exists.is_active = True
             exists.last_seen_at = now
@@ -140,6 +156,19 @@ class ParserImportService:
         model.fingerprint = fingerprint
         model.internship = vacancy.internship
 
+    async def _attach_skills(self, vacancy: Vacancy, skill_names: list[str]) -> None:
+        if not skill_names:
+            return
+
+        skills = await self.skill_repo.get_or_create_many(skill_names)
+
+        await self.vacancy_repo.session.refresh(vacancy, ["skills"])
+
+        for skill in skills:
+            if skill not in vacancy.skills:
+                vacancy.skills.append(skill)
+                logger.debug("Attached skill '%s' to vacancy %s", skill.name, vacancy.id)
+
     async def _create_vacancy(
         self,
         vacancy: ParserVacancyResult,
@@ -150,29 +179,30 @@ class ParserImportService:
         fingerprint: str,
         now: datetime,
     ) -> None:
-        await self.vacancy_repo.create(
-            Vacancy(
-                title=vacancy.title,
-                description=vacancy.description,
-                salary_from=vacancy.salary_from,
-                salary_to=vacancy.salary_to,
-                external_id=vacancy.external_id,
-                experience=vacancy.experience,
-                education=vacancy.education,
-                employment=vacancy.employment,
-                schedule=vacancy.schedule,
-                address=vacancy.address,
-                created_at_source=vacancy.created_at,
-                published_at=vacancy.published_at,
-                company_id=company_id,
-                source_id=source_id,
-                currency_id=currency_id,
-                location_id=city_id,
-                vacancy_url=vacancy.vacancy_url,
-                is_remote=vacancy.is_remote,
-                fingerprint=fingerprint,
-                internship=vacancy.internship,
-                is_active=True,
-                last_seen_at=now,
-            )
+        new_vacancy = Vacancy(
+            title=vacancy.title,
+            description=vacancy.description,
+            salary_from=vacancy.salary_from,
+            salary_to=vacancy.salary_to,
+            external_id=vacancy.external_id,
+            experience=vacancy.experience,
+            education=vacancy.education,
+            employment=vacancy.employment,
+            schedule=vacancy.schedule,
+            address=vacancy.address,
+            created_at_source=vacancy.created_at,
+            published_at=vacancy.published_at,
+            company_id=company_id,
+            source_id=source_id,
+            currency_id=currency_id,
+            location_id=city_id,
+            vacancy_url=vacancy.vacancy_url,
+            is_remote=vacancy.is_remote,
+            fingerprint=fingerprint,
+            internship=vacancy.internship,
+            is_active=True,
+            last_seen_at=now,
         )
+
+        created = await self.vacancy_repo.create(new_vacancy)
+        await self._attach_skills(created, vacancy.skills)

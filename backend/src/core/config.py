@@ -134,6 +134,18 @@ class PracaByConfig:
     PRACA_MAX_PAGES: int = 550
 
 
+class EpamConfig:
+    EPAM_SOURCE_NAME: str = "EPAM"
+    EPAM_BASE_URL: str = "https://careers.epam.com"
+    EPAM_SEARCH_URL: str = "https://careers.epam.com/en/jobs"
+
+    EPAM_TIMEOUT: int = int(os.getenv("EPAM_TIMEOUT", "30"))
+    EPAM_RETRIES: int = int(os.getenv("EPAM_RETRIES", "3"))
+    EPAM_RATE_LIMIT_DELAY: float = 0
+    EPAM_MAX_PAGES: int = 500
+    EPAM_PAGE_SIZE: int = 10
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
@@ -144,3 +156,4 @@ mail_config = MailConfig()
 super_job_config = SuperJobConfig()
 hh_config = HHConfig()
 praca_config = PracaByConfig()
+epam_config = EpamConfig()

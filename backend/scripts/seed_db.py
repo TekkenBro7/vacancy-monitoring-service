@@ -6,7 +6,7 @@ from scripts.clean_db import clear_db
 from src.core.logger import logger
 from src.database.session import get_async_session
 from src.models.currencies import Currency
-from src.models.locations import City, Country
+from src.models.locations import City
 from src.models.notifications import NotificationType
 from src.models.secondary_tables import (
     user_skills_table,
@@ -108,8 +108,13 @@ async def seed_db() -> None:
             },
             {
                 "name": "PracaBy",
-                "source_url": "https://praca.by/",
+                "source_url": "https://praca.by",
                 "source_type_id": source_type_objs[0].id,
+            },
+            {
+                "name": "EPAM",
+                "source_url": "https://careers.epam.com",
+                "source_type_id": source_type_objs[2].id,
             },
         ]
         source_objs = [Source(**s) for s in source_data]
@@ -189,14 +194,6 @@ async def seed_db() -> None:
 
         await session.commit()
         logger.info(f"Inserted {total_user_skill_links} user skills")
-
-        country_names = ["USA", "Germany", "Russia", "France"]
-        country_objs = [Country(name=c) for c in country_names]
-        session.add_all(country_objs)
-        await session.commit()
-        for country_obj in country_objs:
-            await session.refresh(country_obj)
-        logger.info(f"Inserted {len(country_objs)} countries")
 
         city_objs = [
             City(name="Минск"),
