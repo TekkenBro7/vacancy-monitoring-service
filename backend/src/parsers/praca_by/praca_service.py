@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import httpx
 
+from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import praca_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -23,8 +24,6 @@ class PracaByVacancyService(BaseVacancyService):
         page_num = 0
 
         # from src.core.celery.tasks.import_tasks import _import_vacancies_batch
-
-        from src.core.celery.tasks.import_tasks import import_vacancies_batch
 
         async for page_vacancies in self.parser.stream_vacancies(client, target_date.date()):
             page_num += 1

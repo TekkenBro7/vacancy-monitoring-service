@@ -20,7 +20,6 @@ async def clear_db(session: AsyncSession) -> None:
                 vacancies,
                 companies,
                 cities,
-                countries,
                 vacancy_skills,
                 user_skills,
                 skills,
