@@ -37,7 +37,6 @@ class CurrencyRead(BaseModel):
 class CityRead(BaseModel):
     id: int
     name: str
-    country_id: int | None
 
     model_config = {"from_attributes": True}
 
