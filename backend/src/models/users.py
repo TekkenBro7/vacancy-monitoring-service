@@ -34,12 +34,6 @@ class User(BaseModel):
     skills: Mapped[list["Skill"]] = relationship(  # type: ignore
         secondary=user_skills_table, back_populates="users", lazy="selectin"
     )
-    notifications: Mapped[list["Notification"]] = relationship(  # type: ignore
-        back_populates="user", cascade="all, delete-orphan"
-    )
-    subscriptions: Mapped[list["Subscription"]] = relationship(  # type: ignore
-        back_populates="user", cascade="all, delete-orphan"
-    )
     bookmarks: Mapped[list["Bookmark"]] = relationship(  # type: ignore
         back_populates="user", cascade="all, delete-orphan"
     )
