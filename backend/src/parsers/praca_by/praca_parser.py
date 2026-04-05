@@ -26,7 +26,7 @@ class PracaByParser:
     async def _request(self, client: httpx.AsyncClient, url: str) -> str | None:
         for attempt in range(praca_config.PRACA_RETRIES):
             try:
-                await asyncio.sleep(praca_config.PRACA_RATE_LIMIT_DELAY + uniform(0.1, 0.4))
+                await asyncio.sleep(praca_config.PRACA_RATE_LIMIT_DELAY + uniform(0.1, 0.3))
 
                 response = await client.get(
                     url,
@@ -133,7 +133,7 @@ class PracaByParser:
         seen_ids: set[str] = set()
         found_target_date = False
         consecutive_empty = 0
-        max_consecutive_empty = 50
+        max_consecutive_empty = 100
         max_pages = praca_config.PRACA_MAX_PAGES
 
         while page <= max_pages:

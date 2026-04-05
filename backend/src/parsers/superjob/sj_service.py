@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
+from src.core.celery.tasks.import_tasks import _import_vacancies_batch
 from src.core.config import super_job_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -28,7 +28,8 @@ class SJVacancyService(BaseVacancyService):
             return 0
 
         payload = [v.to_dict() for v in vacancies]
-        import_vacancies_batch.delay(payload, super_job_config.SJ_SOURCE_NAME)
+        
+        await _import_vacancies_batch(payload, super_job_config.SJ_SOURCE_NAME)
 
         logger.info(
             "SJ imported %s vacancies from %s to %s (single batch)",
@@ -108,4 +109,4 @@ class SJVacancyService(BaseVacancyService):
 
             current = next_point
 
-        logger.info("SJ parsing finished: total %s vacancies", total)
+        logger.info("SJ finished parsing → total %s vacancies", total)

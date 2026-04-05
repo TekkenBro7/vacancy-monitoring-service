@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
+from src.core.celery.tasks.import_tasks import _import_vacancies_batch
+
 from src.core.config import praca_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -23,16 +24,12 @@ class PracaByVacancyService(BaseVacancyService):
         total = 0
         page_num = 0
 
-        # from src.core.celery.tasks.import_tasks import _import_vacancies_batch
-
         async for page_vacancies in self.parser.stream_vacancies(client, target_date.date()):
             page_num += 1
 
             payload = [v.to_dict() for v in page_vacancies]
 
-            # await _import_vacancies_batch(payload, praca_config.PRACA_SOURCE_NAME)
-
-            import_vacancies_batch.delay(payload, praca_config.PRACA_SOURCE_NAME)
+            await _import_vacancies_batch(payload, praca_config.PRACA_SOURCE_NAME)
 
             total += len(page_vacancies)
 
@@ -67,4 +64,4 @@ class PracaByVacancyService(BaseVacancyService):
 
                 current += step
 
-        logger.info("PracaBy finished → total %s vacancies", total)
+        logger.info("PracaBy finished parsing → total %s vacancies", total)

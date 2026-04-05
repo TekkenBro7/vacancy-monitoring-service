@@ -34,6 +34,6 @@ async def _import_vacancies_batch(
 
             await import_service.import_batch(vacancies, source_name)
 
-            logger.info("Imported batch with %s vacancies", len(vacancies))
+            logger.info("Imported batch with %s vacancies, source: %s", len(vacancies), source_name)
     except Exception:
         logger.exception("Failed to import batch (%s vacancies)", len(vacancies_data))

@@ -17,9 +17,7 @@ from src.utils.datetime_utils import parse_hh_datetime
 
 class HHParser:
     EDUCATION_PATTERNS = [
-        # Неполное высшее (проверяем первым, чтобы не перехватило "высшее")
         (re.compile(r"\bнеполное\s+высшее\b", re.IGNORECASE), "Неполное высшее"),
-        # Высшее образование
         (
             re.compile(
                 r"\bвысшее\s+(?:образование|техническое|профессиональное|медицинское|юридическое|экономическое|педагогическое)\b",
@@ -33,7 +31,6 @@ class HHParser:
             ),
             "Высшее",
         ),
-        # Средне-специальное / среднее профессиональное
         (re.compile(r"\bсредне[\s-]?специальное\b", re.IGNORECASE), "Средне-специальное"),
         (
             re.compile(
@@ -44,11 +41,9 @@ class HHParser:
         (
             re.compile(r"\bспо\b", re.IGNORECASE),
             "Средне-специальное",
-        ),  # СПО - среднее профессиональное
-        # Среднее образование
+        ), 
         (re.compile(r"\bсреднее\s+(?:общее\s+)?образование\b", re.IGNORECASE), "Среднее"),
         (re.compile(r"\bполное\s+среднее\b", re.IGNORECASE), "Среднее"),
-        # Без образования / не требуется
         (
             re.compile(
                 r"\bобразование\s+не\s+(?:требуется|важно|имеет\s+значения)\b", re.IGNORECASE
@@ -75,7 +70,7 @@ class HHParser:
     ) -> dict[str, Any]:
         for attempt in range(hh_config.HH_RETRIES):
             try:
-                await asyncio.sleep(0.35 + uniform(0.3, 0.8))
+                await asyncio.sleep(uniform(0.3, 0.8))
 
                 async with session.get(url, params=params, timeout=self._timeout) as resp:
                     if resp.status == status.HTTP_403_FORBIDDEN:

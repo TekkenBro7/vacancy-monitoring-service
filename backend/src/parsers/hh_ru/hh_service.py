@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
+from src.core.celery.tasks.import_tasks import _import_vacancies_batch
 from src.core.config import hh_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -18,7 +18,8 @@ class HHVacancyService(BaseVacancyService):
 
         async for batch in self.parser.stream_vacancies(query, start, end):
             payload = [v.to_dict() for v in batch]
-            import_vacancies_batch.delay(payload, hh_config.HH_SOURCE_NAME)
+            
+            await _import_vacancies_batch(payload, hh_config.HH_SOURCE_NAME)
             total += len(batch)
 
         logger.info("HeadHunter Range %s - %s → imported %s", start, end, total)
@@ -69,4 +70,4 @@ class HHVacancyService(BaseVacancyService):
 
             current = next_day
 
-        logger.info("HeadHunter Finished parsing → total imported %s", total)
+        logger.info("HeadHunter finished parsing → total imported %s", total)

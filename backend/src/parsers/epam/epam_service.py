@@ -30,14 +30,12 @@ class EpamVacancyService(BaseVacancyService):
 
         total = 0
 
-        # from src.core.celery.tasks.import_tasks import _import_vacancies_batch
+        from src.core.celery.tasks.import_tasks import _import_vacancies_batch
 
         async for page_vacancies in self.parser.stream_vacancies():
             payload = [v.to_dict() for v in page_vacancies]
 
-            import_vacancies_batch.delay(payload, epam_config.EPAM_SOURCE_NAME)
-
-            # await _import_vacancies_batch(payload, epam_config.EPAM_SOURCE_NAME)
+            await _import_vacancies_batch(payload, epam_config.EPAM_SOURCE_NAME)
 
             total += len(page_vacancies)
 
@@ -47,4 +45,4 @@ class EpamVacancyService(BaseVacancyService):
                 total,
             )
 
-        logger.info("EPAM: finished parsing, total %s vacancies", total)
+        logger.info("EPAM finished parsing → total %s vacancies", total)
