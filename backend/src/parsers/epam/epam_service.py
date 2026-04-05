@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from src.core.celery.tasks.import_tasks import import_vacancies_batch
 from src.core.config import epam_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService

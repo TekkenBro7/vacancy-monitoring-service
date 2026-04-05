@@ -18,7 +18,7 @@ class HHVacancyService(BaseVacancyService):
 
         async for batch in self.parser.stream_vacancies(query, start, end):
             payload = [v.to_dict() for v in batch]
-            
+
             await _import_vacancies_batch(payload, hh_config.HH_SOURCE_NAME)
             total += len(batch)
 

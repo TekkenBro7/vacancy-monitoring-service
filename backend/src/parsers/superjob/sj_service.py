@@ -28,7 +28,7 @@ class SJVacancyService(BaseVacancyService):
             return 0
 
         payload = [v.to_dict() for v in vacancies]
-        
+
         await _import_vacancies_batch(payload, super_job_config.SJ_SOURCE_NAME)
 
         logger.info(

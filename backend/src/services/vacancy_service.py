@@ -13,25 +13,57 @@ from src.schemas.companies import (
     VacancyRead,
     VacancyUpdate,
 )
+from src.schemas.vacancies import (
+    AvailableFilters,
+    FilterOption,
+    VacancyFilters,
+    VacancySearchResponse,
+)
 
 
 class VacancyService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.repo = VacancyRepository(Vacancy, db)
         self.enrichment_service = VacancyEnrichmentService(db)
 
-    async def list_vacancies(
+    async def search_vacancies(
         self,
+        filters: VacancyFilters,
         page: int = 1,
-        page_size: int = 10,
-    ) -> PaginatedResponse[VacancyRead]:
+        page_size: int = 20,
+        include_filters: bool = False,
+    ) -> VacancySearchResponse:
         offset = (page - 1) * page_size
-        items = await self.repo.list_with_related(limit=page_size, offset=offset)
-        total_items = await self.repo.count()
-        total_pages = (total_items + page_size - 1) // page_size
 
-        return PaginatedResponse(
-            items=[VacancyRead.model_validate(obj) for obj in items],
+        items = await self.repo.search_with_filters(
+            filters=filters,
+            limit=page_size,
+            offset=offset,
+        )
+
+        total_items = await self.repo.count_with_filters(filters)
+        total_pages = (total_items + page_size - 1) // page_size if total_items > 0 else 0
+
+        available_filters: AvailableFilters | None = None
+        if include_filters:
+            filter_options = await self.repo.get_filter_options_dynamic(filters)
+            available_filters = AvailableFilters(
+                sources=[FilterOption(**s) for s in filter_options["sources"]],
+                companies=[FilterOption(**c) for c in filter_options["companies"]],
+                cities=[FilterOption(**c) for c in filter_options["cities"]],
+                currencies=[FilterOption(**c) for c in filter_options["currencies"]],
+                skills=[FilterOption(**s) for s in filter_options["skills"]],
+                experience=[FilterOption(**e) for e in filter_options["experience"]],
+                employment=[FilterOption(**e) for e in filter_options["employment"]],
+                schedule=[FilterOption(**s) for s in filter_options["schedule"]],
+                total_vacancies=filter_options["total_vacancies"],
+                with_salary_count=filter_options["with_salary_count"],
+                remote_count=filter_options["remote_count"],
+                internship_count=filter_options["internship_count"],
+            )
+
+        return VacancySearchResponse(
+            items=[VacancyRead.model_validate(v) for v in items],
             pagination=PaginationInfo(
                 page=page,
                 page_size=page_size,
@@ -40,6 +72,37 @@ class VacancyService:
                 has_next=page < total_pages,
                 has_prev=page > 1,
             ),
+            filters=available_filters,
+        )
+
+    async def search_filter_options(
+        self,
+        filter_type: str,
+        query: str,
+        limit: int = 50,
+        base_filters: VacancyFilters | None = None,
+    ) -> list[FilterOption]:
+        options = await self.repo.search_filter_options(
+            filter_type=filter_type,
+            query=query,
+            limit=limit,
+            base_filters=base_filters,
+        )
+        return [FilterOption(**opt) for opt in options]
+
+    async def list_vacancies(
+        self,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> PaginatedResponse[VacancyRead]:
+        result = await self.search_vacancies(
+            filters=VacancyFilters(),
+            page=page,
+            page_size=page_size,
+        )
+        return PaginatedResponse(
+            items=result.items,
+            pagination=result.pagination,
         )
 
     async def get_vacancy(self, vacancy_id: int) -> VacancyRead:

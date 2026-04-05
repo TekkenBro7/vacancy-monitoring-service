@@ -41,7 +41,7 @@ class HHParser:
         (
             re.compile(r"\bспо\b", re.IGNORECASE),
             "Средне-специальное",
-        ), 
+        ),
         (re.compile(r"\bсреднее\s+(?:общее\s+)?образование\b", re.IGNORECASE), "Среднее"),
         (re.compile(r"\bполное\s+среднее\b", re.IGNORECASE), "Среднее"),
         (

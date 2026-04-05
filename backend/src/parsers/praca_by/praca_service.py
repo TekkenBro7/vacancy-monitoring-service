@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import httpx
 
 from src.core.celery.tasks.import_tasks import _import_vacancies_batch
-
 from src.core.config import praca_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService

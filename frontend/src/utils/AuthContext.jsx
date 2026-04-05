@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import AuthService from '@/api/services/AuthService';
 
 const AuthContext = createContext(null);
@@ -12,6 +12,8 @@ export function AuthProvider({ children }) {
   });
 
   const [isLoading, setIsLoading] = useState(true);
+
+  const refreshTokenRef = useRef(null);
 
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -29,8 +31,8 @@ export function AuthProvider({ children }) {
       if (userData) {
         setUser(userData);
         setIsAuthenticated(true);
-      } else {
-        await refreshToken();
+      } else if (refreshTokenRef.current) {
+        await refreshTokenRef.current();
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -51,6 +53,10 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   }, [checkAuth]);
+
+  useEffect(() => {
+    refreshTokenRef.current = refreshToken;
+  }, [refreshToken]);
 
   const logout = useCallback(() => {
     AuthService.logout();
@@ -73,6 +79,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/* eslint-disable react-refresh/only-export-components */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

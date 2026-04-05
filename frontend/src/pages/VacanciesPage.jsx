@@ -1,41 +1,95 @@
-import { useState, useEffect } from 'react';
-import { Search, Briefcase, Filter } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Briefcase, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import VacancyService from '@/api/services/VacancyService';
+import VacancyFilters from '@/components/vacancies/VacancyFilters';
 import VacancyList from '@/components/vacancies/VacancyList';
 import Pagination from '@/components/vacancies/Pagination';
 import useNotification from '@/hooks/useNotification';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
+
+const DEFAULT_FILTERS = {
+  search: '',
+  source_ids: [],
+  company_ids: [],
+  city_ids: [],
+  skill_ids: [],
+  experience: [],
+  employment: [],
+  schedule: [],
+  salary_from: null,
+  salary_to: null,
+  currency_id: null,
+  is_remote: null,
+  with_salary_only: false,
+  internship: null,
+  sort_by: 'published_at',
+  sort_order: 'desc',
+};
 
 export default function VacanciesPage() {
   const notification = useNotification();
   const [vacancies, setVacancies] = useState([]);
   const [pagination, setPagination] = useState(null);
+  const [availableFilters, setAvailableFilters] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  useEffect(() => {
-    loadVacancies();
-  }, [currentPage]);
-
-  const loadVacancies = async () => {
+  // Загрузка вакансий
+  const loadVacancies = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await VacancyService.getVacancies({
+
+      // Формируем параметры запроса
+      const params = {
         page: currentPage,
         page_size: PAGE_SIZE,
-      });
+        include_filters: true,
+        sort_by: filters.sort_by,
+        sort_order: filters.sort_order,
+      };
+
+      // Добавляем только непустые фильтры
+      if (filters.search) params.search = filters.search;
+      if (filters.source_ids?.length) params.source_ids = filters.source_ids;
+      if (filters.company_ids?.length) params.company_ids = filters.company_ids;
+      if (filters.city_ids?.length) params.city_ids = filters.city_ids;
+      if (filters.skill_ids?.length) params.skill_ids = filters.skill_ids;
+      if (filters.experience?.length) params.experience = filters.experience;
+      if (filters.employment?.length) params.employment = filters.employment;
+      if (filters.schedule?.length) params.schedule = filters.schedule;
+      if (filters.salary_from) params.salary_from = filters.salary_from;
+      if (filters.salary_to) params.salary_to = filters.salary_to;
+      if (filters.currency_id) params.currency_id = filters.currency_id;
+      if (filters.is_remote !== null) params.is_remote = filters.is_remote;
+      if (filters.with_salary_only) params.with_salary_only = true;
+      if (filters.internship !== null) params.internship = filters.internship;
+
+      const data = await VacancyService.searchVacancies(params);
+
       setVacancies(data.items || []);
       setPagination(data.pagination);
+      if (data.filters) {
+        setAvailableFilters(data.filters);
+      }
     } catch (error) {
       notification.error('Ошибка', 'Не удалось загрузить вакансии');
       console.error('Error loading vacancies:', error);
     } finally {
       setLoading(false);
     }
+  }, [currentPage, filters, notification]);
+
+  useEffect(() => {
+    loadVacancies();
+  }, [loadVacancies]);
+
+  // При изменении фильтров сбрасываем на первую страницу
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page) => {
@@ -43,88 +97,94 @@ export default function VacanciesPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredVacancies = vacancies.filter((vacancy) => {
-    if (!searchQuery.trim()) return true;
+  const handleSortChange = (sortBy) => {
+    const newOrder = filters.sort_by === sortBy && filters.sort_order === 'desc' ? 'asc' : 'desc';
+    handleFiltersChange({ ...filters, sort_by: sortBy, sort_order: newOrder });
+  };
 
-    const query = searchQuery.toLowerCase();
-    return (
-      vacancy.title?.toLowerCase().includes(query) ||
-      vacancy.description?.toLowerCase().includes(query) ||
-      vacancy.company?.name?.toLowerCase().includes(query)
-    );
-  });
+  const sortOptions = [
+    { value: 'published_at', label: 'Дата публикации' },
+    { value: 'salary_from', label: 'Зарплата' },
+    { value: 'title', label: 'Название' },
+  ];
 
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-6">
-        <div className="max-w-6xl mx-auto mb-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Заголовок */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-3" style={{ color: 'rgb(var(--text-primary))' }}>
-              Все вакансии
+              Поиск вакансий
             </h1>
             <p className="text-lg" style={{ color: 'rgb(var(--text-muted))' }}>
-              {pagination ? `Найдено ${pagination.total_items} вакансий` : 'Загрузка вакансий...'}
+              {pagination
+                ? `Найдено ${pagination.total_items.toLocaleString()} вакансий`
+                : 'Загрузка...'}
             </p>
           </div>
 
-          <div className="relative max-w-2xl mx-auto">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5"
-              style={{ color: 'rgb(var(--accent))' }}
-            />
-            <Input
-              type="search"
-              placeholder="Поиск по названию, описанию или компании..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-12 h-12 rounded-xl border-2 text-base shadow-lg"
-              style={{
-                backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
-                borderColor: 'rgb(var(--border))',
-                color: 'rgb(var(--text-primary))',
-              }}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8"
-                style={{ color: 'rgb(var(--text-muted))' }}
-              >
-                ✕
-              </Button>
-            )}
-          </div>
+          {/* Фильтры */}
+          <VacancyFilters
+            filters={filters}
+            availableFilters={availableFilters}
+            onFiltersChange={handleFiltersChange}
+            loading={loading}
+          />
 
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
+          {/* Сортировка и инфо */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
               <Briefcase className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
               <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
                 Показано:{' '}
                 <span className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
-                  {filteredVacancies.length} из {vacancies.length}
+                  {vacancies.length} из {pagination?.total_items || 0}
                 </span>
               </span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              style={{
-                borderColor: 'rgb(var(--border))',
-                color: 'rgb(var(--text-primary))',
-              }}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Фильтры
-            </Button>
+
+            {/* Сортировка */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                Сортировка:
+              </span>
+              <div className="flex gap-1">
+                {sortOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSortChange(option.value)}
+                    className="flex items-center gap-1"
+                    style={{
+                      backgroundColor:
+                        filters.sort_by === option.value ? 'rgb(var(--accent)/0.1)' : 'transparent',
+                      color:
+                        filters.sort_by === option.value
+                          ? 'rgb(var(--accent))'
+                          : 'rgb(var(--text-muted))',
+                    }}
+                  >
+                    {option.label}
+                    {filters.sort_by === option.value && (
+                      <ArrowUpDown
+                        className={`h-3 w-3 transition-transform ${
+                          filters.sort_order === 'asc' ? 'rotate-180' : ''
+                        }`}
+                      />
+                    )}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="max-w-6xl mx-auto">
-          <VacancyList vacancies={filteredVacancies} loading={loading} />
+          {/* Список вакансий */}
+          <VacancyList vacancies={vacancies} loading={loading} />
 
-          {pagination && !loading && (
+          {/* Пагинация */}
+          {pagination && !loading && pagination.total_pages > 1 && (
             <Pagination pagination={pagination} onPageChange={handlePageChange} />
           )}
         </div>
