@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building,
   MapPin,
@@ -5,16 +7,29 @@ import {
   Clock,
   ExternalLink,
   Bookmark,
+  BookmarkCheck,
   Globe,
   Briefcase,
   Calendar,
+  Loader2,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/utils/AuthContext';
+import BookmarkService from '@/api/services/BookmarkService';
+import useNotification from '@/hooks/useNotification';
 
-export default function VacancyCard({ vacancy }) {
+export default function VacancyCard({
+  vacancy,
+  isBookmarked: initialBookmarked = false,
+  onBookmarkChange,
+}) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const notification = useNotification();
+  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
   const formatSalary = (from, to, currency) => {
     const parts = [];
     if (from) parts.push(from.toLocaleString());
@@ -51,9 +66,47 @@ export default function VacancyCard({ vacancy }) {
     return vacancy.company.name;
   };
 
+  const handleCardClick = (e) => {
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    navigate(`/vacancies/${vacancy.id}`);
+  };
+
+  const handleBookmarkClick = async (e) => {
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      notification.info('Требуется авторизация', 'Войдите, чтобы сохранять вакансии');
+      navigate('/login');
+      return;
+    }
+
+    setBookmarkLoading(true);
+    try {
+      const result = await BookmarkService.toggleBookmark(vacancy.id);
+      setIsBookmarked(result.bookmarked);
+
+      if (result.bookmarked) {
+        notification.success('Добавлено в закладки', vacancy.title);
+      } else {
+        notification.info('Удалено из закладок', vacancy.title);
+      }
+
+      if (onBookmarkChange) {
+        onBookmarkChange(vacancy.id, result.bookmarked);
+      }
+    } catch {
+      notification.error('Ошибка', 'Не удалось изменить закладку');
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
   return (
     <div
-      className="group relative backdrop-blur-sm border rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-[rgb(var(--accent))/10] hover:border-[rgb(var(--accent))/30] hover:-translate-y-1"
+      onClick={handleCardClick}
+      className="group relative backdrop-blur-sm border rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-[rgb(var(--accent))/10] hover:border-[rgb(var(--accent))/30] hover:-translate-y-1 cursor-pointer"
       style={{
         backgroundColor: 'rgb(var(--bg-header-muted)/0.4)',
         borderColor: 'rgb(var(--border)/0.5)',
@@ -71,13 +124,12 @@ export default function VacancyCard({ vacancy }) {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <Link
-                to={`/vacancies/${vacancy.id}`}
-                className="text-xl md:text-2xl font-bold transition-all duration-300 hover:text-[rgb(var(--accent))]"
+              <h3
+                className="text-xl md:text-2xl font-bold transition-all duration-300 group-hover:text-[rgb(var(--accent))]"
                 style={{ color: 'rgb(var(--text-primary))' }}
               >
                 {vacancy.title}
-              </Link>
+              </h3>
               {vacancy.is_remote && (
                 <Badge
                   className="border shrink-0 animate-fade-in"
@@ -277,16 +329,30 @@ export default function VacancyCard({ vacancy }) {
             <Button
               variant="outline"
               size="sm"
+              onClick={handleBookmarkClick}
+              disabled={bookmarkLoading}
               className="transition-all duration-300 hover:scale-105"
               style={{
-                borderColor: 'rgb(var(--border))',
-                color: 'rgb(var(--text-primary))',
+                borderColor: isBookmarked ? 'rgb(var(--accent))' : 'rgb(var(--border))',
+                color: isBookmarked ? 'rgb(var(--accent))' : 'rgb(var(--text-primary))',
+                backgroundColor: isBookmarked ? 'rgb(var(--accent)/0.1)' : 'transparent',
               }}
             >
-              <Bookmark className="h-4 w-4 mr-1" />
-              Сохранить
+              {bookmarkLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isBookmarked ? (
+                <>
+                  <BookmarkCheck className="h-4 w-4 mr-1" />
+                  Сохранено
+                </>
+              ) : (
+                <>
+                  <Bookmark className="h-4 w-4 mr-1" />
+                  Сохранить
+                </>
+              )}
             </Button>
-            {vacancy.vacancy_url ? (
+            {vacancy.vacancy_url && (
               <Button
                 size="sm"
                 className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[rgb(var(--accent))/20]"
@@ -296,22 +362,15 @@ export default function VacancyCard({ vacancy }) {
                 }}
                 asChild
               >
-                <a href={vacancy.vacancy_url} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={vacancy.vacancy_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <ExternalLink className="h-4 w-4 mr-1" />
                   Откликнуться
                 </a>
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className="text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[rgb(var(--accent))/20]"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
-                }}
-                asChild
-              >
-                <Link to={`/vacancies/${vacancy.id}`}>Подробнее</Link>
               </Button>
             )}
           </div>

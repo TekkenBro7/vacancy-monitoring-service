@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from src.schemas.companies import VacancyRead
+
 
 class BookmarkCreate(BaseModel):
     user_id: int
@@ -14,5 +16,6 @@ class BookmarkRead(BaseModel):
     vacancy_id: int
     created_at: datetime
     updated_at: datetime
+    vacancy: VacancyRead | None = None
 
     model_config = {"from_attributes": True}

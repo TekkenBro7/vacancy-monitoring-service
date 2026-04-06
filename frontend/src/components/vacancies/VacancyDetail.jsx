@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import {
@@ -9,6 +9,7 @@ import {
   Clock,
   ExternalLink,
   Bookmark,
+  BookmarkCheck,
   Share2,
   Calendar,
   Globe,
@@ -17,25 +18,28 @@ import {
   Users,
   CheckCircle,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import VacancyService from '@/api/services/VacancyService';
+import BookmarkService from '@/api/services/BookmarkService';
+import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
 
 export default function VacancyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const notification = useNotification();
+  const { isAuthenticated } = useAuth();
+
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
-  useEffect(() => {
-    loadVacancy();
-  }, [id]);
-
-  const loadVacancy = async () => {
+  const loadVacancy = useCallback(async () => {
     try {
       setLoading(true);
       const data = await VacancyService.getVacancyById(id);
@@ -47,11 +51,50 @@ export default function VacancyDetail() {
           notification.success('Данные обновлены', 'Описание и навыки дополнены из HeadHunter');
         }
       }
-    } catch (error) {
+    } catch {
       notification.error('Ошибка', 'Не удалось загрузить вакансию');
-      console.error('Error loading vacancy:', error);
     } finally {
       setLoading(false);
+    }
+  }, [id, notification]);
+
+  const checkBookmarkStatus = useCallback(async () => {
+    try {
+      const result = await BookmarkService.checkBookmark(id);
+      setIsBookmarked(result);
+    } catch {
+      console.error('Error checking bookmark:');
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadVacancy();
+    if (isAuthenticated) {
+      checkBookmarkStatus();
+    }
+  }, [id, isAuthenticated, loadVacancy, checkBookmarkStatus]);
+
+  const handleBookmark = async () => {
+    if (!isAuthenticated) {
+      notification.info('Требуется авторизация', 'Войдите, чтобы сохранять вакансии');
+      navigate('/login');
+      return;
+    }
+
+    setBookmarkLoading(true);
+    try {
+      const result = await BookmarkService.toggleBookmark(id);
+      setIsBookmarked(result.bookmarked);
+
+      if (result.bookmarked) {
+        notification.success('Добавлено в закладки', vacancy?.title);
+      } else {
+        notification.info('Удалено из закладок', vacancy?.title);
+      }
+    } catch {
+      notification.error('Ошибка', 'Не удалось изменить закладку');
+    } finally {
+      setBookmarkLoading(false);
     }
   };
 
@@ -110,10 +153,6 @@ export default function VacancyDetail() {
       navigator.clipboard.writeText(window.location.href);
       notification.success('Ссылка скопирована', 'URL вакансии в буфере обмена');
     }
-  };
-
-  const handleBookmark = () => {
-    notification.info('В разработке', 'Функция сохранения будет доступна soon');
   };
 
   if (loading) {
@@ -180,14 +219,22 @@ export default function VacancyDetail() {
                 variant="outline"
                 size="sm"
                 onClick={handleBookmark}
+                disabled={bookmarkLoading}
                 className="transition-all duration-300 hover:scale-105"
                 style={{
-                  borderColor: 'rgb(var(--border))',
-                  color: 'rgb(var(--text-primary))',
+                  borderColor: isBookmarked ? 'rgb(var(--accent))' : 'rgb(var(--border))',
+                  color: isBookmarked ? 'rgb(var(--accent))' : 'rgb(var(--text-primary))',
+                  backgroundColor: isBookmarked ? 'rgb(var(--accent)/0.1)' : 'transparent',
                 }}
               >
-                <Bookmark className="h-4 w-4 mr-2" />
-                Сохранить
+                {bookmarkLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : isBookmarked ? (
+                  <BookmarkCheck className="h-4 w-4 mr-2" />
+                ) : (
+                  <Bookmark className="h-4 w-4 mr-2" />
+                )}
+                {isBookmarked ? 'Сохранено' : 'Сохранить'}
               </Button>
             </div>
           </div>
@@ -354,11 +401,6 @@ export default function VacancyDetail() {
                     >
                       {vacancy.location?.name || 'Не указана'}
                     </div>
-                    {vacancy.location?.country_id && (
-                      <div className="text-xs mt-1" style={{ color: 'rgb(var(--text-muted))' }}>
-                        Страна ID: {vacancy.location.country_id}
-                      </div>
-                    )}
                   </div>
 
                   <div
@@ -625,7 +667,7 @@ export default function VacancyDetail() {
                         'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
                     }}
                     onClick={() =>
-                      notification.info('В разработке', 'Функция отклика будет доступна soon')
+                      notification.info('В разработке', 'Функция отклика будет доступна скоро')
                     }
                   >
                     Откликнуться

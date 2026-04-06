@@ -4,4 +4,5 @@ export const USER_PROFILES_URL = '/user_profiles/';
 export const ROLES_URL = '/roles/';
 export const SKILLS_URL = '/skills/';
 export const VACANCIES_URL = '/vacancies/';
+export const BOOKMARKS_URL = '/bookmarks/';
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';

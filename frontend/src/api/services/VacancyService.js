@@ -103,7 +103,7 @@ const VacancyService = {
 
   async getAvailableFilters() {
     try {
-      const response = await apiClient.get(`${VACANCIES_URL}filters`);
+      const response = await apiClient.get(`${VACANCIES_URL}filters/`);
       return response.data;
     } catch (err) {
       console.error('Get available filters error:', err);

@@ -13,6 +13,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminSkillsPage from './pages/admin/AdminSkillsPage';
 import VacanciesPage from './pages/VacanciesPage';
 import VacancyDetailPage from './pages/VacancyDetailPage';
+import BookmarksPage from './pages/BookmarksPage';
 
 function App() {
   return (
@@ -29,6 +30,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="bookmarks"
+          element={
+            <ProtectedRoute>
+              <BookmarksPage />
             </ProtectedRoute>
           }
         />

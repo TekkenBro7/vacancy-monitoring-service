@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Briefcase, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import VacancyService from '@/api/services/VacancyService';
+import BookmarkService from '@/api/services/BookmarkService';
 import VacancyFilters from '@/components/vacancies/VacancyFilters';
 import VacancyList from '@/components/vacancies/VacancyList';
 import Pagination from '@/components/vacancies/Pagination';
+import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
 
 const PAGE_SIZE = 20;
@@ -30,19 +32,34 @@ const DEFAULT_FILTERS = {
 
 export default function VacanciesPage() {
   const notification = useNotification();
+  const { isAuthenticated } = useAuth();
+
   const [vacancies, setVacancies] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [availableFilters, setAvailableFilters] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
 
-  // Загрузка вакансий
+  const loadBookmarkIds = useCallback(async () => {
+    if (!isAuthenticated) {
+      setBookmarkedIds(new Set());
+      return;
+    }
+
+    try {
+      const ids = await BookmarkService.getMyBookmarkIds();
+      setBookmarkedIds(new Set(ids));
+    } catch (error) {
+      console.error('Error loading bookmark ids:', error);
+    }
+  }, [isAuthenticated]);
+
   const loadVacancies = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Формируем параметры запроса
       const params = {
         page: currentPage,
         page_size: PAGE_SIZE,
@@ -51,7 +68,6 @@ export default function VacanciesPage() {
         sort_order: filters.sort_order,
       };
 
-      // Добавляем только непустые фильтры
       if (filters.search) params.search = filters.search;
       if (filters.source_ids?.length) params.source_ids = filters.source_ids;
       if (filters.company_ids?.length) params.company_ids = filters.company_ids;
@@ -83,10 +99,25 @@ export default function VacanciesPage() {
   }, [currentPage, filters, notification]);
 
   useEffect(() => {
+    loadBookmarkIds();
+  }, [loadBookmarkIds]);
+
+  useEffect(() => {
     loadVacancies();
   }, [loadVacancies]);
 
-  // При изменении фильтров сбрасываем на первую страницу
+  const handleBookmarkChange = (vacancyId, isBookmarked) => {
+    setBookmarkedIds((prev) => {
+      const newSet = new Set(prev);
+      if (isBookmarked) {
+        newSet.add(vacancyId);
+      } else {
+        newSet.delete(vacancyId);
+      }
+      return newSet;
+    });
+  };
+
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
     setCurrentPage(1);
@@ -112,7 +143,6 @@ export default function VacanciesPage() {
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
-          {/* Заголовок */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-3" style={{ color: 'rgb(var(--text-primary))' }}>
               Поиск вакансий
@@ -124,7 +154,6 @@ export default function VacanciesPage() {
             </p>
           </div>
 
-          {/* Фильтры */}
           <VacancyFilters
             filters={filters}
             availableFilters={availableFilters}
@@ -132,7 +161,6 @@ export default function VacanciesPage() {
             loading={loading}
           />
 
-          {/* Сортировка и инфо */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
               <Briefcase className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
@@ -144,7 +172,6 @@ export default function VacanciesPage() {
               </span>
             </div>
 
-            {/* Сортировка */}
             <div className="flex items-center gap-2">
               <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
                 Сортировка:
@@ -180,10 +207,13 @@ export default function VacanciesPage() {
             </div>
           </div>
 
-          {/* Список вакансий */}
-          <VacancyList vacancies={vacancies} loading={loading} />
+          <VacancyList
+            vacancies={vacancies}
+            loading={loading}
+            bookmarkedIds={bookmarkedIds}
+            onBookmarkChange={handleBookmarkChange}
+          />
 
-          {/* Пагинация */}
           {pagination && !loading && pagination.total_pages > 1 && (
             <Pagination pagination={pagination} onPageChange={handlePageChange} />
           )}

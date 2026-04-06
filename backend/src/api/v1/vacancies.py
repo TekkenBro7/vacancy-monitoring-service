@@ -29,7 +29,7 @@ async def list_vacancies(
     return await service.list_vacancies(page=page, page_size=page_size)
 
 
-@router.get("/search", response_model=VacancySearchResponse)
+@router.get("/search/", response_model=VacancySearchResponse)
 async def search_vacancies(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -81,7 +81,7 @@ async def search_vacancies(
     )
 
 
-@router.get("/filters", response_model=AvailableFilters)
+@router.get("/filters/", response_model=AvailableFilters)
 async def get_available_filters(
     service: VacancyService = Depends(get_vacancy_service),
 ) -> AvailableFilters:
@@ -96,7 +96,7 @@ async def get_available_filters(
     return result.filters
 
 
-@router.get("/filters/search", response_model=list[FilterOption])
+@router.get("/filters/search/", response_model=list[FilterOption])
 async def search_filter_options(
     filter_type: str = Query(..., description="Тип фильтра: companies, cities, skills"),
     query: str = Query("", description="Поисковый запрос"),
