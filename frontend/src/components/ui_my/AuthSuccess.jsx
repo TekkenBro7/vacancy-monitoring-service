@@ -21,7 +21,7 @@ export default function AuthSuccess() {
         const response = await apiClient.get('/auth/users/me/');
         const user = response.data;
         if (user) {
-          localStorage.setItem('user', JSON.sçtringify(user));
+          localStorage.setItem('user', JSON.stringify(user));
         }
       } catch (err) {
         console.error('Failed to fetch user data:', err);

@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import VacancyService from '@/api/services/VacancyService';
 import BookmarkService from '@/api/services/BookmarkService';
+import VacancyComments from './VacancyComments';
 import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
 
@@ -688,6 +689,7 @@ export default function VacancyDetail() {
               </div>
             </div>
           </div>
+          <VacancyComments vacancyId={parseInt(id)} />
         </div>
       </div>
     </div>
