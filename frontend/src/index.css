@@ -20,6 +20,10 @@
     --error-bg: 254 226 226;
     --error-border: 248 113 113;
     --error-text: 153 27 27;
+
+    --dropdown-bg: #ffffff;
+    --dropdown-hover: #f3f4f6;
+    --dropdown-header: #f8f9fa;
   }
 
   .dark {
@@ -41,6 +45,10 @@
     --error-bg: 127 29 29;
     --error-border: 239 68 68;
     --error-text: 254 202 202;
+
+    --dropdown-bg: #1f2937;
+    --dropdown-hover: #374151;
+    --dropdown-header: #111827;
   }
 
   body {
