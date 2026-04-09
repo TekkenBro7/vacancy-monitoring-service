@@ -74,7 +74,7 @@ class EpamParser:
         try:
             for attempt in range(epam_config.EPAM_RETRIES):
                 try:
-                    await asyncio.sleep(epam_config.EPAM_RATE_LIMIT_DELAY + uniform(0.1, 0.2))
+                    await asyncio.sleep(epam_config.EPAM_RATE_LIMIT_DELAY + uniform(0.1, 0.5))
                     await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
                     await page.wait_for_selector(wait_selector, timeout=timeout)
                     return await page.content()
@@ -300,7 +300,6 @@ class EpamParser:
         title = self._extract_title(tree)
         description = self._extract_description(tree)
         location_info = self._extract_location(tree)
-        skills = self._extract_skills(tree, location_info["countries"])
         experience = self._extract_experience(tree)
         responsibilities = self._extract_section(tree, "Responsibilities")
         requirements = self._extract_section(tree, "Requirements")
@@ -324,7 +323,7 @@ class EpamParser:
             salary_from=None,
             salary_to=None,
             currency=None,
-            city=None,
+            city=location_info["city"],
             address=location_info["address"],
             experience=experience,
             education=None,
@@ -332,10 +331,10 @@ class EpamParser:
             schedule=None,
             is_remote=location_info["is_remote"],
             published_at=None,
-            internship=self._is_internship(title, full_description),
+            internship=None,
             created_at=None,
             vacancy_url=url,
-            skills=skills,
+            skills=[],
         )
 
     def _extract_title(self, tree: HTMLParser) -> str:
@@ -360,54 +359,69 @@ class EpamParser:
     def _extract_location(self, tree: HTMLParser) -> dict[str, Any]:
         result: dict[str, Any] = {
             "address": None,
+            "city": None,
             "is_remote": False,
-            "countries": set(),
         }
 
         upper_bar = tree.css_first("[data-testid='upper-bar']")
         if not upper_bar:
             return result
 
-        icon_bullets = upper_bar.css("[data-testid='icon-bullet-container']")
+        first_bullet = upper_bar.css_first("[data-testid='icon-bullet-container']")
+        if not first_bullet:
+            return result
 
-        for bullet in icon_bullets:
-            text = bullet.text(strip=True)
+        full_text = first_bullet.text(strip=True)
 
-            if "Remote" in text:
-                result["is_remote"] = True
+        if "Remote" in full_text:
+            result["is_remote"] = True
 
-            for link in bullet.css("[data-testid='icon-bullet-link-item-link']"):
-                href = link.attributes.get("href", "") or ""
-                match = re.search(r"/en/([a-z-]+)-it-jobs", href)
-                if match:
-                    country_slug = match.group(1)
-                    country_name = country_slug.replace("-", " ").title()
-                    result["countries"].add(country_name)
+        location_spans = first_bullet.css("[data-testid='icon-bullet-item']")
 
-        if result["countries"]:
-            result["address"] = ", ".join(sorted(result["countries"]))
+        countries: list[str] = []
+        cities: list[str] = []
+
+        for span in location_spans:
+            text = span.text(strip=True)
+
+            if text.endswith(" in") or text in ("Remote in", "Hybrid in", "On-site in"):
+                continue
+
+            if not text:
+                continue
+
+            if ":" in text:
+                parts = text.split(":", 1)
+                country = parts[0].strip()
+                city = parts[1].strip()
+                if country:
+                    countries.append(country)
+                if city:
+                    cities.append(city)
+            else:
+                countries.append(text)
+
+        for link in first_bullet.css("[data-testid='icon-bullet-link-item-link']"):
+            link_text = link.text(strip=True)
+            if link_text and link_text not in countries:
+                if ":" in link_text:
+                    parts = link_text.split(":", 1)
+                    country = parts[0].strip()
+                    city = parts[1].strip()
+                    if country and country not in countries:
+                        countries.append(country)
+                    if city and city not in cities:
+                        cities.append(city)
+                else:
+                    countries.append(link_text)
+
+        if countries:
+            result["address"] = ", ".join(countries)
+
+        if cities:
+            result["city"] = cities[0]
 
         return result
-
-    def _extract_skills(self, tree: HTMLParser, countries: set[str]) -> list[str]:
-        skills: list[str] = []
-        countries_lower = {c.lower() for c in countries}
-
-        upper_bar = tree.css_first("[data-testid='upper-bar']")
-        if upper_bar:
-            for bullet in upper_bar.css("[data-testid='icon-bullet-container']"):
-                for item in bullet.css("[data-testid='icon-bullet-item']"):
-                    text = item.text(strip=True)
-                    if (
-                        text
-                        and "Remote" not in text
-                        and "Hybrid" not in text
-                        and "Office" not in text
-                        and text.lower() not in countries_lower
-                    ):
-                        skills.append(text)
-
-        return skills
 
     def _extract_experience(self, tree: HTMLParser) -> str | None:
         requirements_section = self._extract_section(tree, "Requirements")
@@ -460,8 +474,3 @@ class EpamParser:
             parts.append(f"<h3>Benefits</h3>{benefits}")
 
         return "\n".join(parts) if parts else ""
-
-    def _is_internship(self, title: str, description: str | None) -> bool:
-        internship_keywords = ["intern", "internship", "trainee", "стажер", "стажировка"]
-        combined = f"{title} {description or ''}".lower()
-        return any(keyword in combined for keyword in internship_keywords)

@@ -43,12 +43,22 @@ def sample_vacancy() -> ParserVacancyResult:
     )
 
 
+@pytest.fixture
+def mock_import_batch() -> Any:
+    with patch(
+        "src.parsers.praca_by.praca_service._import_vacancies_batch",
+        new_callable=AsyncMock,
+    ) as mock:
+        yield mock
+
+
 class TestImportDate:
     @pytest.mark.asyncio
     async def test_imports_vacancies_for_date(
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
@@ -58,20 +68,18 @@ class TestImportDate:
         ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             result = await service._import_date(mock_client, target_date)
 
         assert result == 1
-        mock_task.delay.assert_called_once()
+        mock_import_batch.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_imports_multiple_pages(
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
@@ -82,19 +90,17 @@ class TestImportDate:
             yield [sample_vacancy, sample_vacancy]
             yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             result = await service._import_date(mock_client, target_date)
 
         assert result == 3
-        assert mock_task.delay.call_count == 2
+        assert mock_import_batch.call_count == 2
 
     @pytest.mark.asyncio
     async def test_returns_zero_when_no_vacancies(
         self,
         service: PracaByVacancyService,
+        mock_import_batch: AsyncMock,
     ) -> None:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
@@ -105,20 +111,18 @@ class TestImportDate:
             return
             yield  # type: ignore[misc]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             result = await service._import_date(mock_client, target_date)
 
         assert result == 0
-        mock_task.delay.assert_not_called()
+        mock_import_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_sends_correct_payload(
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         mock_client = AsyncMock()
         target_date = datetime(2024, 6, 15)
@@ -128,13 +132,10 @@ class TestImportDate:
         ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service._import_date(mock_client, target_date)
 
-        call_args = mock_task.delay.call_args
+        call_args = mock_import_batch.call_args
         payload = call_args[0][0]
         source_name = call_args[0][1]
 
@@ -150,6 +151,7 @@ class TestRun:
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 16)
@@ -159,19 +161,17 @@ class TestRun:
         ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service.run(None, from_date, to_date)
 
-        mock_task.delay.assert_called_once()
+        mock_import_batch.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_runs_for_multiple_days(
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 18)
@@ -181,26 +181,23 @@ class TestRun:
         ) -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task,
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service.run(None, from_date, to_date)
 
-        assert mock_task.delay.call_count == 3
+        assert mock_import_batch.call_count == 3
 
     @pytest.mark.asyncio
     async def test_handles_empty_date_range(
         self,
         service: PracaByVacancyService,
+        mock_import_batch: AsyncMock,
     ) -> None:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 15)
 
-        with patch("src.parsers.praca_by.praca_service.import_vacancies_batch") as mock_task:
-            await service.run(None, from_date, to_date)
+        await service.run(None, from_date, to_date)
 
-        mock_task.delay.assert_not_called()
+        mock_import_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_processes_days_sequentially(
@@ -228,6 +225,7 @@ class TestRun:
         self,
         service: PracaByVacancyService,
         sample_vacancy: ParserVacancyResult,
+        mock_import_batch: AsyncMock,
     ) -> None:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 17)
@@ -244,16 +242,14 @@ class TestRun:
             else:
                 yield [sample_vacancy]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch"),
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service.run(None, from_date, to_date)
 
     @pytest.mark.asyncio
     async def test_ignores_query_parameter(
         self,
         service: PracaByVacancyService,
+        mock_import_batch: AsyncMock,
     ) -> None:
         from_date = datetime(2024, 6, 15)
         to_date = datetime(2024, 6, 16)
@@ -264,10 +260,7 @@ class TestRun:
             return
             yield  # type: ignore[misc]
 
-        with (
-            patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.praca_by.praca_service.import_vacancies_batch"),
-        ):
+        with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service.run("Python developer", from_date, to_date)
 
 

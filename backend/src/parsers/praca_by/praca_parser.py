@@ -26,7 +26,7 @@ class PracaByParser:
     async def _request(self, client: httpx.AsyncClient, url: str) -> str | None:
         for attempt in range(praca_config.PRACA_RETRIES):
             try:
-                await asyncio.sleep(praca_config.PRACA_RATE_LIMIT_DELAY + uniform(0.1, 0.3))
+                await asyncio.sleep(praca_config.PRACA_RATE_LIMIT_DELAY + uniform(0.1, 0.5))
 
                 response = await client.get(
                     url,

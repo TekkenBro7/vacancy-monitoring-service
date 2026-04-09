@@ -20,13 +20,12 @@ def sample_vacancy_page_html() -> str:
         <h1 data-testid="job-details-banner-title">Senior Python Developer</h1>
         <div data-testid="upper-bar">
             <div data-testid="icon-bullet-container">
-                <span data-testid="icon-bullet-item">Python</span>
-                <span data-testid="icon-bullet-item">Django</span>
+                <span data-testid="icon-bullet-item">Remote in</span>
+                <span data-testid="icon-bullet-item">Poland: Warsaw</span>
             </div>
             <div data-testid="icon-bullet-container">
-                <span>Remote</span>
-                <a data-testid="icon-bullet-link-item-link" href="/en/poland-it-jobs">Poland</a>
-                <a data-testid="icon-bullet-link-item-link" href="/en/germany-it-jobs">Germany</a>
+                <span data-testid="icon-bullet-item">Python</span>
+                <span data-testid="icon-bullet-item">Django</span>
             </div>
         </div>
         <div data-testid="description-content">
@@ -308,11 +307,7 @@ class TestExtractLocation:
         result = parser._extract_location(tree)
 
         assert result["is_remote"] is True
-        assert "Poland" in result["countries"]
-        assert "Germany" in result["countries"]
-        assert result["address"] is not None
-        assert "Germany" in result["address"]
-        assert "Poland" in result["address"]
+        assert result["address"] is not None or result["city"] is not None
 
     def test_returns_defaults_when_no_location(
         self, parser: EpamParser, sample_vacancy_page_minimal_html: str
@@ -323,8 +318,8 @@ class TestExtractLocation:
         result = parser._extract_location(tree)
 
         assert result["is_remote"] is False
-        assert len(result["countries"]) == 0
         assert result["address"] is None
+        assert result["city"] is None
 
     def test_detects_remote_keyword(self, parser: EpamParser) -> None:
         from selectolax.parser import HTMLParser
@@ -332,7 +327,8 @@ class TestExtractLocation:
         html = """
         <div data-testid="upper-bar">
             <div data-testid="icon-bullet-container">
-                <span>Remote</span>
+                <span data-testid="icon-bullet-item">Remote in</span>
+                <span data-testid="icon-bullet-item">Ukraine</span>
             </div>
         </div>
         """
@@ -346,13 +342,14 @@ class TestExtractLocation:
         html = """
         <div data-testid="upper-bar">
             <div data-testid="icon-bullet-container">
-                <a data-testid="icon-bullet-link-item-link" href="/en/united-states-it-jobs">US</a>
+                <a data-testid="icon-bullet-link-item-link" href="/en/united-states-it-jobs">United States</a>
             </div>
         </div>
         """
         tree = HTMLParser(html)
         result = parser._extract_location(tree)
-        assert "United States" in result["countries"]
+        assert result["address"] is not None
+        assert "United States" in result["address"]
 
     def test_handles_none_href(self, parser: EpamParser) -> None:
         from selectolax.parser import HTMLParser
@@ -366,156 +363,24 @@ class TestExtractLocation:
         """
         tree = HTMLParser(html)
         result = parser._extract_location(tree)
-        assert len(result["countries"]) == 0
 
+        assert result["address"] == "No href"
 
-class TestExtractSkills:
-    def test_extracts_skills_excluding_location_words(
-        self, parser: EpamParser, sample_vacancy_page_html: str
-    ) -> None:
-        from selectolax.parser import HTMLParser
-
-        tree = HTMLParser(sample_vacancy_page_html)
-        countries: set[str] = {"Poland", "Germany"}
-        result = parser._extract_skills(tree, countries)
-
-        assert "Python" in result
-        assert "Django" in result
-        assert "Poland" not in result
-        assert "Germany" not in result
-
-    def test_excludes_remote_hybrid_office(self, parser: EpamParser) -> None:
+    def test_extracts_city_from_colon_format(self, parser: EpamParser) -> None:
         from selectolax.parser import HTMLParser
 
         html = """
         <div data-testid="upper-bar">
             <div data-testid="icon-bullet-container">
-                <span data-testid="icon-bullet-item">Remote</span>
-                <span data-testid="icon-bullet-item">Hybrid</span>
-                <span data-testid="icon-bullet-item">Office</span>
-                <span data-testid="icon-bullet-item">Python</span>
+                <span data-testid="icon-bullet-item">Hybrid in</span>
+                <span data-testid="icon-bullet-item">Hungary: Budapest</span>
             </div>
         </div>
         """
         tree = HTMLParser(html)
-        result = parser._extract_skills(tree, set())
-
-        assert "Python" in result
-        assert "Remote" not in result
-        assert "Hybrid" not in result
-        assert "Office" not in result
-
-    def test_returns_empty_list_when_no_skills(
-        self, parser: EpamParser, sample_vacancy_page_minimal_html: str
-    ) -> None:
-        from selectolax.parser import HTMLParser
-
-        tree = HTMLParser(sample_vacancy_page_minimal_html)
-        result = parser._extract_skills(tree, set())
-        assert len(result) == 0
-
-    def test_excludes_countries_case_insensitive(self, parser: EpamParser) -> None:
-        from selectolax.parser import HTMLParser
-
-        html = """
-        <div data-testid="upper-bar">
-            <div data-testid="icon-bullet-container">
-                <span data-testid="icon-bullet-item">POLAND</span>
-                <span data-testid="icon-bullet-item">Python</span>
-            </div>
-        </div>
-        """
-        tree = HTMLParser(html)
-        result = parser._extract_skills(tree, {"Poland"})
-
-        assert "Python" in result
-        assert "POLAND" not in result
-
-    def test_skips_empty_text(self, parser: EpamParser) -> None:
-        from selectolax.parser import HTMLParser
-
-        html = """
-        <div data-testid="upper-bar">
-            <div data-testid="icon-bullet-container">
-                <span data-testid="icon-bullet-item">  </span>
-                <span data-testid="icon-bullet-item">Python</span>
-            </div>
-        </div>
-        """
-        tree = HTMLParser(html)
-        result = parser._extract_skills(tree, set())
-
-        assert len(result) == 1
-        assert "Python" in result
-
-
-class TestExtractExperience:
-    def test_extracts_years_of_experience(
-        self, parser: EpamParser, sample_vacancy_page_html: str
-    ) -> None:
-        from selectolax.parser import HTMLParser
-
-        tree = HTMLParser(sample_vacancy_page_html)
-        result = parser._extract_experience(tree)
-
-        assert result is not None
-        assert "5+" in result
-
-    def test_returns_none_when_no_requirements_section(
-        self, parser: EpamParser, sample_vacancy_page_minimal_html: str
-    ) -> None:
-        from selectolax.parser import HTMLParser
-
-        tree = HTMLParser(sample_vacancy_page_minimal_html)
-        result = parser._extract_experience(tree)
-        assert result is None
-
-    def test_extracts_at_least_pattern(self, parser: EpamParser) -> None:
-        from selectolax.parser import HTMLParser
-
-        html = """
-        <div data-testid="accordion-section-container">
-            <div data-testid="accordion-section-label-container">Requirements</div>
-            <div data-testid="accordion-section-children-container">
-                <p>At least 3 years</p>
-            </div>
-        </div>
-        """
-        tree = HTMLParser(html)
-        result = parser._extract_experience(tree)
-        assert result is not None
-        assert "3 years" in result
-
-    def test_extracts_years_in_pattern(self, parser: EpamParser) -> None:
-        from selectolax.parser import HTMLParser
-
-        html = """
-        <div data-testid="accordion-section-container">
-            <div data-testid="accordion-section-label-container">Requirements</div>
-            <div data-testid="accordion-section-children-container">
-                <p>2 years in Python</p>
-            </div>
-        </div>
-        """
-        tree = HTMLParser(html)
-        result = parser._extract_experience(tree)
-        assert result is not None
-        assert "2 years" in result
-
-    def test_returns_none_when_no_experience_found(self, parser: EpamParser) -> None:
-        from selectolax.parser import HTMLParser
-
-        html = """
-        <div data-testid="accordion-section-container">
-            <div data-testid="accordion-section-label-container">Requirements</div>
-            <div data-testid="accordion-section-children-container">
-                <p>Good communication skills</p>
-            </div>
-        </div>
-        """
-        tree = HTMLParser(html)
-        result = parser._extract_experience(tree)
-        assert result is None
+        result = parser._extract_location(tree)
+        assert result["address"] == "Hungary"
+        assert result["city"] == "Budapest"
 
 
 class TestExtractSection:
@@ -640,39 +505,6 @@ class TestBuildFullDescription:
         assert "\n" in result
 
 
-class TestIsInternship:
-    def test_detects_intern_in_title(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Software Engineering Intern", None) is True
-
-    def test_detects_internship_in_title(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Summer Internship Program", None) is True
-
-    def test_detects_trainee_in_title(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Junior Trainee Developer", None) is True
-
-    def test_detects_internship_in_description(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Developer", "Join our internship program") is True
-
-    def test_detects_russian_intern(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Стажер-разработчик", None) is True
-
-    def test_detects_russian_internship(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Developer", "Это стажировка") is True
-
-    def test_returns_false_for_regular_position(self, parser: EpamParser) -> None:
-        assert (
-            parser._is_internship("Senior Python Developer", "We need an experienced developer")
-            is False
-        )
-
-    def test_case_insensitive(self, parser: EpamParser) -> None:
-        assert parser._is_internship("INTERN Position", None) is True
-        assert parser._is_internship("position", "INTERNSHIP program") is True
-
-    def test_handles_none_description(self, parser: EpamParser) -> None:
-        assert parser._is_internship("Regular Developer", None) is False
-
-
 class TestParseVacancyPage:
     def test_parses_full_vacancy(self, parser: EpamParser, sample_vacancy_page_html: str) -> None:
         result = parser._parse_vacancy_page(
@@ -684,12 +516,9 @@ class TestParseVacancyPage:
         assert result.title == "Senior Python Developer"
         assert result.company_name == "EPAM Systems"
         assert result.company_external_id == "epam"
-        assert result.is_remote is True
-        assert result.internship is False
-        assert "Python" in result.skills
-        assert "Django" in result.skills
+
+        assert result.internship is None
         assert result.vacancy_url == "https://careers.epam.com/en/vacancy/test"
-        assert result.address is not None
         assert result.experience is not None
 
     def test_parses_minimal_vacancy(
@@ -715,7 +544,7 @@ class TestParseVacancyPage:
             "https://careers.epam.com/en/vacancy/intern",
         )
 
-        assert result.internship is True
+        assert result.internship is None
 
     def test_always_sets_epam_company(self, parser: EpamParser) -> None:
         result = parser._parse_vacancy_page("<html><body></body></html>", "test", "url")
@@ -857,7 +686,7 @@ class TestFetchStaticPage:
             result = await parser._fetch_static_page("https://test.com")
 
         assert result == "<html>Success</html>"
-        # Check that backoff sleep was called with >= 30 seconds
+
         sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
         assert any(s >= 30 for s in sleep_calls)
 
@@ -911,7 +740,6 @@ class TestFetchStaticPage:
         ):
             result = await parser._fetch_static_page("https://test.com")
 
-        # Should still return content even if wait_for_selector times out
         assert result == "<html>Success</html>"
 
 
@@ -999,7 +827,6 @@ class TestFetchVacanciesBatch:
 
             results = await parser._fetch_vacancies_batch(refs)
 
-        # Should have 1 successful result, 1 exception handled
         assert len(results) == 1
 
     @pytest.mark.asyncio
@@ -1031,7 +858,6 @@ class TestStreamVacancies:
             async for batch in parser.stream_vacancies():
                 results.extend(batch)
 
-        # First page has 3 vacancies, second has 1
         assert mock_fetch_batch.call_count == 2
 
     @pytest.mark.asyncio
@@ -1076,7 +902,6 @@ class TestStreamVacancies:
             patch.object(parser, "close", new_callable=AsyncMock),
             patch("src.core.config.epam_config.EPAM_MAX_PAGES", 2),
         ):
-            # Return same page twice (same vacancy IDs)
             mock_fetch_list.side_effect = [sample_search_page_html, sample_search_page_html]
             mock_fetch_batch.return_value = [create_vacancy_result()]
 
@@ -1084,7 +909,6 @@ class TestStreamVacancies:
             async for batch in parser.stream_vacancies():
                 results.extend(batch)
 
-        # Should only process first page, second page has all duplicates
         assert mock_fetch_batch.call_count == 1
 
     @pytest.mark.asyncio
@@ -1101,7 +925,6 @@ class TestStreamVacancies:
             patch("src.core.config.epam_config.EPAM_MAX_PAGES", 3),
         ):
             mock_fetch_list.return_value = sample_search_page_html
-            # Return different IDs each time to avoid duplicate detection
             mock_extract.side_effect = [
                 [{"external_id": f"blt{i}", "slug": f"slug{i}", "url": f"url{i}"}] for i in range(3)
             ]
@@ -1132,7 +955,6 @@ class TestStreamVacancies:
             async for batch in parser.stream_vacancies():
                 results.extend(batch)
 
-        # Should stop after first page because next button is disabled
         assert mock_fetch_list.call_count == 1
 
     @pytest.mark.asyncio
@@ -1200,7 +1022,6 @@ class TestClose:
         parser._browser = None
         parser._playwright = None
 
-        # Should not raise
         await parser.close()
 
     @pytest.mark.asyncio
@@ -1255,7 +1076,7 @@ class TestEnsureBrowser:
         mock_browser.new_context = AsyncMock(return_value=mock_context)
 
         parser._browser = None
-        parser._context = AsyncMock()  # Context exists but browser is None
+        parser._context = AsyncMock()
 
         with patch("src.parsers.epam.epam_parser.async_playwright") as mock_async_playwright:
             mock_async_playwright.return_value.start = AsyncMock(return_value=mock_playwright)

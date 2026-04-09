@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -489,15 +490,23 @@ class TestStreamVacancies:
         vacancy_html = "<html><body><h1>Test</h1></body></html>"
 
         mock_client = AsyncMock()
+        call_count = 0
+
+        async def mock_response(*args: Any, **kwargs: Any) -> str | None:
+            nonlocal call_count
+            call_count += 1
+
+            if call_count == 1:
+                return target_date_html
+            elif call_count == 2:
+                return vacancy_html
+            else:
+                return other_date_html
 
         with (
-            patch.object(parser, "_request", new_callable=AsyncMock) as mock_request,
+            patch.object(parser, "_request", mock_response),
             patch("src.core.config.praca_config.PRACA_MAX_PAGES", 100),
         ):
-            responses = [target_date_html, vacancy_html]
-            responses += [other_date_html] * 51
-            mock_request.side_effect = responses
-
             results = []
             async for batch in parser.stream_vacancies(mock_client, date(2024, 6, 15)):
                 results.extend(batch)

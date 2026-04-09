@@ -38,7 +38,7 @@ class SJParser:
     ) -> dict[str, Any]:
         for attempt in range(super_job_config.SJ_RETRIES):
             try:
-                await asyncio.sleep(uniform(0.1, 0.3))
+                await asyncio.sleep(uniform(0.1, 0.5))
 
                 async with session.get(url, params=params, timeout=self._timeout) as resp:
                     if resp.status == status.HTTP_503_SERVICE_UNAVAILABLE:

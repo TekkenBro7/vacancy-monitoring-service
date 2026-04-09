@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -67,32 +67,40 @@ class TestRun:
             yield [sample_vacancy]
             yield [sample_vacancy, sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        assert mock_import_task.delay.call_count == 2
+        assert mock_import.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_sends_correct_payload_to_celery(
+    async def test_sends_correct_payload(
         self, service: EpamVacancyService, sample_vacancy: ParserVacancyResult
     ) -> None:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
-            patch("src.core.config.epam_config.EPAM_SOURCE_NAME", "EPAM"),
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
+            patch("src.parsers.epam.epam_service.epam_config.EPAM_SOURCE_NAME", "EPAM"),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        mock_import_task.delay.assert_called_once()
-        call_args = mock_import_task.delay.call_args
+        mock_import.assert_called_once()
+        call_args = mock_import.call_args
         payload = call_args[0][0]
         source_name = call_args[0][1]
 
@@ -108,14 +116,18 @@ class TestRun:
             return
             yield  # type: ignore[misc]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        mock_import_task.delay.assert_not_called()
+        mock_import.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_ignores_date_parameters(
@@ -124,18 +136,22 @@ class TestRun:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run(
                 query="Python",
                 from_date=datetime(2024, 1, 1),
                 to_date=datetime(2024, 12, 31),
             )
 
-        assert mock_import_task.delay.call_count == 1
+        assert mock_import.call_count == 1
 
     @pytest.mark.asyncio
     async def test_logs_warning_for_date_filtering(self, service: EpamVacancyService) -> None:
@@ -143,12 +159,16 @@ class TestRun:
             return
             yield  # type: ignore[misc]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
             patch("src.parsers.epam.epam_service.logger") as mock_logger,
         ):
-            mock_import_task.delay = MagicMock()
             await service.run(
                 from_date=datetime(2024, 1, 1),
                 to_date=datetime(2024, 12, 31),
@@ -165,12 +185,16 @@ class TestRun:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
             patch("src.parsers.epam.epam_service.logger") as mock_logger,
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
         warning_calls = [
@@ -187,12 +211,16 @@ class TestRun:
             yield [sample_vacancy]
             yield [sample_vacancy, sample_vacancy, sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
             patch("src.parsers.epam.epam_service.logger") as mock_logger,
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
         info_calls = mock_logger.info.call_args_list
@@ -206,14 +234,18 @@ class TestRun:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        call_args = mock_import_task.delay.call_args
+        call_args = mock_import.call_args
         payload = call_args[0][0]
 
         assert isinstance(payload[0], dict)
@@ -223,7 +255,7 @@ class TestRun:
         assert payload[0]["skills"] == ["Python", "Django"]
 
     @pytest.mark.asyncio
-    async def test_calls_delay_for_each_batch(
+    async def test_calls_import_for_each_batch(
         self, service: EpamVacancyService, sample_vacancy: ParserVacancyResult
     ) -> None:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
@@ -231,14 +263,18 @@ class TestRun:
             yield [sample_vacancy]
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        assert mock_import_task.delay.call_count == 3
+        assert mock_import.call_count == 3
 
     @pytest.mark.asyncio
     async def test_logs_info_at_start_and_end(self, service: EpamVacancyService) -> None:
@@ -246,12 +282,16 @@ class TestRun:
             return
             yield  # type: ignore[misc]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
             patch("src.parsers.epam.epam_service.logger") as mock_logger,
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
         info_calls = mock_logger.info.call_args_list
@@ -266,15 +306,19 @@ class TestRun:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
-            patch("src.core.config.epam_config.EPAM_SOURCE_NAME", "CustomEPAM"),
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
+            patch("src.parsers.epam.epam_service.epam_config.EPAM_SOURCE_NAME", "CustomEPAM"),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run()
 
-        call_args = mock_import_task.delay.call_args
+        call_args = mock_import.call_args
         source_name = call_args[0][1]
         assert source_name == "CustomEPAM"
 
@@ -287,14 +331,18 @@ class TestRunWithQuery:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             await service.run(query="Python Developer")
 
-        assert mock_import_task.delay.call_count == 1
+        assert mock_import.call_count == 1
 
 
 class TestRunErrorHandling:
@@ -304,25 +352,33 @@ class TestRunErrorHandling:
             raise RuntimeError("Parser failed")
             yield  # type: ignore[misc]
 
+        mock_import = AsyncMock()
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock()
             with pytest.raises(RuntimeError, match="Parser failed"):
                 await service.run()
 
     @pytest.mark.asyncio
-    async def test_propagates_celery_exception(
+    async def test_propagates_import_exception(
         self, service: EpamVacancyService, sample_vacancy: ParserVacancyResult
     ) -> None:
         async def mock_stream() -> AsyncGenerator[list[ParserVacancyResult], None]:
             yield [sample_vacancy]
 
+        mock_import = AsyncMock(side_effect=Exception("Import error"))
+
         with (
             patch.object(service.parser, "stream_vacancies", mock_stream),
-            patch("src.parsers.epam.epam_service.import_vacancies_batch") as mock_import_task,
+            patch(
+                "src.parsers.epam.epam_service._import_vacancies_batch",
+                mock_import,
+            ),
         ):
-            mock_import_task.delay = MagicMock(side_effect=Exception("Celery error"))
-            with pytest.raises(Exception, match="Celery error"):
+            with pytest.raises(Exception, match="Import error"):
                 await service.run()

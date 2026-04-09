@@ -71,6 +71,7 @@ class VacancyRead(BaseModel):
     vacancy_url: str | None
     is_remote: bool | None
     is_active: bool | None
+    address: str | None
     created_at_source: datetime | None
     updated_at: datetime | None
     published_at: datetime | None

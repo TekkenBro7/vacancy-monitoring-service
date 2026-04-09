@@ -12,6 +12,8 @@ from src.parsers.hh_ru.hh_parser import HHParser
 
 
 class VacancyEnrichmentService:
+    ENRICHMENT_INTERVAL_DAYS = 3
+
     def __init__(self, db_session: AsyncSession) -> None:
         self.db = db_session
         self.skill_repository = SkillRepository(Skill, self.db)
@@ -21,25 +23,28 @@ class VacancyEnrichmentService:
         should_enrich, reason = self._should_enrich(vacancy)
 
         if not should_enrich:
-            logger.info(f"Vacancy {vacancy.id} does not need enrichment: {reason}")
+            logger.warning(f"Vacancy {vacancy.id} does not need enrichment: {reason}")
             return vacancy
 
         logger.info(
-            f"Enriching vacancy {vacancy.id} from HH.ru API (external_id: {vacancy.external_id}). Reason: {reason}"
+            f"Enriching vacancy {vacancy.id} from HH.ru API "
+            f"(external_id: {vacancy.external_id}). Reason: {reason}"
         )
 
         enriched_data = await self.enrich_vacancy_data(vacancy.external_id)
 
-        if enriched_data:
-            logger.info(
-                f"Successfully enriched vacancy {vacancy.id} with {len(enriched_data.get('skills', []))} skills"
-            )
-            await self._update_vacancy(vacancy, enriched_data)
+        if enriched_data is None:
+            logger.warning(f"Vacancy {vacancy.id} not found in HH.ru API - marking as inactive")
+            vacancy.is_active = False
             vacancy.last_enriched_at = datetime.now(UTC)
         else:
-            logger.warning(
-                f"Failed to enrich vacancy {vacancy.id} from HH.ru API - no data returned"
+            logger.info(
+                f"Successfully enriched vacancy {vacancy.id} "
+                f"with {len(enriched_data.get('skills', []))} skills"
             )
+            await self._update_vacancy(vacancy, enriched_data)
+            vacancy.is_active = enriched_data.get("is_active", True)
+            vacancy.last_enriched_at = datetime.now(UTC)
 
         return vacancy
 
@@ -53,70 +58,75 @@ class VacancyEnrichmentService:
         if not vacancy.external_id:
             return False, "No external_id"
 
-        description = vacancy.description or ""
-        has_description = len(description.strip()) > 0
-        has_skills = bool(vacancy.skills and len(vacancy.skills) > 0)
+        if not vacancy.last_enriched_at:
+            description = vacancy.description or ""
+            if len(description.strip()) == 0:
+                return True, "Never enriched and no description"
+            return True, "Never enriched"
 
-        if not has_description:
-            return True, "No description"
+        time_since_enrichment = datetime.now(UTC) - vacancy.last_enriched_at
 
-        if not has_skills:
-            return True, "No skills"
+        if time_since_enrichment >= timedelta(days=self.ENRICHMENT_INTERVAL_DAYS):
+            return True, f"{self.ENRICHMENT_INTERVAL_DAYS} days since last enrichment"
 
-        last_check_time = vacancy.last_seen_at or vacancy.created_at
-
-        if last_check_time:
-            if datetime.now(UTC) - last_check_time >= timedelta(days=7):
-                return True, "7 days since last_seen_at"
-
-        return False, "Already enriched and recent"
+        return False, "Recently enriched"
 
     async def _update_vacancy(self, vacancy: Vacancy, data: dict) -> None:
         if data.get("description"):
             vacancy.description = data["description"]
-            logger.info(
+            logger.debug(
                 f"Updated description for vacancy {vacancy.id} ({len(data['description'])} chars)"
             )
 
-        if data.get("skills") and (not vacancy.skills or len(vacancy.skills) == 0):
-            await self._create_and_attach_skills(vacancy, data["skills"])
-            logger.info(f"Created and attached skills for vacancy {vacancy.id}: {data['skills']}")
+        if data.get("skills"):
+            await self._update_skills(vacancy, data["skills"])
 
-        if not vacancy.experience and data.get("experience"):
+        if data.get("experience"):
             vacancy.experience = data["experience"]
 
-        if not vacancy.schedule and data.get("schedule"):
+        if data.get("schedule"):
             vacancy.schedule = data["schedule"]
 
-        if not vacancy.employment and data.get("employment"):
+        if data.get("employment"):
             vacancy.employment = data["employment"]
 
-        if not vacancy.salary_from and data.get("salary_from"):
+        if data.get("salary_from") is not None:
             vacancy.salary_from = data["salary_from"]
 
-        if not vacancy.salary_to and data.get("salary_to"):
+        if data.get("salary_to") is not None:
             vacancy.salary_to = data["salary_to"]
 
-    async def _create_and_attach_skills(self, vacancy: Vacancy, skill_names: list[str]) -> None:
-        skills = await self.skill_repository.get_or_create_many(skill_names)
+    async def _update_skills(self, vacancy: Vacancy, skill_names: list[str]) -> None:
+        if not skill_names:
+            return
 
+        skills = await self.skill_repository.get_or_create_many(skill_names)
+        existing_skill_ids = {skill.id for skill in vacancy.skills}
+
+        added_count = 0
         for skill in skills:
-            if skill not in vacancy.skills:
+            if skill.id not in existing_skill_ids:
                 vacancy.skills.append(skill)
-                logger.debug(f"Attached skill '{skill.name}' to vacancy {vacancy.id}")
+                added_count += 1
+
+        if added_count > 0:
+            logger.debug(f"Added {added_count} new skills to vacancy {vacancy.id}")
 
     async def enrich_vacancy_data(self, vacancy_id: str) -> dict[str, Any] | None:
         data = await self.parser.get_vacancy(vacancy_id)
+
         if not data:
             return None
 
-        description = data.get("description", "")
+        is_archived = data.get("archived", False)
+        is_active = not is_archived
 
+        description = data.get("description", "")
         skills = [skill["name"] for skill in data.get("key_skills", []) if skill.get("name")]
 
-        salary_data = data.get("salary", {})
-        salary_from = salary_data.get("from") if salary_data else None
-        salary_to = salary_data.get("to") if salary_data else None
+        salary_data = data.get("salary") or {}
+        salary_from = salary_data.get("from")
+        salary_to = salary_data.get("to")
 
         return {
             "description": description,
@@ -126,6 +136,7 @@ class VacancyEnrichmentService:
             "employment": data.get("employment", {}).get("name"),
             "salary_from": salary_from,
             "salary_to": salary_to,
+            "is_active": is_active,
             "work_format": (
                 data.get("work_format", [{}])[0].get("name") if data.get("work_format") else None
             ),

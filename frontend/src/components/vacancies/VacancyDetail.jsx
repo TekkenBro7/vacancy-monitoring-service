@@ -100,22 +100,21 @@ export default function VacancyDetail() {
   };
 
   const formatSalary = (from, to, currency) => {
-    if (!from && !to) return 'По договорённости';
+    const symbol = currency?.symbol || 'Ю';
 
-    const parts = [];
-    if (from) parts.push(from.toLocaleString());
-    if (to) parts.push(to.toLocaleString());
-
-    const symbol = currency?.symbol || '₽';
-    const result = parts.join(' - ');
-
-    if (from && to) {
-      return `${symbol} ${result}`;
-    } else if (from) {
-      return `от ${symbol} ${result}`;
-    } else {
-      return `до ${symbol} ${result}`;
+    if (!from && !to) {
+      return '$ По договоренности';
     }
+
+    if (from && !to) {
+      return `от ${from.toLocaleString()} ${symbol}`;
+    }
+
+    if (!from && to) {
+      return `до ${to.toLocaleString()} ${symbol}`;
+    }
+
+    return `${from.toLocaleString()} - ${to.toLocaleString()} ${symbol}`;
   };
 
   const formatDate = (dateString) => {
@@ -144,14 +143,16 @@ export default function VacancyDetail() {
   };
 
   const handleShare = () => {
+    const url = vacancy?.vacancy_url;
+
     if (navigator.share) {
       navigator.share({
         title: vacancy?.title,
-        text: `Вакансия: ${vacancy?.title}`,
-        url: window.location.href,
+        text: `Вакансия: ${vacancy?.title}\n${url}`,
+        url: url,
       });
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(url);
       notification.success('Ссылка скопирована', 'URL вакансии в буфере обмена');
     }
   };
@@ -297,7 +298,7 @@ export default function VacancyDetail() {
                           🎓 Стажировка
                         </Badge>
                       )}
-                      {vacancy.is_active && (
+                      {vacancy.is_active ? (
                         <Badge
                           className="border"
                           style={{
@@ -309,6 +310,19 @@ export default function VacancyDetail() {
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Активна
+                        </Badge>
+                      ) : (
+                        <Badge
+                          className="border"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgb(239, 68, 68)/25, rgb(239, 68, 68)/10)',
+                            borderColor: 'rgb(239, 68, 68)/0.4)',
+                            color: 'rgb(239, 68, 68)',
+                          }}
+                        >
+                          <Clock className="h-3 w-3 mr-1" />
+                          Неактивна
                         </Badge>
                       )}
                     </div>
@@ -354,12 +368,6 @@ export default function VacancyDetail() {
                     }}
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <div
-                        className="p-2 rounded-lg"
-                        style={{ backgroundColor: 'rgb(var(--accent)/0.1)' }}
-                      >
-                        <DollarSign className="h-6 w-6" style={{ color: 'rgb(var(--accent))' }} />
-                      </div>
                       <span
                         className="text-sm font-medium"
                         style={{ color: 'rgb(var(--text-muted))' }}
@@ -400,8 +408,15 @@ export default function VacancyDetail() {
                       className="text-lg font-semibold"
                       style={{ color: 'rgb(var(--text-primary))' }}
                     >
-                      {vacancy.location?.name || 'Не указана'}
+                      {vacancy.location?.name || vacancy.address || 'Не указана'}
                     </div>
+                    {vacancy.address &&
+                      vacancy.location?.name &&
+                      vacancy.address !== vacancy.location.name && (
+                        <div className="text-sm mt-1" style={{ color: 'rgb(var(--text-muted))' }}>
+                          {vacancy.address}
+                        </div>
+                      )}
                   </div>
 
                   <div

@@ -29,8 +29,11 @@ def sample_vacancy() -> ParserVacancyResult:
 
 @pytest.fixture
 def mock_celery_task() -> Any:
-    # Патчим в модуле sj_service, где import_vacancies_batch импортирован
-    with patch("src.parsers.superjob.sj_service.import_vacancies_batch") as mock_task:
+    """Mock the async _import_vacancies_batch function."""
+    with patch(
+        "src.parsers.superjob.sj_service._import_vacancies_batch",
+        new_callable=AsyncMock,
+    ) as mock_task:
         yield mock_task
 
 
@@ -40,7 +43,7 @@ class TestImportRange:
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "fetch_all_vacancies", new_callable=AsyncMock
@@ -52,14 +55,14 @@ class TestImportRange:
             )
 
         assert result == 1
-        mock_celery_task.delay.assert_called_once()
+        mock_celery_task.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_imports_multiple_vacancies(
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "fetch_all_vacancies", new_callable=AsyncMock
@@ -71,13 +74,13 @@ class TestImportRange:
             )
 
         assert result == 3
-        mock_celery_task.delay.assert_called_once()
+        mock_celery_task.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_imports_empty_results(
         self,
         service: SJVacancyService,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "fetch_all_vacancies", new_callable=AsyncMock
@@ -89,14 +92,14 @@ class TestImportRange:
             )
 
         assert result == 0
-        mock_celery_task.delay.assert_not_called()
+        mock_celery_task.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_sends_correct_payload(
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "fetch_all_vacancies", new_callable=AsyncMock
@@ -107,7 +110,8 @@ class TestImportRange:
                 None, datetime(2024, 6, 1, tzinfo=UTC), datetime(2024, 6, 2, tzinfo=UTC)
             )
 
-        call_args = mock_celery_task.delay.call_args
+        # Теперь проверяем call_args напрямую (не .delay.call_args)
+        call_args = mock_celery_task.call_args
         payload = call_args[0][0]
         source_name = call_args[0][1]
 
@@ -123,7 +127,7 @@ class TestParseRange:
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with (
             patch.object(service.parser, "search_vacancies", new_callable=AsyncMock) as mock_search,
@@ -146,7 +150,7 @@ class TestParseRange:
     async def test_returns_zero_when_no_vacancies(
         self,
         service: SJVacancyService,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "search_vacancies", new_callable=AsyncMock
@@ -158,14 +162,14 @@ class TestParseRange:
             )
 
         assert result == 0
-        mock_celery_task.delay.assert_not_called()
+        mock_celery_task.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_splits_when_over_limit(
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         call_count = 0
 
@@ -173,7 +177,7 @@ class TestParseRange:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return 600  # Over 480 limit
+                return 600
             return 200
 
         with (
@@ -196,10 +200,10 @@ class TestParseRange:
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         start = datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
-        end = datetime(2024, 6, 1, 12, 0, 30, tzinfo=UTC)  # 30 seconds interval
+        end = datetime(2024, 6, 1, 12, 0, 30, tzinfo=UTC)
 
         with (
             patch.object(service.parser, "search_vacancies", new_callable=AsyncMock) as mock_search,
@@ -207,12 +211,11 @@ class TestParseRange:
                 service.parser, "fetch_all_vacancies", new_callable=AsyncMock
             ) as mock_fetch,
         ):
-            mock_search.return_value = 600  # Over limit
+            mock_search.return_value = 600
             mock_fetch.return_value = [sample_vacancy]
 
             result = await service._parse_range(None, start, end)
 
-        # Should import anyway since can't split further
         assert result == 1
         mock_fetch.assert_called_once()
 
@@ -223,7 +226,7 @@ class TestRun:
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with (
             patch.object(service.parser, "search_vacancies", new_callable=AsyncMock) as mock_search,
@@ -240,14 +243,14 @@ class TestRun:
                 to_date=datetime(2024, 6, 2, tzinfo=UTC),
             )
 
-        mock_celery_task.delay.assert_called_once()
+        mock_celery_task.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_processes_multiple_days(
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with (
             patch.object(service.parser, "search_vacancies", new_callable=AsyncMock) as mock_search,
@@ -264,14 +267,14 @@ class TestRun:
                 to_date=datetime(2024, 6, 4, tzinfo=UTC),
             )
 
-        assert mock_celery_task.delay.call_count == 3
+        assert mock_celery_task.call_count == 3
 
     @pytest.mark.asyncio
     async def test_processes_with_query(
         self,
         service: SJVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with (
             patch.object(service.parser, "search_vacancies", new_callable=AsyncMock) as mock_search,
@@ -295,7 +298,7 @@ class TestRun:
     async def test_handles_empty_date_range(
         self,
         service: SJVacancyService,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "search_vacancies", new_callable=AsyncMock
@@ -307,13 +310,13 @@ class TestRun:
             )
 
         mock_search.assert_not_called()
-        mock_celery_task.delay.assert_not_called()
+        mock_celery_task.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handles_zero_vacancies_per_day(
         self,
         service: SJVacancyService,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "search_vacancies", new_callable=AsyncMock
@@ -327,13 +330,13 @@ class TestRun:
             )
 
         assert mock_search.call_count == 2
-        mock_celery_task.delay.assert_not_called()
+        mock_celery_task.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_accumulates_total_across_days(
         self,
         service: SJVacancyService,
-        mock_celery_task: MagicMock,
+        mock_celery_task: AsyncMock,
     ) -> None:
         vacancies_per_day = [
             [ParserVacancyResult(external_id="1", title="Dev1")],
@@ -363,4 +366,4 @@ class TestRun:
                 to_date=datetime(2024, 6, 4, tzinfo=UTC),
             )
 
-        assert mock_celery_task.delay.call_count == 3
+        assert mock_celery_task.call_count == 3

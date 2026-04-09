@@ -31,14 +31,21 @@ export default function VacancyCard({
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   const formatSalary = (from, to, currency) => {
-    const parts = [];
-    if (from) parts.push(from.toLocaleString());
-    if (to) parts.push(to.toLocaleString());
+    const symbol = currency?.symbol || 'Ю';
 
-    if (parts.length === 0) return 'По договорённости';
+    if (!from && !to) {
+      return '$ По договоренности';
+    }
 
-    const symbol = currency?.symbol || '₽';
-    return `${symbol} ${parts.join(' - ')}`;
+    if (from && !to) {
+      return `от ${from.toLocaleString()} ${symbol}`;
+    }
+
+    if (!from && to) {
+      return `до ${to.toLocaleString()} ${symbol}`;
+    }
+
+    return `${from.toLocaleString()} - ${to.toLocaleString()} ${symbol}`;
   };
 
   const timeAgo = (dateString) => {
@@ -57,8 +64,21 @@ export default function VacancyCard({
   };
 
   const getLocationText = () => {
-    if (!vacancy.location) return 'Локация не указана';
-    return vacancy.location.name;
+    const parts = [];
+
+    if (vacancy.location?.name) {
+      parts.push(vacancy.location.name);
+    }
+
+    if (vacancy.address && vacancy.address !== vacancy.location?.name) {
+      parts.push(vacancy.address);
+    }
+
+    if (parts.length === 0) {
+      return 'Локация не указана';
+    }
+
+    return parts.join(', ');
   };
 
   const getCompanyText = () => {
@@ -181,7 +201,6 @@ export default function VacancyCard({
             }}
           >
             <div className="flex items-center md:justify-end gap-2 mb-1">
-              <DollarSign className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
               <span
                 className="text-lg md:text-xl font-bold"
                 style={{ color: 'rgb(var(--accent))' }}
@@ -279,42 +298,6 @@ export default function VacancyCard({
             </div>
           </div>
         </div>
-
-        {vacancy.skills && vacancy.skills.length > 0 && (
-          <div className="mb-6">
-            <div className="text-xs mb-3" style={{ color: 'rgb(var(--text-muted))' }}>
-              Ключевые навыки
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {vacancy.skills.slice(0, 8).map((skill) => (
-                <Badge
-                  key={skill.id}
-                  variant="outline"
-                  className="text-xs transition-all duration-300 hover:scale-105 hover:shadow-md"
-                  style={{
-                    borderColor: 'rgb(var(--border))',
-                    color: 'rgb(var(--text-primary))',
-                    backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
-                  }}
-                >
-                  {skill.name}
-                </Badge>
-              ))}
-              {vacancy.skills.length > 8 && (
-                <Badge
-                  variant="outline"
-                  className="text-xs"
-                  style={{
-                    borderColor: 'rgb(var(--border))',
-                    color: 'rgb(var(--accent))',
-                  }}
-                >
-                  +{vacancy.skills.length - 8}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center justify-between gap-4 pt-4">
           <div

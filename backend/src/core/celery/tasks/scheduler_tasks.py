@@ -20,7 +20,7 @@ async def _schedule_source_parse_tasks() -> None:
     today = datetime.now(UTC).date()
     last_full_day = today - timedelta(days=1)
 
-    last_full_day = date(2026, 3, 22)
+    # last_full_day = date(2026, 3, 22)
 
     if last_full_day < START_PARSE_DATE:
         logger.info(

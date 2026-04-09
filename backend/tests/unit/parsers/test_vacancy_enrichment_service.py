@@ -103,7 +103,7 @@ def fully_enriched_vacancy(hh_source: MagicMock) -> MagicMock:
     vacancy.skills = [MagicMock(spec=Skill)]
     vacancy.last_seen_at = datetime.now(UTC)
     vacancy.created_at = datetime.now(UTC)
-    vacancy.last_enriched_at = datetime.now(UTC)
+    vacancy.last_enriched_at = datetime.now(UTC)  # Recently enriched
     vacancy.experience = "1-3 года"
     vacancy.schedule = "Полный день"
     vacancy.employment = "Полная занятость"
@@ -113,16 +113,17 @@ def fully_enriched_vacancy(hh_source: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
-def old_vacancy(hh_source: MagicMock) -> MagicMock:
+def old_enriched_vacancy(hh_source: MagicMock) -> MagicMock:
+    """Vacancy that was enriched more than ENRICHMENT_INTERVAL_DAYS ago."""
     vacancy = MagicMock(spec=Vacancy)
     vacancy.id = 4
     vacancy.external_id = "22222"
     vacancy.source = hh_source
     vacancy.description = "Description"
     vacancy.skills = [MagicMock(spec=Skill)]
-    vacancy.last_seen_at = datetime.now(UTC) - timedelta(days=10)
+    vacancy.last_seen_at = datetime.now(UTC)
     vacancy.created_at = datetime.now(UTC) - timedelta(days=10)
-    vacancy.last_enriched_at = None
+    vacancy.last_enriched_at = datetime.now(UTC) - timedelta(days=10)  # Old enrichment
     vacancy.experience = None
     vacancy.schedule = None
     vacancy.employment = None
@@ -142,6 +143,7 @@ def sample_enriched_data() -> dict[str, Any]:
         "salary_from": 150000,
         "salary_to": 250000,
         "work_format": "Удалённая работа",
+        "is_active": True,
     }
 
 
@@ -195,39 +197,39 @@ class TestShouldEnrich:
         assert result is False
         assert reason == "No external_id"
 
-    def test_returns_true_when_no_description(
+    def test_returns_true_when_never_enriched_no_description(
         self, service: VacancyEnrichmentService, vacancy_without_description: MagicMock
     ) -> None:
         result, reason = service._should_enrich(vacancy_without_description)
 
         assert result is True
-        assert reason == "No description"
+        assert "Never enriched" in reason
 
-    def test_returns_true_when_no_skills(
+    def test_returns_true_when_never_enriched_with_description(
         self, service: VacancyEnrichmentService, vacancy_without_skills: MagicMock
     ) -> None:
         result, reason = service._should_enrich(vacancy_without_skills)
 
         assert result is True
-        assert reason == "No skills"
+        assert reason == "Never enriched"
 
-    def test_returns_true_when_old_vacancy(
-        self, service: VacancyEnrichmentService, old_vacancy: MagicMock
+    def test_returns_true_when_old_enrichment(
+        self, service: VacancyEnrichmentService, old_enriched_vacancy: MagicMock
     ) -> None:
-        result, reason = service._should_enrich(old_vacancy)
+        result, reason = service._should_enrich(old_enriched_vacancy)
 
         assert result is True
-        assert "7 days" in reason
+        assert "days since last enrichment" in reason
 
-    def test_returns_false_when_fully_enriched(
+    def test_returns_false_when_recently_enriched(
         self, service: VacancyEnrichmentService, fully_enriched_vacancy: MagicMock
     ) -> None:
         result, reason = service._should_enrich(fully_enriched_vacancy)
 
         assert result is False
-        assert reason == "Already enriched and recent"
+        assert reason == "Recently enriched"
 
-    def test_returns_true_when_empty_description(
+    def test_returns_true_when_empty_description_never_enriched(
         self, service: VacancyEnrichmentService, hh_source: MagicMock
     ) -> None:
         vacancy = MagicMock(spec=Vacancy)
@@ -235,12 +237,12 @@ class TestShouldEnrich:
         vacancy.external_id = "123"
         vacancy.description = "   "
         vacancy.skills = [MagicMock(spec=Skill)]
-        vacancy.last_seen_at = datetime.now(UTC)
+        vacancy.last_enriched_at = None
 
         result, reason = service._should_enrich(vacancy)
 
         assert result is True
-        assert reason == "No description"
+        assert "Never enriched" in reason and "no description" in reason
 
 
 class TestEnrichVacancyIfNeeded:
@@ -301,7 +303,22 @@ class TestEnrichVacancyIfNeeded:
             result = await service.enrich_vacancy_if_needed(vacancy_without_description)
 
         assert result == vacancy_without_description
-        assert vacancy_without_description.last_enriched_at is None
+
+        assert vacancy_without_description.is_active is False
+        assert vacancy_without_description.last_enriched_at is not None
+
+    @pytest.mark.asyncio
+    async def test_marks_vacancy_inactive_when_not_found(
+        self,
+        service: VacancyEnrichmentService,
+        vacancy_without_description: MagicMock,
+    ) -> None:
+        with patch.object(service, "enrich_vacancy_data", new_callable=AsyncMock) as mock_enrich:
+            mock_enrich.return_value = None
+
+            await service.enrich_vacancy_if_needed(vacancy_without_description)
+
+        assert vacancy_without_description.is_active is False
 
 
 class TestEnrichVacancyData:
@@ -422,12 +439,47 @@ class TestEnrichVacancyData:
         assert result is not None
         assert result["work_format"] == "Удалённая работа"
 
+    @pytest.mark.asyncio
+    async def test_returns_is_active_true_when_not_archived(
+        self,
+        service: VacancyEnrichmentService,
+        mock_parser: AsyncMock,
+    ) -> None:
+        mock_parser.get_vacancy.return_value = {
+            "description": "Test",
+            "key_skills": [],
+            "archived": False,
+        }
+
+        result = await service.enrich_vacancy_data("12345")
+
+        assert result is not None
+        assert result["is_active"] is True
+
+    @pytest.mark.asyncio
+    async def test_returns_is_active_false_when_archived(
+        self,
+        service: VacancyEnrichmentService,
+        mock_parser: AsyncMock,
+    ) -> None:
+        mock_parser.get_vacancy.return_value = {
+            "description": "Test",
+            "key_skills": [],
+            "archived": True,
+        }
+
+        result = await service.enrich_vacancy_data("12345")
+
+        assert result is not None
+        assert result["is_active"] is False
+
 
 class TestUpdateVacancy:
     @pytest.mark.asyncio
     async def test_updates_description(
         self, service: VacancyEnrichmentService, vacancy_without_description: MagicMock
     ) -> None:
+        vacancy_without_description.skills = []
         data: dict[str, Any] = {"description": "New description"}
 
         await service._update_vacancy(vacancy_without_description, data)
@@ -442,8 +494,10 @@ class TestUpdateVacancy:
         mock_skill_repository: AsyncMock,
     ) -> None:
         skill1 = MagicMock(spec=Skill)
+        skill1.id = 1
         skill1.name = "Python"
         skill2 = MagicMock(spec=Skill)
+        skill2.id = 2
         skill2.name = "FastAPI"
         mock_skill_repository.get_or_create_many.return_value = [skill1, skill2]
         vacancy_without_skills.skills = []
@@ -455,23 +509,10 @@ class TestUpdateVacancy:
         mock_skill_repository.get_or_create_many.assert_called_once_with(["Python", "FastAPI"])
 
     @pytest.mark.asyncio
-    async def test_does_not_overwrite_existing_experience(
-        self, service: VacancyEnrichmentService
-    ) -> None:
-        vacancy = MagicMock(spec=Vacancy)
-        vacancy.skills = []
-        vacancy.experience = "3-5 лет"
-
-        data: dict[str, Any] = {"experience": "1-3 года"}
-
-        await service._update_vacancy(vacancy, data)
-
-        assert vacancy.experience == "3-5 лет"
-
-    @pytest.mark.asyncio
-    async def test_updates_missing_experience(
+    async def test_updates_experience(
         self, service: VacancyEnrichmentService, vacancy_without_description: MagicMock
     ) -> None:
+        vacancy_without_description.skills = []
         data: dict[str, Any] = {"experience": "1-3 года"}
 
         await service._update_vacancy(vacancy_without_description, data)
@@ -479,13 +520,14 @@ class TestUpdateVacancy:
         assert vacancy_without_description.experience == "1-3 года"
 
     @pytest.mark.asyncio
-    async def test_updates_all_missing_fields(
+    async def test_updates_all_fields(
         self,
         service: VacancyEnrichmentService,
         vacancy_without_description: MagicMock,
         mock_skill_repository: AsyncMock,
     ) -> None:
         mock_skill_repository.get_or_create_many.return_value = []
+        vacancy_without_description.skills = []
         data: dict[str, Any] = {
             "description": "New desc",
             "skills": [],
@@ -505,54 +547,30 @@ class TestUpdateVacancy:
         assert vacancy_without_description.salary_from == 100000
         assert vacancy_without_description.salary_to == 200000
 
-
-class TestCreateAndAttachSkills:
     @pytest.mark.asyncio
-    async def test_attaches_new_skills(
-        self,
-        service: VacancyEnrichmentService,
-        vacancy_without_skills: MagicMock,
-        mock_skill_repository: AsyncMock,
+    async def test_does_not_update_empty_description(
+        self, service: VacancyEnrichmentService
     ) -> None:
-        skill1 = MagicMock(spec=Skill)
-        skill1.name = "Python"
-        skill2 = MagicMock(spec=Skill)
-        skill2.name = "FastAPI"
-        mock_skill_repository.get_or_create_many.return_value = [skill1, skill2]
-        vacancy_without_skills.skills = []
-
-        await service._create_and_attach_skills(vacancy_without_skills, ["Python", "FastAPI"])
-
-        assert skill1 in vacancy_without_skills.skills
-        assert skill2 in vacancy_without_skills.skills
-
-    @pytest.mark.asyncio
-    async def test_does_not_duplicate_skills(
-        self,
-        service: VacancyEnrichmentService,
-        mock_skill_repository: AsyncMock,
-    ) -> None:
-        existing_skill = MagicMock(spec=Skill)
-        existing_skill.name = "Python"
-
         vacancy = MagicMock(spec=Vacancy)
-        vacancy.skills = [existing_skill]
+        vacancy.skills = []
+        vacancy.description = "Existing description"
 
-        mock_skill_repository.get_or_create_many.return_value = [existing_skill]
+        data: dict[str, Any] = {"description": ""}
 
-        await service._create_and_attach_skills(vacancy, ["Python"])
+        await service._update_vacancy(vacancy, data)
 
-        assert vacancy.skills.count(existing_skill) == 1
+        assert vacancy.description == "Existing description"
 
     @pytest.mark.asyncio
-    async def test_handles_empty_skill_list(
-        self,
-        service: VacancyEnrichmentService,
-        vacancy_without_skills: MagicMock,
-        mock_skill_repository: AsyncMock,
+    async def test_does_not_update_none_description(
+        self, service: VacancyEnrichmentService
     ) -> None:
-        mock_skill_repository.get_or_create_many.return_value = []
+        vacancy = MagicMock(spec=Vacancy)
+        vacancy.skills = []
+        vacancy.description = "Existing description"
 
-        await service._create_and_attach_skills(vacancy_without_skills, [])
+        data: dict[str, Any] = {"description": None}
 
-        mock_skill_repository.get_or_create_many.assert_called_once_with([])
+        await service._update_vacancy(vacancy, data)
+
+        assert vacancy.description == "Existing description"

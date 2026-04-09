@@ -28,9 +28,12 @@ def sample_vacancy() -> ParserVacancyResult:
 
 
 @pytest.fixture
-def mock_celery_task() -> Any:
-    with patch("src.parsers.hh_ru.hh_service.import_vacancies_batch") as mock_task:
-        yield mock_task
+def mock_import_batch() -> Any:
+    with patch(
+        "src.parsers.hh_ru.hh_service._import_vacancies_batch",
+        new_callable=AsyncMock,
+    ) as mock:
+        yield mock
 
 
 class TestImportRange:
@@ -39,7 +42,7 @@ class TestImportRange:
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -48,14 +51,14 @@ class TestImportRange:
             result = await service._import_range(None, datetime(2024, 6, 1), datetime(2024, 6, 2))
 
         assert result == 1
-        mock_celery_task.delay.assert_called_once()
+        mock_import_batch.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_imports_multiple_batches(
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy, sample_vacancy]
@@ -65,13 +68,13 @@ class TestImportRange:
             result = await service._import_range(None, datetime(2024, 6, 1), datetime(2024, 6, 2))
 
         assert result == 3
-        assert mock_celery_task.delay.call_count == 2
+        assert mock_import_batch.call_count == 2
 
     @pytest.mark.asyncio
     async def test_imports_empty_results(
         self,
         service: HHVacancyService,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             return
@@ -81,14 +84,14 @@ class TestImportRange:
             result = await service._import_range(None, datetime(2024, 6, 1), datetime(2024, 6, 2))
 
         assert result == 0
-        mock_celery_task.delay.assert_not_called()
+        mock_import_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_sends_correct_payload(
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -96,7 +99,7 @@ class TestImportRange:
         with patch.object(service.parser, "stream_vacancies", mock_stream):
             await service._import_range(None, datetime(2024, 6, 1), datetime(2024, 6, 2))
 
-        call_args = mock_celery_task.delay.call_args
+        call_args = mock_import_batch.call_args
         payload = call_args[0][0]
 
         assert isinstance(payload, list)
@@ -110,7 +113,7 @@ class TestParseRange:
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -131,7 +134,7 @@ class TestParseRange:
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         call_count = 0
 
@@ -158,7 +161,7 @@ class TestParseRange:
     async def test_returns_zero_when_cannot_split(
         self,
         service: HHVacancyService,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         start = datetime(2024, 6, 1, 12, 0, 0)
         end = start
@@ -179,7 +182,7 @@ class TestRun:
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -196,14 +199,14 @@ class TestRun:
                 to_date=datetime(2024, 6, 2),
             )
 
-        mock_celery_task.delay.assert_called_once()
+        mock_import_batch.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_processes_multiple_days(
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -220,14 +223,14 @@ class TestRun:
                 to_date=datetime(2024, 6, 4),
             )
 
-        assert mock_celery_task.delay.call_count == 3
+        assert mock_import_batch.call_count == 3
 
     @pytest.mark.asyncio
     async def test_processes_with_query(
         self,
         service: HHVacancyService,
         sample_vacancy: ParserVacancyResult,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         async def mock_stream(*args: Any) -> Any:
             yield [sample_vacancy]
@@ -251,7 +254,7 @@ class TestRun:
     async def test_handles_empty_date_range(
         self,
         service: HHVacancyService,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         with patch.object(
             service.parser, "search_vacancies", new_callable=AsyncMock
@@ -263,13 +266,13 @@ class TestRun:
             )
 
         mock_search.assert_not_called()
-        mock_celery_task.delay.assert_not_called()
+        mock_import_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_accumulates_total_across_days(
         self,
         service: HHVacancyService,
-        mock_celery_task: MagicMock,
+        mock_import_batch: AsyncMock,
     ) -> None:
         day_counts = [3, 5, 2]
         current_day = 0
@@ -292,4 +295,4 @@ class TestRun:
                 to_date=datetime(2024, 6, 4),
             )
 
-        assert mock_celery_task.delay.call_count == 10
+        assert mock_import_batch.call_count == 10

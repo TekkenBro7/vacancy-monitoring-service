@@ -7,16 +7,11 @@ from src.core.logger import logger
 from src.database.session import get_async_session
 from src.models.currencies import Currency
 from src.models.locations import City
-from src.models.notifications import NotificationType
 from src.models.secondary_tables import (
     user_skills_table,
 )
 from src.models.skills import Skill
 from src.models.sources import Source, SourceType
-from src.models.subscriptions import (
-    SubscriptionTarget,
-    SubscriptionType,
-)
 from src.models.users import Role, User, UserProfile
 
 fake = Faker()
@@ -71,6 +66,12 @@ async def seed_db() -> None:
             {"name": "EUR", "symbol": "€"},
             {"name": "RUR", "symbol": "₽"},
             {"name": "BYR", "symbol": "Br"},
+            {"name": "UAH", "symbol": "₴"},
+            {"name": "KZT", "symbol": "₸"},
+            {"name": "GBP", "symbol": "£"},
+            {"name": "UZS", "symbol": "сўм"},
+            {"name": "KGS", "symbol": "С"},
+            {"name": "AZN", "symbol": "₼"},
         ]
         currency_objs = [Currency(**c) for c in currency_data]
         session.add_all(currency_objs)
@@ -123,42 +124,6 @@ async def seed_db() -> None:
         for s in source_objs:
             await session.refresh(s)
         logger.info(f"Inserted {len(source_objs)} sources")
-
-        subscription_targets_data = [
-            {"name": "vacancy"},
-            {"name": "company"},
-            {"name": "category"},
-        ]
-        target_objs = [SubscriptionTarget(**d) for d in subscription_targets_data]
-        session.add_all(target_objs)
-        await session.commit()
-        for t in target_objs:
-            await session.refresh(t)
-        logger.info(f"Inserted {len(target_objs)} subscription targets")
-
-        subscription_types_data = [
-            {"name": "email", "description": "Email notifications"},
-            {"name": "telegram", "description": "Telegram notifications"},
-            {"name": "browser", "description": "Browser push notifications"},
-        ]
-        sub_type_objs = [SubscriptionType(**d) for d in subscription_types_data]
-        session.add_all(sub_type_objs)
-        await session.commit()
-        for sub_types in sub_type_objs:
-            await session.refresh(sub_types)
-        logger.info(f"Inserted {len(sub_type_objs)} subscription types")
-
-        notification_type_data = [
-            {"name": "info", "description": "General info message"},
-            {"name": "warning", "description": "Important warnings"},
-            {"name": "subscription_update", "description": "Subscription activity"},
-        ]
-        notif_type_objs = [NotificationType(**d) for d in notification_type_data]
-        session.add_all(notif_type_objs)
-        await session.commit()
-        for nt in notif_type_objs:
-            await session.refresh(nt)
-        logger.info(f"Inserted {len(notif_type_objs)} notification types")
 
         skill_names = [
             "Python",
