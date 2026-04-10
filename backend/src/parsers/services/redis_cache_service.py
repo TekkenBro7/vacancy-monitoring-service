@@ -12,7 +12,7 @@ from src.utils.redis_keys import RedisKeys
 
 
 class RedisCacheService:
-    TTL_CACHE = 24 * 3600
+    TTL_CACHE = 3600
     TTL_NEGATIVE = 10 * 60
 
     def __init__(

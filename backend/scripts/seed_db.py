@@ -117,6 +117,11 @@ async def seed_db() -> None:
                 "source_url": "https://careers.epam.com",
                 "source_type_id": source_type_objs[2].id,
             },
+            {
+                "name": "Wargaming",
+                "source_url": "https://wargaming.com",
+                "source_type_id": source_type_objs[2].id,
+            },
         ]
         source_objs = [Source(**s) for s in source_data]
         session.add_all(source_objs)

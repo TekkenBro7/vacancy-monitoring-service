@@ -74,7 +74,7 @@ class EpamParser:
         try:
             for attempt in range(epam_config.EPAM_RETRIES):
                 try:
-                    await asyncio.sleep(epam_config.EPAM_RATE_LIMIT_DELAY + uniform(0.1, 0.5))
+                    await asyncio.sleep(epam_config.EPAM_RATE_LIMIT_DELAY + uniform(0.1, 1))
                     await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
                     await page.wait_for_selector(wait_selector, timeout=timeout)
                     return await page.content()

@@ -146,6 +146,18 @@ class EpamConfig:
     EPAM_PAGE_SIZE: int = 10
 
 
+class WargamingConfig:
+    WARGAMING_SOURCE_NAME: str = "Wargaming"
+    WARGAMING_BASE_URL: str = "https://wargaming.com"
+    WARGAMING_CAREERS_URL: str = "https://wargaming.com/en/careers/"
+
+    WARGAMING_TIMEOUT: int = int(os.getenv("WARGAMING_TIMEOUT", "30"))
+    WARGAMING_RETRIES: int = int(os.getenv("WARGAMING_RETRIES", "3"))
+    WARGAMING_RATE_LIMIT_DELAY: float = 1
+    WARGAMING_BATCH_SIZE: int = 10
+    WARGAMING_MAX_CONCURRENT: int = 1
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
@@ -157,3 +169,4 @@ super_job_config = SuperJobConfig()
 hh_config = HHConfig()
 praca_config = PracaByConfig()
 epam_config = EpamConfig()
+wargaming_config = WargamingConfig()

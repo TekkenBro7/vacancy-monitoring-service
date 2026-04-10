@@ -314,7 +314,7 @@ class PracaByParser:
 
         salary_from = None
         salary_to = None
-        currency = "BYN"
+        currency = "BYR"
 
         if "$" in salary_text or "usd" in salary_text.lower():
             currency = "USD"
