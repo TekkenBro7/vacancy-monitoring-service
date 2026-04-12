@@ -158,6 +158,21 @@ class WargamingConfig:
     WARGAMING_MAX_CONCURRENT: int = 1
 
 
+class AIConfig:
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "2048"))
+    GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.1"))
+
+
+class TelegramConfig:
+    TELEGRAM_API_ID: int = int(os.getenv("TELEGRAM_API_ID", "0"))
+    TELEGRAM_API_HASH: str = os.getenv("TELEGRAM_API_HASH", "")
+    TELEGRAM_PHONE: str = os.getenv("TELEGRAM_PHONE", "")
+    TELEGRAM_SESSION_NAME: str = os.getenv("TELEGRAM_SESSION_NAME", "vacancy_parser")
+    TELEGRAM_SOURCE_NAME: str = "Telegram"
+    TELEGRAM_CHANNEL_NAME: str = "@jobsearchhhhh"
+
+
 base_config = BaseConfig()
 postgres_config = PostgresConfig()
 jwt_config = JWTConfig()
@@ -170,3 +185,5 @@ hh_config = HHConfig()
 praca_config = PracaByConfig()
 epam_config = EpamConfig()
 wargaming_config = WargamingConfig()
+ai_config = AIConfig()
+telegram_config = TelegramConfig()

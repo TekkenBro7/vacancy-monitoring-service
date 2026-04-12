@@ -183,3 +183,5 @@ staticfiles/
 static/
 
 directory_structure.py
+
+*.session
