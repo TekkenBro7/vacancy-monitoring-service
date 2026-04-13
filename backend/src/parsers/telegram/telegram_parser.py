@@ -1,5 +1,5 @@
+import asyncio
 from collections.abc import AsyncGenerator
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from types import TracebackType
 
@@ -8,15 +8,9 @@ from telethon.tl.types import Message
 
 from src.core.config import telegram_config
 from src.core.logger import logger
-
-
-@dataclass
-class TelegramMessage:
-    id: int
-    text: str
-    date: datetime
-    channel: str
-    url: str
+from src.parsers.base.parser_result import ParserVacancyResult
+from src.parsers.telegram.schemas import TelegramMessage
+from src.parsers.telegram.telegram_ai_extractor import TelegramAIExtractor
 
 
 def _ensure_utc(dt: datetime) -> datetime:
@@ -26,8 +20,12 @@ def _ensure_utc(dt: datetime) -> datetime:
 
 
 class TelegramParser:
+    BATCH_SIZE: int = 10
+    AI_DELAY: float = 2
+
     def __init__(self) -> None:
         self._client: TelegramClient | None = None
+        self._extractor: TelegramAIExtractor | None = None
 
     async def connect(self) -> None:
         self._client = TelegramClient(
@@ -36,13 +34,22 @@ class TelegramParser:
             telegram_config.TELEGRAM_API_HASH,
         )
         await self._client.start(phone=telegram_config.TELEGRAM_PHONE)
-        logger.info("Telegram client connected")
+
+        self._extractor = TelegramAIExtractor()
+        await self._extractor.connect()
+
+        logger.info("Telegram parser connected")
 
     async def disconnect(self) -> None:
+        if self._extractor:
+            await self._extractor.disconnect()
+            self._extractor = None
+
         if self._client:
             await self._client.disconnect()
             self._client = None
-            logger.info("Telegram client disconnected")
+
+        logger.info("Telegram parser disconnected")
 
     async def __aenter__(self) -> "TelegramParser":
         await self.connect()
@@ -61,19 +68,21 @@ class TelegramParser:
             raise RuntimeError("Telegram client not connected")
         return self._client
 
-    async def stream_messages(
+    def _ensure_extractor(self) -> TelegramAIExtractor:
+        if self._extractor is None:
+            raise RuntimeError("AI extractor not initialized")
+        return self._extractor
+
+    async def _iter_messages(
         self,
         channel: str,
         from_date: datetime,
         to_date: datetime,
-    ) -> AsyncGenerator[list[TelegramMessage], None]:
+    ) -> AsyncGenerator[TelegramMessage, None]:
         client = self._ensure_client()
 
         from_date = _ensure_utc(from_date)
         to_date = _ensure_utc(to_date)
-
-        batch: list[TelegramMessage] = []
-        batch_size = 50
 
         async for message in client.iter_messages(
             channel,
@@ -96,17 +105,45 @@ class TelegramParser:
 
             channel_username = channel.lstrip("@")
 
-            batch.append(
-                TelegramMessage(
-                    id=message.id,
-                    text=message.text,
-                    date=msg_date,
-                    channel=channel,
-                    url=f"https://t.me/{channel_username}/{message.id}",
-                )
+            yield TelegramMessage(
+                id=message.id,
+                text=message.text,
+                date=msg_date,
+                channel=channel,
+                url=f"https://t.me/{channel_username}/{message.id}",
             )
 
-            if len(batch) >= batch_size:
+    async def stream_vacancies(
+        self,
+        channel: str,
+        from_date: datetime,
+        to_date: datetime,
+    ) -> AsyncGenerator[list[ParserVacancyResult], None]:
+        extractor = self._ensure_extractor()
+        batch: list[ParserVacancyResult] = []
+
+        async for msg in self._iter_messages(channel, from_date, to_date):
+            result = await extractor.extract_vacancy(msg)
+
+            if result.success and result.vacancy:
+                batch.append(result.vacancy)
+
+                logger.info(
+                    "Message %d → %s (%s)",
+                    msg.id,
+                    result.vacancy.title,
+                    result.vacancy.company_name or "?",
+                )
+            else:
+                logger.debug(
+                    "Message %d skipped: %s",
+                    msg.id,
+                    result.error or "not a vacancy",
+                )
+
+            await asyncio.sleep(self.AI_DELAY)
+
+            if len(batch) >= self.BATCH_SIZE:
                 yield batch
                 batch = []
 
@@ -114,7 +151,7 @@ class TelegramParser:
             yield batch
 
         logger.info(
-            "Telegram %s: finished streaming %s to %s",
+            "Telegram %s: finished %s to %s",
             channel,
             from_date.date(),
             to_date.date(),

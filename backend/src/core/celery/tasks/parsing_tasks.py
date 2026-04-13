@@ -36,6 +36,9 @@ async def _run_source_parse_task(task_id: int) -> None:
 
         source = await source_repo.get_by_id(task.source_id)
 
+        if source.name != "Telegram":
+            return
+
         if source is None:
             await parse_task_repo.mark_failed(task.id, f"Source {task.source_id} not found")
             return

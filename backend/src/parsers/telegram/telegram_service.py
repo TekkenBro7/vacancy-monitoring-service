@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from src.core.celery.tasks.import_tasks import _import_vacancies_batch
 from src.core.config import telegram_config
 from src.core.logger import logger
 from src.parsers.base.base_vacancy_service import BaseVacancyService
@@ -16,37 +17,30 @@ class TelegramVacancyService(BaseVacancyService):
         self.channel = telegram_config.TELEGRAM_CHANNEL_NAME
         self.parser = TelegramParser()
 
-    async def _import_messages(
+    async def _import_vacancies(
         self,
         from_date: datetime,
         to_date: datetime,
     ) -> int:
         total = 0
 
-        async for batch in self.parser.stream_messages(
+        async for vacancies in self.parser.stream_vacancies(
             channel=self.channel,
             from_date=from_date,
             to_date=to_date,
         ):
-            if not batch:
+            if not vacancies:
                 continue
 
-            for msg in batch:
-                logger.info(
-                    "Telegram message %d [%s]: %s...",
-                    msg.id,
-                    msg.date.date(),
-                    msg.text[:100],
-                )
-                print()
-                print()
+            payload = [v.to_dict() for v in vacancies]
+            await _import_vacancies_batch(payload, telegram_config.TELEGRAM_SOURCE_NAME)
 
-            total += len(batch)
+            total += len(vacancies)
 
             logger.info(
-                "Telegram %s: batch %d messages, total %d",
+                "Telegram %s: sent %d vacancies to import (total: %d)",
                 self.channel,
-                len(batch),
+                len(vacancies),
                 total,
             )
 
@@ -68,17 +62,17 @@ class TelegramVacancyService(BaseVacancyService):
             raise ValueError("from_date and to_date are required")
 
         logger.info(
-            "Telegram: starting parsing %s from %s to %s",
+            "Telegram: starting %s [%s → %s]",
             self.channel,
             from_date.date(),
             to_date.date(),
         )
 
         async with self.parser:
-            total = await self._import_messages(from_date, to_date)
+            total = await self._import_vacancies(from_date, to_date)
 
         logger.info(
-            "Telegram finished: %s → total %d messages",
+            "Telegram finished: %s → %d vacancies",
             self.channel,
             total,
         )
