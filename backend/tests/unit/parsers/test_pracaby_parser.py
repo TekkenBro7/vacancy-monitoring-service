@@ -150,7 +150,7 @@ class TestParseSalary:
 
         assert salary_from == 2000
         assert salary_to == 3500
-        assert currency == "BYN"
+        assert currency == "BYR"
 
     def test_parses_salary_from_only(self, parser: PracaByParser) -> None:
         from selectolax.parser import HTMLParser
@@ -233,7 +233,7 @@ class TestParseVacancyPage:
         assert result.address == "Минск, ул. Тестовая, 123"
         assert result.salary_from == 2000
         assert result.salary_to == 3500
-        assert result.currency == "BYN"
+        assert result.currency == "BYR"
         assert result.experience == "Опыт работы от 1 года"
         assert result.education == "Высшее образование"
         assert result.schedule == "Полный день"
