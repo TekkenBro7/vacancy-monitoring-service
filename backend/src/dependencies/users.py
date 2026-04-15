@@ -46,3 +46,9 @@ async def validate_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         ) from e
+
+
+async def require_admin(current_user: UserMe = Depends(get_current_user)) -> UserMe:
+    if current_user.role_name.lower() != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user

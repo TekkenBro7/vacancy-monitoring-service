@@ -70,7 +70,7 @@ class HHParser:
     ) -> dict[str, Any]:
         for attempt in range(hh_config.HH_RETRIES):
             try:
-                await asyncio.sleep(uniform(0.3, 0.8))
+                await asyncio.sleep(uniform(0.5, 1.0))
 
                 async with session.get(url, params=params, timeout=self._timeout) as resp:
                     if resp.status == status.HTTP_403_FORBIDDEN:
@@ -89,8 +89,12 @@ class HHParser:
                     return await resp.json()
             except TimeoutError:
                 logger.warning("HH API timeout (attempt %s)", attempt + 1)
+                await asyncio.sleep(60 * (attempt + 1))
+                continue
             except aiohttp.ClientError as e:
                 logger.warning("HH API connection error: %s", e)
+                await asyncio.sleep(60 * (attempt + 1))
+                continue
         raise Exception("HH API request failed after retries")
 
     async def get_vacancy(self, vacancy_id: str) -> dict[str, Any] | None:

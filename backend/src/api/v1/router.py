@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from src.api.v1.analytics import router as analytics_router
 from src.api.v1.auth import router as auth_router
 from src.api.v1.bookmarks import router as bookmarks_router
 from src.api.v1.cities import router as cities_router
@@ -32,3 +33,4 @@ v1_router.include_router(comparisons_router, prefix="/comparisons", tags=["Compa
 v1_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 v1_router.include_router(skills_router, prefix="/skills", tags=["Skills"])
 v1_router.include_router(bookmarks_router, prefix="/bookmarks", tags=["Bookmarks"])
+v1_router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])

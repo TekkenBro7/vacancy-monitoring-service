@@ -1,147 +1,123 @@
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Users,
-  Briefcase,
+  RefreshCw,
+  Calendar,
+  TrendingUp,
   Building2,
   Tags,
-  TrendingUp,
+  MapPin,
   DollarSign,
-  Clock,
-  CheckCircle,
+  Users,
+  Server,
+  Activity,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-const stats = [
-  {
-    title: 'Пользователи',
-    value: '1,234',
-    change: '+12%',
-    icon: Users,
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    title: 'Вакансии',
-    value: '856',
-    change: '+5%',
-    icon: Briefcase,
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    title: 'Компании',
-    value: '342',
-    change: '+8%',
-    icon: Building2,
-    color: 'from-emerald-500 to-teal-500',
-  },
-  {
-    title: 'Навыки',
-    value: '1,567',
-    change: '+15%',
-    icon: Tags,
-    color: 'from-amber-500 to-orange-500',
-  },
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    user: 'Иван Петров',
-    action: 'зарегистрировался',
-    time: '5 минут назад',
-  },
-  {
-    id: 2,
-    user: 'ООО "ТехКорп"',
-    action: 'добавил вакансию',
-    time: '15 минут назад',
-  },
-  {
-    id: 3,
-    user: 'Мария Сидорова',
-    action: 'обновил профиль',
-    time: '1 час назад',
-  },
-  {
-    id: 4,
-    user: 'Анна Иванова',
-    action: 'откликнулась на вакансию',
-    time: '2 часа назад',
-  },
-];
-
-const topVacancies = [
-  {
-    id: 1,
-    title: 'Senior Frontend Developer',
-    company: 'TechCorp Inc.',
-    applications: 45,
-    status: 'active',
-  },
-  {
-    id: 2,
-    title: 'Python Backend Developer',
-    company: 'DataSoft',
-    applications: 38,
-    status: 'active',
-  },
-  {
-    id: 3,
-    title: 'DevOps Engineer',
-    company: 'CloudTeam',
-    applications: 29,
-    status: 'active',
-  },
-];
+import { Button } from '@/components/ui/button';
+import AnalyticsService from '@/api/services/AnalyticsService';
+import StatsGrid from '@/components/analytics/StatsGrid';
+import { LineChart, BarChart, PieChart, AreaChart } from '@/components/analytics/charts';
 
 export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [period, setPeriod] = useState(30);
+  const [analytics, setAnalytics] = useState(null);
+
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await AnalyticsService.getFullDashboard(period);
+      setAnalytics(data);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError('Ошибка загрузки аналитики');
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-3">
+          <RefreshCw className="h-6 w-6 animate-spin" style={{ color: 'rgb(var(--accent))' }} />
+          <span style={{ color: 'rgb(var(--text-muted))' }}>Загрузка аналитики...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-red-500">{error}</p>
+        <Button onClick={fetchAnalytics}>Повторить</Button>
+      </div>
+    );
+  }
+
+  if (!analytics) return null;
+
+  const {
+    overview,
+    overview_with_trend,
+    vacancies_time_series,
+    salary_stats,
+    top_companies,
+    top_skills,
+    top_cities,
+    sources_stats,
+    vacancy_detailed_stats,
+    user_activity,
+  } = analytics;
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
-          Панель администратора
-        </h1>
-        <p style={{ color: 'rgb(var(--text-muted))' }}>
-          Добро пожаловать в панель управления системой
-        </p>
-      </div>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+            Аналитика
+          </h1>
+          <p style={{ color: 'rgb(var(--text-muted))' }}>Обзор статистики и метрик системы</p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card
-            key={stat.title}
-            className="backdrop-blur-sm border transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-[rgb(var(--accent))/50] cursor-pointer"
-            style={{
-              backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
-              borderColor: 'rgb(var(--border))',
-            }}
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2 p-1 rounded-lg"
+            style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle
-                className="text-sm font-medium"
-                style={{ color: 'rgb(var(--text-muted))' }}
+            {[7, 14, 30, 90].map((days) => (
+              <Button
+                key={days}
+                variant={period === days ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPeriod(days)}
+                className={period === days ? 'bg-[rgb(var(--accent))]' : ''}
               >
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color}`}>
-                <stat.icon className="h-4 w-4 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
-                {stat.value}
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                <TrendingUp className="h-3 w-3 text-emerald-500" />
-                <span className="text-xs text-emerald-500">{stat.change}</span>
-                <span className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                  к прошлому месяцу
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                {days}д
+              </Button>
+            ))}
+          </div>
+
+          <Button variant="outline" size="sm" onClick={fetchAnalytics}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Обновить
+          </Button>
+        </div>
       </div>
 
+      {/* Stats Grid */}
+      <StatsGrid overview={overview} trends={overview_with_trend} />
+
+      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vacancies Time Series */}
         <Card
           className="backdrop-blur-sm border"
           style={{
@@ -154,42 +130,23 @@ export default function AdminDashboard() {
               className="flex items-center gap-2"
               style={{ color: 'rgb(var(--text-primary))' }}
             >
-              <Clock className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
-              Последняя активность
+              <TrendingUp className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              Динамика вакансий
             </CardTitle>
-            <CardDescription>Последние действия пользователей в системе</CardDescription>
+            <CardDescription>Новые вакансии за период</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-lg transition-all duration-300 hover:bg-[rgb(var(--accent))/10] hover:scale-[1.01] cursor-pointer"
-                  style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
-                >
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{activity.user.charAt(0)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: 'rgb(var(--text-primary))' }}
-                    >
-                      {activity.user}
-                    </p>
-                    <p className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                      {activity.action}
-                    </p>
-                  </div>
-                  <span className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                    {activity.time}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AreaChart
+              data={vacancies_time_series.data}
+              xKey="date"
+              yKey="count"
+              color="#6366f1"
+              height={280}
+            />
           </CardContent>
         </Card>
 
+        {/* Sources Distribution */}
         <Card
           className="backdrop-blur-sm border"
           style={{
@@ -202,51 +159,86 @@ export default function AdminDashboard() {
               className="flex items-center gap-2"
               style={{ color: 'rgb(var(--text-primary))' }}
             >
-              <Briefcase className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
-              Популярные вакансии
+              <Server className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              Источники вакансий
             </CardTitle>
-            <CardDescription>Вакансии с наибольшим количеством откликов</CardDescription>
+            <CardDescription>Распределение по источникам</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {topVacancies.map((vacancy) => (
-                <div
-                  key={vacancy.id}
-                  className="flex items-center justify-between p-3 rounded-lg transition-all duration-300 hover:bg-[rgb(var(--accent))/10] hover:scale-[1.01] cursor-pointer"
-                  style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: 'rgb(var(--text-primary))' }}
-                    >
-                      {vacancy.title}
-                    </p>
-                    <p className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                      {vacancy.company}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div
-                        className="text-sm font-semibold"
-                        style={{ color: 'rgb(var(--accent))' }}
-                      >
-                        {vacancy.applications}
-                      </div>
-                      <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
-                        откликов
-                      </div>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PieChart
+              data={sources_stats.map((s) => ({ name: s.name, count: s.vacancy_count }))}
+              nameKey="name"
+              valueKey="count"
+              height={280}
+              innerRadius={50}
+              outerRadius={90}
+            />
           </CardContent>
         </Card>
       </div>
 
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Skills */}
+        <Card
+          className="backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className="flex items-center gap-2"
+              style={{ color: 'rgb(var(--text-primary))' }}
+            >
+              <Tags className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              Топ навыков
+            </CardTitle>
+            <CardDescription>Самые востребованные навыки</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BarChart
+              data={top_skills.slice(0, 10)}
+              xKey="name"
+              yKey="vacancy_count"
+              layout="vertical"
+              height={350}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Top Companies */}
+        <Card
+          className="backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className="flex items-center gap-2"
+              style={{ color: 'rgb(var(--text-primary))' }}
+            >
+              <Building2 className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              Топ компаний
+            </CardTitle>
+            <CardDescription>Компании с наибольшим числом вакансий</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BarChart
+              data={top_companies}
+              xKey="name"
+              yKey="vacancy_count"
+              layout="vertical"
+              height={350}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Salary Stats */}
       <Card
         className="backdrop-blur-sm border"
         style={{
@@ -255,39 +247,321 @@ export default function AdminDashboard() {
         }}
       >
         <CardHeader>
-          <CardTitle style={{ color: 'rgb(var(--text-primary))' }}>Быстрые действия</CardTitle>
-          <CardDescription>Часто используемые операции</CardDescription>
+          <CardTitle
+            className="flex items-center gap-2"
+            style={{ color: 'rgb(var(--text-primary))' }}
+          >
+            <DollarSign className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+            Статистика зарплат
+          </CardTitle>
+          <CardDescription>Распределение зарплат по диапазонам</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { title: 'Добавить пользователя', icon: Users },
-              { title: 'Создать вакансию', icon: Briefcase },
-              { title: 'Добавить компанию', icon: Building2 },
-              { title: 'Управление навыками', icon: Tags },
-            ].map((action) => (
-              <button
-                key={action.title}
-                className="
-                  flex flex-col items-center gap-3 p-6 rounded-xl
-                  bg-[rgb(var(--bg-header-muted))]
-                  border border-[rgb(var(--border))]
-                  hover:border-[rgb(var(--accent))/50]
-                  hover:bg-[rgb(var(--accent))/10]
-                  hover:shadow-lg hover:scale-[1.03]
-                  transition-all duration-300
-                  cursor-pointer
-                "
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div
+              className="text-center p-4 rounded-lg"
+              style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+            >
+              <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                Минимальная
+              </p>
+              <p className="text-xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                {salary_stats.min_salary?.toLocaleString() || '—'} ₽
+              </p>
+            </div>
+            <div
+              className="text-center p-4 rounded-lg"
+              style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+            >
+              <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                Средняя
+              </p>
+              <p className="text-xl font-bold" style={{ color: 'rgb(var(--accent))' }}>
+                {salary_stats.avg_salary?.toLocaleString() || '—'} ₽
+              </p>
+            </div>
+            <div
+              className="text-center p-4 rounded-lg"
+              style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+            >
+              <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                Медиана
+              </p>
+              <p className="text-xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                {salary_stats.median_salary?.toLocaleString() || '—'} ₽
+              </p>
+            </div>
+            <div
+              className="text-center p-4 rounded-lg"
+              style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+            >
+              <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                Максимальная
+              </p>
+              <p className="text-xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                {salary_stats.max_salary?.toLocaleString() || '—'} ₽
+              </p>
+            </div>
+          </div>
+          <BarChart
+            data={salary_stats.distribution.map((d) => ({
+              name: d.range_label,
+              count: d.count,
+            }))}
+            xKey="name"
+            yKey="count"
+            layout="horizontal"
+            height={250}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Charts Row 3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Top Cities */}
+        <Card
+          className="backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className="flex items-center gap-2"
+              style={{ color: 'rgb(var(--text-primary))' }}
+            >
+              <MapPin className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              География вакансий
+            </CardTitle>
+            <CardDescription>Топ городов</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {top_cities.slice(0, 8).map((city, index) => (
+                <div key={city.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{
+                        backgroundColor: `hsl(${240 - index * 20}, 70%, 60%)`,
+                        color: 'white',
+                      }}
+                    >
+                      {index + 1}
+                    </span>
+                    <span style={{ color: 'rgb(var(--text-primary))' }}>{city.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium" style={{ color: 'rgb(var(--accent))' }}>
+                      {city.vacancy_count}
+                    </span>
+                    <span className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                      ({city.percentage}%)
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Experience Distribution */}
+        <Card
+          className="backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className="flex items-center gap-2"
+              style={{ color: 'rgb(var(--text-primary))' }}
+            >
+              <Activity className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              По опыту работы
+            </CardTitle>
+            <CardDescription>Требования к опыту</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PieChart
+              data={vacancy_detailed_stats.by_experience.map((e) => ({
+                name: e.experience,
+                count: e.count,
+              }))}
+              nameKey="name"
+              valueKey="count"
+              height={250}
+              showLegend={true}
+              innerRadius={40}
+              outerRadius={70}
+            />
+          </CardContent>
+        </Card>
+
+        {/* User Activity */}
+        <Card
+          className="backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className="flex items-center gap-2"
+              style={{ color: 'rgb(var(--text-primary))' }}
+            >
+              <Users className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+              Активность пользователей
+            </CardTitle>
+            <CardDescription>Статистика за период</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div
+                className="flex justify-between items-center p-3 rounded-lg"
+                style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
               >
-                <action.icon className="h-8 w-8" style={{ color: 'rgb(var(--accent))' }} />
-                <span className="text-sm font-medium" style={{ color: 'rgb(var(--text-primary))' }}>
-                  {action.title}
+                <span style={{ color: 'rgb(var(--text-muted))' }}>Новых сегодня</span>
+                <span className="font-bold" style={{ color: 'rgb(var(--accent))' }}>
+                  +{user_activity.new_users_today}
                 </span>
-              </button>
-            ))}
+              </div>
+              <div
+                className="flex justify-between items-center p-3 rounded-lg"
+                style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+              >
+                <span style={{ color: 'rgb(var(--text-muted))' }}>За неделю</span>
+                <span className="font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                  +{user_activity.new_users_week}
+                </span>
+              </div>
+              <div
+                className="flex justify-between items-center p-3 rounded-lg"
+                style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+              >
+                <span style={{ color: 'rgb(var(--text-muted))' }}>За месяц</span>
+                <span className="font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                  +{user_activity.new_users_month}
+                </span>
+              </div>
+              <div
+                className="flex justify-between items-center p-3 rounded-lg"
+                style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+              >
+                <span style={{ color: 'rgb(var(--text-muted))' }}>С закладками</span>
+                <span className="font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                  {user_activity.users_with_bookmarks}
+                </span>
+              </div>
+              <div
+                className="flex justify-between items-center p-3 rounded-lg"
+                style={{ backgroundColor: 'rgb(var(--bg-header-muted))' }}
+              >
+                <span style={{ color: 'rgb(var(--text-muted))' }}>Ср. закладок на юзера</span>
+                <span className="font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
+                  {user_activity.avg_bookmarks_per_user}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sources Table */}
+      <Card
+        className="backdrop-blur-sm border"
+        style={{
+          backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+          borderColor: 'rgb(var(--border))',
+        }}
+      >
+        <CardHeader>
+          <CardTitle
+            className="flex items-center gap-2"
+            style={{ color: 'rgb(var(--text-primary))' }}
+          >
+            <Server className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+            Детали источников
+          </CardTitle>
+          <CardDescription>Подробная статистика по каждому источнику</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b" style={{ borderColor: 'rgb(var(--border))' }}>
+                  <th className="text-left py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Источник
+                  </th>
+                  <th className="text-left py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Тип
+                  </th>
+                  <th className="text-right py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Всего
+                  </th>
+                  <th className="text-right py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Активных
+                  </th>
+                  <th className="text-right py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Ср. зарплата
+                  </th>
+                  <th className="text-right py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                    Доля
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sources_stats.map((source) => (
+                  <tr
+                    key={source.id}
+                    className="border-b hover:bg-[rgb(var(--bg-header-muted))]"
+                    style={{ borderColor: 'rgb(var(--border))' }}
+                  >
+                    <td
+                      className="py-3 px-4 font-medium"
+                      style={{ color: 'rgb(var(--text-primary))' }}
+                    >
+                      {source.name}
+                    </td>
+                    <td className="py-3 px-4" style={{ color: 'rgb(var(--text-muted))' }}>
+                      {source.source_type}
+                    </td>
+                    <td
+                      className="py-3 px-4 text-right"
+                      style={{ color: 'rgb(var(--text-primary))' }}
+                    >
+                      {source.vacancy_count.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-right" style={{ color: 'rgb(var(--accent))' }}>
+                      {source.active_vacancy_count.toLocaleString()}
+                    </td>
+                    <td
+                      className="py-3 px-4 text-right"
+                      style={{ color: 'rgb(var(--text-primary))' }}
+                    >
+                      {source.avg_salary ? `${source.avg_salary.toLocaleString()} ₽` : '—'}
+                    </td>
+                    <td
+                      className="py-3 px-4 text-right"
+                      style={{ color: 'rgb(var(--text-muted))' }}
+                    >
+                      {source.percentage}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <div className="text-center text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+        Данные обновлены: {new Date(analytics.generated_at).toLocaleString('ru-RU')}
+      </div>
     </div>
   );
 }

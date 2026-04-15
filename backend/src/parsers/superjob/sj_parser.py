@@ -22,6 +22,17 @@ class SJParser:
         6: "Учащийся",
     }
 
+    SJ_CURRENCY_MAP = {
+        "rub": "RUR",
+        "usd": "USD",
+        "eur": "EUR",
+        "uah": "UAH",
+        "byn": "BYR",
+        "kzt": "KZT",
+        "uzs": "UZS",
+        "azn": "AZN",
+    }
+
     def __init__(self) -> None:
         self._timeout = aiohttp.ClientTimeout(total=super_job_config.SJ_TIMEOUT)
         self.headers = {
@@ -38,7 +49,7 @@ class SJParser:
     ) -> dict[str, Any]:
         for attempt in range(super_job_config.SJ_RETRIES):
             try:
-                await asyncio.sleep(uniform(0.1, 0.5))
+                await asyncio.sleep(uniform(0.2, 0.5))
 
                 async with session.get(url, params=params, timeout=self._timeout) as resp:
                     if resp.status == status.HTTP_503_SERVICE_UNAVAILABLE:
@@ -167,6 +178,13 @@ class SJParser:
 
         return None
 
+    def _normalize_currency(self, currency: str | None) -> str | None:
+        if not currency:
+            return None
+
+        normalized = currency.lower().strip()
+        return self.SJ_CURRENCY_MAP.get(normalized, currency.upper())
+
     def _parse_vacancy(self, v: dict[str, Any]) -> ParserVacancyResult:
         town = v.get("town") or {}
         experience = v.get("experience") or {}
@@ -197,6 +215,7 @@ class SJParser:
             salary_to = None
 
         education = self._parse_education(v.get("education"))
+        currency = self._normalize_currency(v.get("currency"))
 
         return ParserVacancyResult(
             external_id=str(v.get("id")),
@@ -206,7 +225,7 @@ class SJParser:
             company_external_id=str(client.get("id")) if client.get("id") else None,
             salary_from=salary_from,
             salary_to=salary_to,
-            currency=v.get("currency"),
+            currency=currency,
             city=town.get("title"),
             address=v.get("address"),
             experience=experience.get("title"),
