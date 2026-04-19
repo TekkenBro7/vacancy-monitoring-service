@@ -28,7 +28,7 @@ def sample_vacancy_response() -> dict[str, Any]:
         "place_of_work": {"id": SJPlaceOfWork.REMOTE, "title": "Удалённая работа"},
         "payment_from": 150000,
         "payment_to": 250000,
-        "currency": "rub",
+        "currency": "RUR",
         "firm_name": "Tech Company",
         "client": {"id": 789, "title": "Tech Company Inc"},
         "work": "Разработка на Python",
@@ -90,7 +90,7 @@ class TestParseVacancy:
         assert result.company_external_id == "789"
         assert result.salary_from == 150000
         assert result.salary_to == 250000
-        assert result.currency == "rub"
+        assert result.currency == "RUR"
         assert result.city == "Москва"
         assert result.experience == "от 1 года"
         assert result.employment == "Полный рабочий день"
