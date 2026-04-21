@@ -80,10 +80,6 @@ async def seed_db() -> None:
             await session.refresh(c)
         logger.info(f"Inserted {len(currency_objs)} currencies")
 
-        for profile in profiles:
-            profile.desired_salary_currency_id = fake.random_element(currency_objs).id
-        await session.commit()
-
         source_types_data = [
             {"type_name": "job_board", "description": "Vacancy aggregator"},
             {"type_name": "social_network", "description": "Social media platform"},

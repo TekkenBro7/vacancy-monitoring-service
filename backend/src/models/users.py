@@ -63,12 +63,25 @@ class UserProfile(BaseModel):
     avatar_url: Mapped[str] = mapped_column(String(255), nullable=True)
     desired_salary: Mapped[int] = mapped_column(nullable=True)
     desired_position: Mapped[str] = mapped_column(String(100), nullable=True)
-    desired_salary_currency_id: Mapped[int] = mapped_column(
-        ForeignKey("currencies.id"), nullable=True
+
+    city_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cities.id", ondelete="SET NULL"), nullable=True
     )
+    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    preferred_remote: Mapped[bool | None] = mapped_column(nullable=True)
+    preferred_internship: Mapped[bool | None] = mapped_column(nullable=True)
+    preferred_employment: Mapped[str | None] = mapped_column(
+        String(150), nullable=True
+    )  # Полная, частичная и т.д.
+    preferred_schedule: Mapped[str | None] = mapped_column(
+        String(150), nullable=True
+    )  # Гибкий, сменный и т.д.
+
+    bio: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="profile")
-    desired_salary_currency: Mapped["Currency"] = relationship(back_populates="user_profiles")  # type: ignore
+    city: Mapped["City"] = relationship(back_populates="user_profiles")  # type: ignore
 
     def __repr__(self) -> str:
         return f"<UserProfile(id={self.id}, user_id={self.user_id}, full_name={self.full_name})>"

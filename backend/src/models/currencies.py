@@ -11,9 +11,6 @@ class Currency(BaseModel):
     name: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     symbol: Mapped[str | None] = mapped_column(String(16), nullable=True, unique=True)
 
-    user_profiles: Mapped[list["UserProfile"]] = relationship(  # type: ignore
-        back_populates="desired_salary_currency", cascade="all, delete-orphan"
-    )
     vacancies: Mapped[list["Vacancy"]] = relationship(  # type: ignore
         back_populates="currency", cascade="all, delete-orphan"
     )

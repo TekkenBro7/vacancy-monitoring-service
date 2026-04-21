@@ -4,7 +4,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.repositories.user_profile_repository import UserProfileRepository
 from src.models.users import UserProfile
-from src.schemas.user_profiles import UserProfileRead, UserProfileUpdate
+from src.schemas.user_profiles import ProfileOptionsResponse, UserProfileRead, UserProfileUpdate
+
+EMPLOYMENT_TYPES = [
+    "Полная занятость",
+    "Частичная занятость",
+    "Проектная работа",
+    "Стажировка",
+    "Волонтёрство",
+]
+
+SCHEDULE_TYPES = [
+    "Полный день",
+    "Сменный график",
+    "Гибкий график",
+    "Удалённая работа",
+    "Вахтовый метод",
+]
 
 
 class UserProfileService:
@@ -37,7 +53,15 @@ class UserProfileService:
             setattr(profile, key, value)
 
         try:
-            updated = await self.repo.update(profile)
-            return UserProfileRead.model_validate(updated)
+            _ = await self.repo.update(profile)
+            updated_profile = await self.repo.get_by_user_id(user_id)
+            return UserProfileRead.model_validate(updated_profile)
         except IntegrityError as e:
             raise HTTPException(status.HTTP_409_CONFLICT, "Failed to update profile") from e
+
+    @staticmethod
+    def get_profile_options() -> ProfileOptionsResponse:
+        return ProfileOptionsResponse(
+            employment_types=EMPLOYMENT_TYPES,
+            schedule_types=SCHEDULE_TYPES,
+        )

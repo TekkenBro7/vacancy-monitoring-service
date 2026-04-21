@@ -14,6 +14,7 @@ class City(BaseModel):
     vacancies: Mapped[list["Vacancy"]] = relationship(  # type: ignore
         back_populates="location", cascade="all, delete-orphan"
     )
+    user_profiles: Mapped[list["UserProfile"]] = relationship(back_populates="city")  # type: ignore
 
     def __repr__(self) -> str:
         return f"<City id={self.id!r} name={self.name!r}>"

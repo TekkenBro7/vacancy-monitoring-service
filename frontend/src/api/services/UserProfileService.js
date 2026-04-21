@@ -21,6 +21,16 @@ const UserProfileService = {
       throw err;
     }
   },
+
+  async getProfileOptions() {
+    try {
+      const response = await apiClient.get(`${USER_PROFILES_URL}options/`);
+      return response.data;
+    } catch (err) {
+      console.error('Get profile options error:', err);
+      throw err;
+    }
+  },
 };
 
 export default UserProfileService;
