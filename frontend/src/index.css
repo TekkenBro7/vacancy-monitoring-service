@@ -131,7 +131,15 @@
     animation: slide-in-right 0.4s ease-out forwards;
   }
 
-  /* HH.ru HTML description styles */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .hh-description {
     line-height: 1.7;
   }

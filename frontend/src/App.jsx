@@ -14,6 +14,8 @@ import AdminSkillsPage from './pages/admin/AdminSkillsPage';
 import VacanciesPage from './pages/VacanciesPage';
 import VacancyDetailPage from './pages/VacancyDetailPage';
 import BookmarksPage from './pages/BookmarksPage';
+import ComparisonsPage from './pages/ComparisonsPage';
+import ComparisonDetailPage from './pages/ComparisonDetailPage';
 
 function App() {
   return (
@@ -38,6 +40,22 @@ function App() {
           element={
             <ProtectedRoute>
               <BookmarksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="comparisons"
+          element={
+            <ProtectedRoute>
+              <ComparisonsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="comparisons/:id"
+          element={
+            <ProtectedRoute>
+              <ComparisonDetailPage />
             </ProtectedRoute>
           }
         />

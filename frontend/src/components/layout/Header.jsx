@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Logo from '@/components/ui_my/Logo';
 import ThemeToggle from '@/components/ui_my/ThemeToggle';
 import { useAuth } from '@/utils/AuthContext';
+import { GitCompare } from 'lucide-react';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -148,6 +149,15 @@ export default function Header() {
                 >
                   <Bookmark className="h-4 w-4 mr-2" style={{ color: 'rgb(var(--accent))' }} />
                   Закладки
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/comparisons')}
+                  className="transition-all duration-300 hover:bg-[rgb(var(--accent))]/10 hover:scale-[1.03]"
+                >
+                  <GitCompare className="h-4 w-4 mr-2" style={{ color: 'rgb(var(--accent))' }} />
+                  Сравнения
                 </Button>
 
                 <Button

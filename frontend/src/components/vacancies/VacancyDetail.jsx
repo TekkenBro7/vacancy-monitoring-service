@@ -28,6 +28,8 @@ import BookmarkService from '@/api/services/BookmarkService';
 import VacancyComments from './VacancyComments';
 import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
+import { GitCompare } from 'lucide-react';
+import AddToComparisonModal from '@/components/comparisons/AddToComparisonModal';
 
 export default function VacancyDetail() {
   const { id } = useParams();
@@ -39,6 +41,8 @@ export default function VacancyDetail() {
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
 
   const loadVacancy = useCallback(async () => {
     try {
@@ -237,6 +241,30 @@ export default function VacancyDetail() {
                   <Bookmark className="h-4 w-4 mr-2" />
                 )}
                 {isBookmarked ? 'Сохранено' : 'Сохранить'}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    notification.info(
+                      'Требуется авторизация',
+                      'Войдите, чтобы сравнивать вакансии'
+                    );
+                    navigate('/login');
+                    return;
+                  }
+                  setComparisonModalOpen(true);
+                }}
+                className="transition-all duration-300 hover:scale-105"
+                style={{
+                  borderColor: 'rgb(var(--border))',
+                  color: 'rgb(var(--text-primary))',
+                }}
+              >
+                <GitCompare className="h-4 w-4 mr-2" style={{ color: 'rgb(var(--accent))' }} />
+                Сравнить
               </Button>
             </div>
           </div>
@@ -707,6 +735,15 @@ export default function VacancyDetail() {
           <VacancyComments vacancyId={parseInt(id)} />
         </div>
       </div>
+
+      <AddToComparisonModal
+        isOpen={comparisonModalOpen}
+        onClose={() => setComparisonModalOpen(false)}
+        vacancy={vacancy}
+        onSuccess={() => {
+          notification.success('Готово', 'Вакансия добавлена в сравнение');
+        }}
+      />
     </div>
   );
 }
