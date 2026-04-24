@@ -1,38 +1,33 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Search,
-  TrendingUp,
-  Users,
-  Zap,
-  Target,
   Sparkles,
   ArrowRight,
   Briefcase,
-  Building,
-  MapPin,
-  DollarSign,
-  Clock,
+  Zap,
+  Shield,
+  TrendingUp,
+  Star,
+  Database,
+  Layers,
+  CheckCircle,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import useNotification from '@/hooks/useNotification';
 import VacancyService from '@/api/services/VacancyService';
-import VacancyList from '@/components/vacancies/VacancyList';
+import VacancyCard from '@/components/vacancies/VacancyCard';
+import { useAuth } from '@/utils/AuthContext';
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const notification = useNotification();
+  const { isAuthenticated } = useAuth();
   const [vacancies, setVacancies] = useState([]);
   const [loadingVacancies, setLoadingVacancies] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const oauthLogin = localStorage.getItem('oauthLogin');
@@ -49,151 +44,169 @@ export default function HomePage() {
   const loadVacancies = async () => {
     try {
       setLoadingVacancies(true);
-      const data = await VacancyService.getVacancies({ page: 1, page_size: 3 });
-      setVacancies(data.items || []); // Берем только items из пагинированного ответа
+      const data = await VacancyService.getVacancies({ page: 1, page_size: 4 });
+      setVacancies(data.items || []);
     } catch (error) {
       console.error('Error loading vacancies:', error);
     } finally {
       setLoadingVacancies(false);
     }
   };
-  const categories = [
-    {
-      title: 'Backend разработка',
-      count: '1.2K+',
-      icon: Target,
-      color: 'bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500',
-    },
-    {
-      title: 'Frontend разработка',
-      count: '850+',
-      icon: Zap,
-      color: 'bg-gradient-to-r from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500',
-    },
-    {
-      title: 'Data Science',
-      count: '420+',
-      icon: TrendingUp,
-      color: 'bg-gradient-to-r from-emerald-400 to-teal-400 dark:from-emerald-500 dark:to-teal-500',
-    },
-    {
-      title: 'DevOps',
-      count: '380+',
-      icon: Sparkles,
-      color: 'bg-gradient-to-r from-amber-400 to-orange-400 dark:from-amber-500 dark:to-orange-500',
-    },
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate(
+      `/vacancies${searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery.trim())}` : ''}`
+    );
+  };
+
+  const sources = [
+    { name: 'HeadHunter', color: 'from-red-500 to-rose-600' },
+    { name: 'SuperJob', color: 'from-blue-500 to-indigo-600' },
+    { name: 'Praca.by', color: 'from-emerald-500 to-green-600' },
+    { name: 'Telegram', color: 'from-sky-400 to-blue-500' },
+    { name: 'EPAM', color: 'from-cyan-500 to-blue-600' },
+    { name: 'Wargaming', color: 'from-orange-500 to-amber-600' },
   ];
 
-  const stats = [
-    { value: '12K+', label: 'Активных вакансий', icon: Briefcase },
-    { value: '850+', label: 'Компаний-партнеров', icon: Building },
-    { value: '50K+', label: 'Пользователей', icon: Users },
-    { value: '99%', label: 'Удовлетворенности', icon: Sparkles },
+  const features = [
+    { icon: Database, title: '6 источников', color: 'from-blue-500 to-cyan-500' },
+    { icon: Sparkles, title: 'AI-анализ', color: 'from-violet-500 to-purple-500' },
+    { icon: TrendingUp, title: 'Аналитика', color: 'from-emerald-500 to-teal-500' },
+    { icon: Zap, title: 'Ежедневно', color: 'from-amber-500 to-orange-500' },
+  ];
+
+  const steps = [
+    { num: '01', title: 'Ищите', desc: 'Введите должность или навыки', icon: Search },
+    { num: '02', title: 'Сравнивайте', desc: 'Анализируйте предложения', icon: Layers },
+    { num: '03', title: 'Откликайтесь', desc: 'Переходите на источник', icon: CheckCircle },
   ];
 
   return (
-    <div className="min-h-screen transition-colors duration-300">
-      <section className="relative overflow-hidden pt-20 pb-16">
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{
-            background:
-              'linear-gradient(to right, transparent, rgb(var(--accent))/30, transparent)',
-          }}
-        />
-        <div
-          className="absolute -top-20 -right-20 w-80 h-80 rounded-full blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, rgb(var(--accent))/10 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, rgb(var(--accent))/5 0%, transparent 70%)',
-          }}
-        />
+    <div className="min-h-screen">
+      <section className="relative pt-10 pb-6 lg:pt-16 lg:pb-10">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full blur-3xl opacity-12 dark:opacity-6"
+            style={{
+              background: 'radial-gradient(ellipse, rgb(var(--accent)) 0%, transparent 60%)',
+            }}
+          />
+        </div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div
-              className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full backdrop-blur-sm border"
+          <div className="max-w-2xl mx-auto text-center">
+            <Badge
+              className="mb-5 px-3 py-1.5 text-sm border gap-2"
               style={{
-                backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
-                borderColor: 'rgb(var(--border))',
+                background: 'linear-gradient(135deg, rgb(var(--accent))/10, rgb(var(--accent))/5)',
+                borderColor: 'rgb(var(--accent))/0.2',
+                color: 'rgb(var(--accent))',
               }}
             >
-              <Sparkles className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
-              <span className="text-sm" style={{ color: 'rgb(var(--accent))' }}>
-                Платформа нового поколения
+              <span className="relative flex h-2 w-2">
+                <span
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  style={{ backgroundColor: 'rgb(var(--accent))' }}
+                />
+                <span
+                  className="relative inline-flex rounded-full h-2 w-2"
+                  style={{ backgroundColor: 'rgb(var(--accent))' }}
+                />
               </span>
-            </div>
+              10,000+ вакансий
+            </Badge>
 
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+              <span style={{ color: 'rgb(var(--text-primary))' }}>Все IT-вакансии </span>
               <span
                 className="bg-clip-text text-transparent"
                 style={{
-                  backgroundImage:
-                    'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
+                  backgroundImage: 'linear-gradient(135deg, rgb(var(--accent)), rgb(168, 85, 247))',
                 }}
               >
-                Находите лучшие
+                в одном месте
               </span>
-              <br />
-              <span style={{ color: 'rgb(var(--text-primary))' }}>вакансии в одном месте</span>
             </h1>
 
             <p
-              className="text-xl mb-10 max-w-2xl mx-auto"
+              className="text-base lg:text-lg mb-6 max-w-lg mx-auto"
               style={{ color: 'rgb(var(--text-muted))' }}
             >
-              Мониторинг, сравнение и анализ вакансий с разных платформ. Умный поиск,
-              персонализированные рекомендации и актуальная аналитика рынка.
+              Агрегируем вакансии с лучших площадок. AI помогает найти идеальные предложения.
             </p>
 
-            <div className="max-w-3xl mx-auto mb-12">
-              <div className="relative">
-                <Search
-                  className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5"
-                  style={{ color: 'rgb(var(--accent))' }}
+            <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-6">
+              <div
+                className="flex items-center gap-2 p-1.5 rounded-2xl border shadow-lg transition-all focus-within:shadow-xl focus-within:border-[rgb(var(--accent))]/30"
+                style={{
+                  backgroundColor: 'rgb(var(--bg-header-muted))',
+                  borderColor: 'rgb(var(--border))',
+                }}
+              >
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0"
+                  style={{ backgroundColor: 'rgb(var(--accent))/10' }}
+                >
+                  <Search className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="React, Python, DevOps, Минск..."
+                  className="flex-1 h-10 bg-transparent text-base outline-none border-none"
+                  style={{ color: 'rgb(var(--text-primary))' }}
                 />
-                <Input
-                  type="search"
-                  placeholder="Должность, навыки, компания или ключевые слова..."
-                  className="pl-12 pr-32 h-14 rounded-2xl border-2 text-lg shadow-xl"
+                <Button
+                  type="submit"
+                  className="h-10 px-6 rounded-xl text-white font-semibold transition-all hover:scale-[1.02]"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  }}
+                >
+                  Найти
+                </Button>
+              </div>
+            </form>
+
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {sources.map((source) => (
+                <div
+                  key={source.name}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs"
                   style={{
                     backgroundColor: 'rgb(var(--bg-header-muted)/0.5)',
                     borderColor: 'rgb(var(--border))',
                     color: 'rgb(var(--text-primary))',
                   }}
-                />
-                <Button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-xl text-white shadow-lg"
-                  style={{
-                    background:
-                      'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
-                  }}
                 >
-                  Найти вакансии
-                </Button>
-              </div>
+                  <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${source.color}`} />
+                  {source.name}
+                </div>
+              ))}
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div
-                    className="text-2xl font-bold bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage:
-                        'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
-                    }}
+            <div className="flex justify-center gap-3 flex-wrap">
+              {features.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border"
+                  style={{
+                    backgroundColor: 'rgb(var(--bg-header-muted)/0.4)',
+                    borderColor: 'rgb(var(--border)/0.5)',
+                  }}
+                >
+                  <div className={`p-1.5 rounded-lg bg-gradient-to-br ${feature.color}`}>
+                    <feature.icon className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: 'rgb(var(--text-primary))' }}
                   >
-                    {stat.value}
-                  </div>
-                  <div className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
-                    {stat.label}
-                  </div>
+                    {feature.title}
+                  </span>
                 </div>
               ))}
             </div>
@@ -201,142 +214,213 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16">
+      <section className="py-6">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4" style={{ color: 'rgb(var(--text-primary))' }}>
-              Популярные категории
-            </h2>
-            <p className="max-w-2xl mx-auto" style={{ color: 'rgb(var(--text-muted))' }}>
-              Ищите вакансии по интересующим направлениям с актуальной статистикой
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Card
-                key={category.title}
-                className="backdrop-blur-sm hover:shadow-xl transition-all border"
-                style={{
-                  backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
-                  borderColor: 'rgb(var(--border)/0.5)',
-                }}
-              >
-                <CardHeader>
+          <div
+            className="max-w-4xl mx-auto p-6 rounded-2xl border"
+            style={{
+              backgroundColor: 'rgb(var(--bg-header-muted)/0.3)',
+              borderColor: 'rgb(var(--border)/0.5)',
+            }}
+          >
+            <div className="grid grid-cols-3 gap-6">
+              {steps.map((step, i) => (
+                <div key={step.num} className="relative text-center">
+                  {i < steps.length - 1 && (
+                    <div
+                      className="hidden md:block absolute top-7 left-[55%] w-[90%] h-px"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, rgb(var(--accent))/50, rgb(var(--accent))/5)',
+                      }}
+                    />
+                  )}
                   <div
-                    className={`p-3 rounded-xl w-12 h-12 flex items-center justify-center mb-4 ${category.color}`}
+                    className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgb(var(--accent))/15, rgb(var(--accent))/5)',
+                      border: '1px solid rgb(var(--accent))/0.3',
+                    }}
                   >
-                    <category.icon className="h-6 w-6 text-white" />
+                    <step.icon className="h-6 w-6" style={{ color: 'rgb(var(--accent))' }} />
                   </div>
-                  <CardTitle className="text-xl" style={{ color: 'rgb(var(--text-primary))' }}>
-                    {category.title}
-                  </CardTitle>
-                  <CardDescription style={{ color: 'rgb(var(--text-muted))' }}>
-                    {category.count} вакансий
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button variant="ghost" style={{ color: 'rgb(var(--accent))' }}>
-                    Смотреть все <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'rgb(var(--text-primary))' }}>
-                Последние вакансии
-              </h2>
-              <p style={{ color: 'rgb(var(--text-muted))' }}>
-                Актуальные предложения от работодателей
-              </p>
+                  <div
+                    className="text-[10px] font-bold tracking-widest mb-1.5"
+                    style={{ color: 'rgb(var(--accent))' }}
+                  >
+                    ШАГ {step.num}
+                  </div>
+                  <h3 className="font-bold mb-1" style={{ color: 'rgb(var(--text-primary))' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                    {step.desc}
+                  </p>
+                </div>
+              ))}
             </div>
-            <Button
-              className="text-white"
-              style={{
-                background:
-                  'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
-              }}
-              asChild
-            >
-              <Link to="/vacancies">
-                Показать все вакансии <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
           </div>
-
-          <VacancyList vacancies={vacancies} loading={loadingVacancies} />
         </div>
       </section>
 
-      <section className="py-20">
+      <section className="py-8">
         <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <div
-              className="p-8 rounded-3xl backdrop-blur-sm border shadow-2xl"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgb(var(--bg-header-muted)/0.5), rgb(var(--bg-header)/0.5))',
-                borderColor: 'rgb(var(--border)/0.5)',
-              }}
-            >
-              <h2 className="text-4xl font-bold mb-6">
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent)/0.8))',
-                  }}
-                >
-                  Начните карьерный рост
-                </span>
-                <br />
-                <span style={{ color: 'rgb(var(--text-primary))' }}>уже сегодня</span>
-              </h2>
-
-              <p
-                className="mb-8 text-lg max-w-2xl mx-auto"
-                style={{ color: 'rgb(var(--text-muted))' }}
-              >
-                Присоединяйтесь к тысячам профессионалов, которые уже нашли свою идеальную работу
-                через JobHub
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  className="h-14 px-8 rounded-xl text-white text-lg font-semibold shadow-xl"
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Badge
+                  className="border text-xs"
                   style={{
                     background:
-                      'linear-gradient(to right, rgb(var(--button-from)), rgb(var(--button-to)))',
+                      'linear-gradient(135deg, rgb(var(--accent))/10, rgb(var(--accent))/5)',
+                    borderColor: 'rgb(var(--accent))/0.2',
+                    color: 'rgb(var(--accent))',
                   }}
                 >
-                  <Briefcase className="mr-2 h-5 w-5" />
-                  Найти вакансии
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 px-8 rounded-xl hover:bg-gray-800/50"
-                  style={{
-                    borderColor: 'rgb(var(--border))',
-                    color: 'rgb(var(--text-primary))',
-                  }}
+                  <Zap className="h-3 w-3 mr-1" />
+                  Свежие
+                </Badge>
+                <h2
+                  className="text-xl lg:text-2xl font-bold"
+                  style={{ color: 'rgb(var(--text-primary))' }}
                 >
-                  Создать профиль
-                </Button>
+                  Последние вакансии
+                </h2>
+              </div>
+              <Button
+                size="sm"
+                className="text-white transition-all hover:scale-[1.02]"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                }}
+                asChild
+              >
+                <Link to="/vacancies">
+                  Все вакансии
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {loadingVacancies
+                ? [...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-44 rounded-2xl animate-pulse"
+                      style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.3)' }}
+                    />
+                  ))
+                : vacancies
+                    .slice(0, 4)
+                    .map((vacancy) => <VacancyCard key={vacancy.id} vacancy={vacancy} />)}
+            </div>
+
+            <div className="mt-8 text-center">
+              <Button
+                variant="outline"
+                className="h-11 px-8 rounded-xl border-2 transition-all hover:scale-[1.02]"
+                style={{ borderColor: 'rgb(var(--border))', color: 'rgb(var(--text-primary))' }}
+                asChild
+              >
+                <Link to="/vacancies">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Смотреть все вакансии
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-8">
+        <div className="container mx-auto px-6">
+          <div
+            className="max-w-6xl mx-auto relative overflow-hidden rounded-2xl p-6 lg:p-8"
+            style={{
+              background:
+                'linear-gradient(135deg, rgb(var(--bg-header-muted)/0.5), rgb(var(--accent))/5)',
+              border: '1px solid rgb(var(--border)/0.5)',
+            }}
+          >
+            <div
+              className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 50%)',
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold mb-1">
+                  <span style={{ color: 'rgb(var(--text-primary))' }}>
+                    {isAuthenticated ? 'Продолжайте поиск ' : 'Начните поиск '}
+                  </span>
+                  <span
+                    className="bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(135deg, rgb(var(--accent)), rgb(168, 85, 247))',
+                    }}
+                  >
+                    прямо сейчас
+                  </span>
+                </h2>
+                <p className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                  {isAuthenticated
+                    ? 'Ваш профиль поможет найти лучшие вакансии'
+                    : 'Тысячи IT-специалистов уже нашли работу мечты'}
+                </p>
               </div>
 
-              <p className="text-sm mt-6" style={{ color: 'rgb(var(--text-muted))' }}>
-                Регистрация займет меньше минуты. Без скрытых платежей.
-              </p>
+              <div className="flex gap-3">
+                <Button
+                  className="h-11 px-6 rounded-xl text-white font-medium transition-all hover:scale-[1.02]"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgb(var(--button-from)), rgb(var(--button-to)))',
+                  }}
+                  asChild
+                >
+                  <Link to="/vacancies">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Вакансии
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-11 px-6 rounded-xl border-2 transition-all hover:scale-[1.02]"
+                  style={{ borderColor: 'rgb(var(--border))', color: 'rgb(var(--text-primary))' }}
+                  asChild
+                >
+                  <Link to={isAuthenticated ? '/profile' : '/register'}>
+                    <User className="h-4 w-4 mr-2" />
+                    {isAuthenticated ? 'Профиль' : 'Регистрация'}
+                  </Link>
+                </Button>
+              </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-6 pb-12">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-8">
+            {[
+              { icon: Shield, text: 'Проверенные источники' },
+              { icon: Zap, text: 'Обновления каждый день' },
+              { icon: Star, text: 'Полностью бесплатно' },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-2">
+                <item.icon className="h-4 w-4" style={{ color: 'rgb(var(--accent))' }} />
+                <span className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
+                  {item.text}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
