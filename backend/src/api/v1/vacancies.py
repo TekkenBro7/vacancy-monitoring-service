@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.session import get_async_session
+from src.dependencies.users import require_admin
 from src.schemas.companies import PaginatedResponse, VacancyCreate, VacancyRead, VacancyUpdate
+from src.schemas.users import UserMe
 from src.schemas.vacancies import (
     AvailableFilters,
     FilterOption,
@@ -135,7 +137,9 @@ async def create_vacancy(
 async def update_vacancy(
     vacancy_id: int,
     data: VacancyUpdate,
+    db: AsyncSession = Depends(get_async_session),
     service: VacancyService = Depends(get_vacancy_service),
+    _: UserMe = Depends(require_admin),
 ) -> VacancyRead:
     return await service.update_vacancy(vacancy_id, data)
 
@@ -143,6 +147,8 @@ async def update_vacancy(
 @router.delete("/{vacancy_id}/")
 async def delete_vacancy(
     vacancy_id: int,
+    db: AsyncSession = Depends(get_async_session),
     service: VacancyService = Depends(get_vacancy_service),
+    _: UserMe = Depends(require_admin),
 ) -> dict[str, bool | int]:
     return await service.delete_vacancy(vacancy_id)

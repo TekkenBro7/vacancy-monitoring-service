@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Building,
   MapPin,
-  DollarSign,
   Clock,
   ExternalLink,
   Bookmark,
@@ -19,6 +18,8 @@ import {
   CheckCircle,
   Sparkles,
   Loader2,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,12 +31,21 @@ import { useAuth } from '@/utils/AuthContext';
 import useNotification from '@/hooks/useNotification';
 import { GitCompare } from 'lucide-react';
 import AddToComparisonModal from '@/components/comparisons/AddToComparisonModal';
+import VacancyEditModal from './VacancyEditModal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function VacancyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const notification = useNotification();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role_name === 'admin';
 
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +53,9 @@ export default function VacancyDetail() {
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadVacancy = useCallback(async () => {
     try {
@@ -62,6 +75,19 @@ export default function VacancyDetail() {
       setLoading(false);
     }
   }, [id, notification]);
+
+  const handleDeleteVacancy = async () => {
+    setDeleting(true);
+    try {
+      await VacancyService.deleteVacancy(vacancy.id);
+      notification.success('Удалено', 'Вакансия успешно удалена');
+      navigate('/vacancies');
+    } catch (err) {
+      notification.error('Ошибка', err.response?.data?.detail || 'Не удалось удалить вакансию');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const checkBookmarkStatus = useCallback(async () => {
     try {
@@ -267,6 +293,33 @@ export default function VacancyDetail() {
                 Сравнить
               </Button>
             </div>
+            {isAdmin && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditModalOpen(true)}
+                  className="transition-all duration-300 hover:scale-105"
+                  style={{
+                    borderColor: 'rgb(var(--accent))',
+                    color: 'rgb(var(--accent))',
+                    backgroundColor: 'rgb(var(--accent)/0.05)',
+                  }}
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Редактировать
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteModalOpen(true)}
+                  className="transition-all duration-300 hover:scale-105 border-red-500/50 text-red-500 hover:bg-red-500/10"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Удалить
+                </Button>
+              </>
+            )}
           </div>
 
           <div
@@ -551,6 +604,43 @@ export default function VacancyDetail() {
                         </div>
                       </div>
                     )}
+                    {vacancy.education && (
+                      <div
+                        className="flex items-center gap-3 p-4 rounded-xl"
+                        style={{ backgroundColor: 'rgb(var(--bg-header-muted)/0.5)' }}
+                      >
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ backgroundColor: 'rgb(var(--accent)/0.1)' }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            style={{ color: 'rgb(var(--accent))' }}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-xs" style={{ color: 'rgb(var(--text-muted))' }}>
+                            Образование
+                          </div>
+                          <div
+                            className="font-semibold"
+                            style={{ color: 'rgb(var(--text-primary))' }}
+                          >
+                            {vacancy.education}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {vacancy.employment && (
                       <div
                         className="flex items-center gap-3 p-4 rounded-xl"
@@ -744,6 +834,71 @@ export default function VacancyDetail() {
           notification.success('Готово', 'Вакансия добавлена в сравнение');
         }}
       />
+
+      {isAdmin && vacancy && (
+        <VacancyEditModal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          vacancy={vacancy}
+          onSuccess={() => {
+            setEditModalOpen(false);
+            loadVacancy();
+            notification.success('Успешно', 'Вакансия обновлена');
+          }}
+        />
+      )}
+
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent
+          style={{
+            backgroundColor: 'rgb(var(--bg-header))',
+            borderColor: 'rgb(var(--border))',
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle style={{ color: 'rgb(var(--text-primary))' }}>
+              Удалить вакансию
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p style={{ color: 'rgb(var(--text-muted))' }}>
+              Вы уверены, что хотите удалить вакансию{' '}
+              <span className="font-semibold" style={{ color: 'rgb(var(--text-primary))' }}>
+                «{vacancy?.title}»
+              </span>
+              ? Это действие нельзя отменить.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleting}
+              style={{
+                borderColor: 'rgb(var(--border))',
+                color: 'rgb(var(--text-primary))',
+                backgroundColor: 'rgb(var(--bg-header-muted))',
+              }}
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleDeleteVacancy}
+              disabled={deleting}
+              className="text-white bg-red-500 hover:bg-red-600"
+            >
+              {deleting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Удаление...
+                </span>
+              ) : (
+                'Удалить'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

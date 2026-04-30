@@ -9,4 +9,6 @@ export const COMMENTS_URL = '/comments/';
 export const SEARCH_QUERIES_URL = '/search_queries/';
 export const COMPARISONS_URL = '/comparisons/';
 export const CITIES_URL = '/cities/';
+export const CURRENCIES_URL = '/currencies/';
+export const COMPANIES_URL = '/companies/';
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';

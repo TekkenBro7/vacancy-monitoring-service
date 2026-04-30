@@ -20,6 +20,7 @@ const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Пользователи', href: '/admin/users', icon: Users },
   { name: 'Навыки', href: '/admin/skills', icon: Tags },
+  { name: 'Вакансии', href: '/admin/vacancies', icon: Briefcase },
 ];
 
 export default function AdminLayout() {

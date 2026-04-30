@@ -65,6 +65,7 @@ class VacancyRead(BaseModel):
     salary_to: int | None
     external_id: str
     experience: str | None
+    education: str | None
     employment: str | None
     schedule: str | None
     internship: bool | None
@@ -72,10 +73,12 @@ class VacancyRead(BaseModel):
     is_remote: bool | None
     is_active: bool | None
     address: str | None
+    created_at: datetime | None
     created_at_source: datetime | None
     updated_at: datetime | None
     published_at: datetime | None
     last_seen_at: datetime | None
+    last_enriched_at: datetime | None
     fingerprint: str
 
     currency: CurrencyRead | None = None
@@ -108,13 +111,16 @@ class VacancyUpdate(BaseModel):
     salary_from: int | None = None
     salary_to: int | None = None
     currency_id: int | None = None
-    company_id: int | None = None
-    source_id: int | None = None
-    location_id: int | None = None
     vacancy_url: HttpUrl | None = None
     is_remote: bool | None = None
     is_active: bool | None = None
-    published_at: datetime | None = None
+    experience: str | None = None
+    education: str | None = None
+    employment: str | None = None
+    schedule: str | None = None
+    internship: bool | None = None
+    address: str | None = None
+    skill_ids: list[int] | None = None
 
 
 class PaginationInfo(BaseModel):

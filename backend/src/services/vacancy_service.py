@@ -113,7 +113,8 @@ class VacancyService:
         vacancy = await self.enrichment_service.enrich_vacancy_if_needed(vacancy)
 
         if vacancy.last_enriched_at:
-            vacancy = await self.repo.update(vacancy)
+            await self.repo.update(vacancy)
+            vacancy = await self.repo.get_by_id_with_related(vacancy_id)
 
         return VacancyRead.model_validate(vacancy)
 
@@ -144,18 +145,26 @@ class VacancyService:
             ) from e
 
     async def update_vacancy(self, vacancy_id: int, data: VacancyUpdate) -> VacancyRead:
-        vacancy = await self.repo.get_by_id(vacancy_id)
+        vacancy = await self.repo.get_by_id_with_related(vacancy_id)
         if not vacancy:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Vacancy not found")
 
-        for key, value in data.model_dump(exclude_unset=True).items():
+        update_data = data.model_dump(exclude_unset=True)
+
+        skill_ids = update_data.pop("skill_ids", None)
+
+        for key, value in update_data.items():
             if isinstance(value, HttpUrl):
                 value = str(value)
             setattr(vacancy, key, value)
 
+        if skill_ids is not None:
+            await self.repo.update_vacancy_skills(vacancy, skill_ids)
+
         try:
-            updated = await self.repo.update(vacancy)
-            return VacancyRead.model_validate(updated)
+            await self.repo.update(vacancy)
+            updated_with_related = await self.repo.get_by_id_with_related(vacancy_id)
+            return VacancyRead.model_validate(updated_with_related)
 
         except IntegrityError as e:
             raise HTTPException(

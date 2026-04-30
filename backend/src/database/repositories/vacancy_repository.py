@@ -546,3 +546,13 @@ class VacancyRepository(BaseRepository[Vacancy]):
 
         result = await self.session.execute(search_query)
         return [{"id": row.id, "name": row.name, "count": row.count} for row in result]
+
+    async def update_vacancy_skills(self, vacancy: Vacancy, skill_ids: list[int]) -> None:
+        if skill_ids:
+            skills_query = select(Skill).where(Skill.id.in_(skill_ids))
+            result = await self.session.execute(skills_query)
+            skills = list(result.scalars().all())
+        else:
+            skills = []
+
+        vacancy.skills = skills

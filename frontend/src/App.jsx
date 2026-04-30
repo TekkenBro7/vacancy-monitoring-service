@@ -16,6 +16,7 @@ import VacancyDetailPage from './pages/VacancyDetailPage';
 import BookmarksPage from './pages/BookmarksPage';
 import ComparisonsPage from './pages/ComparisonsPage';
 import ComparisonDetailPage from './pages/ComparisonDetailPage';
+import AdminVacanciesPage from './pages/admin/AdminVacanciesPage';
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="skills" element={<AdminSkillsPage />} />
+        <Route path="vacancies" element={<AdminVacanciesPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
