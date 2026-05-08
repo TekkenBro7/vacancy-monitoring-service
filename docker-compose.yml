@@ -124,6 +124,20 @@ services:
     restart: unless-stopped
     networks:
       - vacancy-network
+  
+  nginx:
+    image: nginx:alpine
+    container_name: vacancy_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - vacancy-network
 
 
 volumes:
