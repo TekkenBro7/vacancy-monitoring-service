@@ -109,6 +109,7 @@ class HHConfig:
     HH_PER_PAGE = 100
     HH_TIMEOUT = int(os.getenv("HH_TIMEOUT", 20))
     HH_RETRIES = int(os.getenv("HH_RETRIES", 3))
+    HH_ACCESS_TOKEN = os.getenv("HH_ACCESS_TOKEN", "")
 
 
 class SuperJobConfig:

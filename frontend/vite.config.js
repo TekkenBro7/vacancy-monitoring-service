@@ -24,6 +24,7 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: 'all',
     hmr: {
+      // Закоментить "hmr" если локально
       clientPort: 80,
     },
   },

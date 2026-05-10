@@ -8,7 +8,7 @@ from src.database.repositories.source_repository import SourceRepository
 from src.database.session import async_session_maker
 from src.models.sources import Source, SourceParseTask
 
-START_PARSE_DATE = date(2026, 4, 10)
+START_PARSE_DATE = date(2026, 5, 1)
 
 
 @celery_app.task(name="schedule_source_parse_tasks", queue="parsing_queue")
@@ -20,7 +20,7 @@ async def _schedule_source_parse_tasks() -> None:
     today = datetime.now(UTC).date()
     last_full_day = today - timedelta(days=1)
 
-    last_full_day = date(2026, 4, 10)
+    last_full_day = date(2026, 5, 1)
 
     if last_full_day < START_PARSE_DATE:
         logger.info(

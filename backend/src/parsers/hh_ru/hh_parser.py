@@ -63,6 +63,7 @@ class HHParser:
             "Connection": "keep-alive",
             "Cache-Control": "no-cache",
             "Referer": "https://hh.ru/",
+            "Authorization": f"Bearer {hh_config.HH_ACCESS_TOKEN}",
         }
 
     async def _request(
