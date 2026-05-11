@@ -533,27 +533,6 @@ export default function VacancyDetail() {
             </div>
 
             <div className="p-8">
-              {vacancy.last_enriched_at &&
-                vacancy.source?.name?.toLowerCase().includes('headhunter') && (
-                  <div
-                    className="mb-6 p-4 rounded-xl border flex items-center justify-between"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgb(var(--accent)/10), rgb(var(--accent)/5))',
-                      borderColor: 'rgb(var(--accent)/0.3)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="p-2 rounded-lg"
-                        style={{ backgroundColor: 'rgb(var(--accent)/0.1)' }}
-                      >
-                        <Sparkles className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
               {(vacancy.experience || vacancy.employment || vacancy.schedule) && (
                 <div className="mb-8">
                   <h2

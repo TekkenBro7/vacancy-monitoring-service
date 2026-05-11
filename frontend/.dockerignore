@@ -10,3 +10,5 @@ Dockerfile
 build
 README.md
 .vscode
+.env
+.env.docker

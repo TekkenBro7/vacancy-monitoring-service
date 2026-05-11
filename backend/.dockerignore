@@ -4,6 +4,7 @@ pycache
 *.pyc
 .git
 .env
+.env.docker
 .mypy_cache
 .pytest_cache
 .ruff_cache
