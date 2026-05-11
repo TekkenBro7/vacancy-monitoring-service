@@ -61,6 +61,8 @@ services:
       - ./backend/.env
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/vacancy_parser.session:/app/vacancy_parser.session
     depends_on:
       db:
         condition: service_healthy
@@ -80,6 +82,8 @@ services:
     env_file:
       - ./backend/.env
     command: ["celery", "-A", "src.core.celery.celery_app", "worker", "--loglevel=info"]
+    volumes:
+      - ./backend/vacancy_parser.session:/app/vacancy_parser.session
     depends_on:
       db:
         condition: service_healthy

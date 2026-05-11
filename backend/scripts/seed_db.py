@@ -51,10 +51,8 @@ async def seed_db() -> None:
                 user_id=user.id,
                 full_name=fake.name(),
                 phone=fake.msisdn(),
-                avatar_url=fake.image_url(),
                 desired_position=fake.job(),
                 desired_salary=fake.random_int(min=500, max=5000) * 10,
-                desired_salary_currency_id=None,
             )
             profiles.append(profile)
         session.add_all(profiles)

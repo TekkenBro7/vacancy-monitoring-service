@@ -550,22 +550,6 @@ export default function VacancyDetail() {
                       >
                         <Sparkles className="h-5 w-5" style={{ color: 'rgb(var(--accent))' }} />
                       </div>
-                      <div>
-                        <div
-                          className="font-semibold"
-                          style={{ color: 'rgb(var(--text-primary))' }}
-                        >
-                          Данные дополнены из HeadHunter
-                        </div>
-                        <div className="text-sm" style={{ color: 'rgb(var(--text-muted))' }}>
-                          Описание и навыки обновлены{' '}
-                          {new Date(vacancy.last_enriched_at).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
