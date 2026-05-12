@@ -2,23 +2,43 @@
 
 Vacancy Monitoring Service — A service for comparing and monitoring available vacancies and internships with integration of external data sources.
 
-![FastAPI](https://img.shields.io/badge/FastAPI-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.122-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-![Docker](https://img.shields.io/badge/Docker-✓-blue)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+![Docker](https://img.shields.io/badge/Docker-✓-2496ED)
+![Celery](https://img.shields.io/badge/Celery-✓-37814A)
+![nginx](https://img.shields.io/badge/nginx-✓-009639)
 
 ---
 
 ⚙️ Tech Stack
 
-- Backend: FastAPI  
-- Database: PostgreSQL  
-- ORM: SQLAlchemy + Alembic  
-- Asynchrony: Uvicorn (ASGI)  
-- Containerization: Docker, Docker Compose  
-- Dependency Management: Uv  
-- Code Quality & Linting: ruff, black, isort, mypy  
-- Testing: Pytest  
-- Development Tools: Makefile commands
+- **FastAPI** — async REST API
+- **PostgreSQL 16** — primary database
+- **ORM**: SQLAlchemy + Alembic — ORM and migrations
+- **Celery** + **Redis** + **RabbitMQ** — task queues and background jobs
+- **Groq AI** — AI-powered data extraction
+- **Playwright** — parsing JavaScript-heavy websites
+- **Telethon** — Telegram client
+- **Uvicorn (ASGI)** — backend server
+- **Docker, Docker Compose** — containerization
+- **uv** — dependency management
+- **ruff**, **mypy** — linting and type checking
+- **pytest** — testing
+- **Makefile commands** — development utilities
+
+---
+
+## 🔌 Источники данных
+
+| Source | Type | Description |
+|---|---|---|
+| **HH.ru** | REST API | Official API with application token |
+| **SuperJob** | REST API | Official API with application token |
+| **EPAM** | Parser | Playwright (JS rendering) |
+| **Wargaming** | Parser | Playwright (JS rendering) |
+| **Praca.by** | Parser | selectolax (HTML parsing) |
+| **Telegram** | Telethon + AI | Channel parsing with AI extraction via Groq |
 
 ---
 
@@ -33,7 +53,7 @@ cd improve-api-service
 
 ### ⚙️ Setup `.env` File
 
-Create a `.env` file in your root based on `.env.example`
+Create a `.env` and `.env.docker` files based on `.env.example` and `.env.docker`
 
 ### Installing dependencies via Poetry
 
@@ -80,10 +100,18 @@ To start the app using Docker:
 ```bash
 docker-compose up --build
 ```
-And make sure that the `env` file states `POSTGRES_HOST=db`
 
-- FastAPI will run on `http://localhost:8000`
-- PostgreSQL is available at port `5432`
+Make sure `backend/.env.docker` contains:
+```env
+POSTGRES_HOST=db
+REDIS_HOST=redis
+RABBITMQ_HOST=rabbitmq
+FRONTEND_URL=http://localhost
+```
+
+Also uou need to authorize Telegram once locally before running Docker
+
+FastAPI will run on `http://localhost:8000` or `http://localhost`
 
 ### 🔧 Run Locally
 
@@ -95,9 +123,30 @@ CREATE USER 'your_user' WITH PASSWORD 'your_password';
 GRANT ALL PRIVILEGES ON DATABASE 'your_db' TO 'your_user';
 ```
 3. Apply migrations
-4. Ensure `.env` specifies `POSTGRES_HOST=localhost`
-5. Start the development server
+4. Make sure `backend/.env` contains:
+```env
+POSTGRES_HOST=localhost
+REDIS_HOST=localhost
+RABBITMQ_HOST=localhost
+FRONTEND_URL=http://localhost:3000
+```
+5. Start  services
 ```bash
+# Terminal 1 — backend
+cd backend
 make runserver
+
+# Terminal 2 — frontend
+cd frontend
+npm install
+npm run dev
+
+# Terminal 3 — Celery worker
+cd backend
+make celery
+
+# Terminal 4 — Celery beat
+cd backend
+make celery_beat
 ```
 For convenience, you can use the `make seed_data` command before starting the server to create test data.
