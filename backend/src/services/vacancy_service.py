@@ -100,6 +100,7 @@ class VacancyService:
             page=page,
             page_size=page_size,
         )
+        
         return PaginatedResponse(
             items=result.items,
             pagination=result.pagination,
