@@ -1,8 +1,10 @@
+import redis.asyncio as redis
 from fastapi import HTTPException, status
 from pydantic import HttpUrl
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.logger import logger
 from src.database.repositories.vacancy_repository import VacancyRepository
 from src.models.companies import Vacancy
 from src.parsers.hh_ru.vacancy_enrichment_service import VacancyEnrichmentService
@@ -19,12 +21,36 @@ from src.schemas.vacancies import (
     VacancyFilters,
     VacancySearchResponse,
 )
+from src.utils.redis_keys import RedisKeys
 
 
 class VacancyService:
-    def __init__(self, db: AsyncSession) -> None:
+    CACHE_TTL = 60 * 5
+
+    def __init__(self, db: AsyncSession, redis_client: redis.Redis | None = None) -> None:
         self.repo = VacancyRepository(Vacancy, db)
         self.enrichment_service = VacancyEnrichmentService(db)
+        self.redis = redis_client
+        self.keys = RedisKeys()
+
+    async def _get_cache(self, key: str) -> VacancySearchResponse | None:
+        if not self.redis:
+            return None
+        try:
+            cached = await self.redis.get(key)
+            if cached:
+                return VacancySearchResponse.model_validate_json(cached)
+        except Exception as e:
+            logger.warning("Redis GET error %s: %s", key, e)
+        return None
+
+    async def _set_cache(self, key: str, value: VacancySearchResponse) -> None:
+        if not self.redis:
+            return
+        try:
+            await self.redis.set(key, value.model_dump_json(), ex=self.CACHE_TTL)
+        except Exception as e:
+            logger.warning("Redis SET error %s: %s", key, e)
 
     async def search_vacancies(
         self,
@@ -33,6 +59,20 @@ class VacancyService:
         page_size: int = 20,
         include_filters: bool = False,
     ) -> VacancySearchResponse:
+        cache_key = self.keys.vacancy_search_key(
+            filters_dict=filters.model_dump(),
+            page=page,
+            page_size=page_size,
+            include_filters=include_filters,
+        )
+
+        cached_result = await self._get_cache(cache_key)
+        if cached_result:
+            logger.debug("Cache HIT: %s", cache_key)
+            return cached_result
+
+        logger.debug("Cache MISS: %s", cache_key)
+
         offset = (page - 1) * page_size
 
         items = await self.repo.search_with_filters(
@@ -62,7 +102,7 @@ class VacancyService:
                 internship_count=filter_options["internship_count"],
             )
 
-        return VacancySearchResponse(
+        result = VacancySearchResponse(
             items=[VacancyRead.model_validate(v) for v in items],
             pagination=PaginationInfo(
                 page=page,
@@ -74,6 +114,10 @@ class VacancyService:
             ),
             filters=available_filters,
         )
+
+        await self._set_cache(cache_key, result)
+
+        return result
 
     async def search_filter_options(
         self,
@@ -100,7 +144,7 @@ class VacancyService:
             page=page,
             page_size=page_size,
         )
-        
+
         return PaginatedResponse(
             items=result.items,
             pagination=result.pagination,

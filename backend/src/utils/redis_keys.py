@@ -1,3 +1,6 @@
+import hashlib
+import json
+
 from src.core.constants import EMAIL_PENDING_PREFIX, EMAIL_VERIFICATION_PREFIX
 
 
@@ -29,3 +32,17 @@ class RedisKeys:
     @staticmethod
     def vacancy_external_key(source_id: int, external_id: str) -> str:
         return f"vacancy:{source_id}:{external_id}"
+
+    @staticmethod
+    def vacancy_search_key(
+        filters_dict: dict, page: int, page_size: int, include_filters: bool
+    ) -> str:
+        payload = {
+            "filters": filters_dict,
+            "page": page,
+            "page_size": page_size,
+            "include_filters": include_filters,
+        }
+        raw = json.dumps(payload, sort_keys=True, default=str)
+        hashed = hashlib.md5(raw.encode()).hexdigest()
+        return f"vacancy_search:{hashed}"

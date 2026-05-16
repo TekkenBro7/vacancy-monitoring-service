@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.redis_client import redis_client
 from src.database.session import get_async_session
 from src.dependencies.users import require_admin
 from src.schemas.companies import PaginatedResponse, VacancyCreate, VacancyRead, VacancyUpdate
@@ -19,7 +20,7 @@ router = APIRouter()
 
 
 def get_vacancy_service(db: AsyncSession = Depends(get_async_session)) -> VacancyService:
-    return VacancyService(db)
+    return VacancyService(db, redis_client=redis_client)
 
 
 @router.get("/", response_model=PaginatedResponse[VacancyRead])
