@@ -20,7 +20,7 @@ async def _dispatch_source_parse_tasks() -> None:
     async with async_session_maker() as session:
         repo = SourceParseTaskRepository(SourceParseTask, session)
 
-        tasks = await repo.get_tasks_for_dispatch(limit=200)
+        tasks = await repo.get_tasks_for_dispatch(limit=50)
 
         scheduled_count = 0
 
