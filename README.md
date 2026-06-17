@@ -148,5 +148,8 @@ make celery
 # Terminal 4 — Celery beat
 cd backend
 make celery_beat
+
+# To get inside Postgres you can use
+psql -h localhost -p 5432 -U vacancy_db_user -d vacancy_db
 ```
 For convenience, you can use the `make seed_data` command before starting the server to create test data.
